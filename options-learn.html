@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>期权策略百科</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0b0e13;--panel:#111720;--card:#161e2a;--card-h:#1c2538;
+  --b1:#1e2a3a;--b2:#243040;
+  --t1:#e8eef8;--t2:#8fa3bb;--t3:#4a5c72;
+  --green:#27c96f;--gs:rgba(39,201,111,.12);
+  --red:#f0524f;--rs:rgba(240,82,79,.12);
+  --blue:#4fa3ff;--bs:rgba(79,163,255,.12);
+  --yellow:#f0a030;--ys:rgba(240,160,48,.12);
+  --purple:#9d7bea;--ps:rgba(157,123,234,.12);
+  --teal:#26c0b0;--ts:rgba(38,192,176,.12);
+  --orange:#f07840;--os:rgba(240,120,64,.12);
+  --pink:#e060a0;--pks:rgba(224,96,160,.12);
+}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,'SF Pro Display','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;min-height:100vh;font-size:18px;line-height:1.65}
+
+/* ── Header ── */
+header{
+  background:var(--panel);border-bottom:1px solid var(--b1);
+  padding:0 32px;height:56px;display:flex;align-items:center;gap:20px;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(12px);
+}
+.back-btn{
+  display:flex;align-items:center;gap:7px;
+  color:var(--t2);font-size:16px;font-weight:500;
+  text-decoration:none;cursor:pointer;
+  padding:6px 16px;border-radius:7px;border:1px solid var(--b2);
+  background:var(--card);transition:all .15s;
+}
+.back-btn:hover{color:var(--t1);border-color:var(--blue)}
+.h-title{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.hsp{flex:1}
+.strat-count{font-size:15px;color:var(--t3);background:var(--card);border:1px solid var(--b1);padding:4px 12px;border-radius:6px}
+
+/* ── Category nav ── */
+.cat-nav{
+  background:var(--panel);border-bottom:1px solid var(--b1);
+  padding:0 32px;display:flex;gap:0;overflow-x:auto;
+  position:sticky;top:56px;z-index:99;
+}
+.cat-nav::-webkit-scrollbar{height:0}
+.cat-btn{
+  padding:13px 22px;font-size:16px;font-weight:600;color:var(--t3);
+  border-bottom:2px solid transparent;cursor:pointer;
+  transition:all .15s;white-space:nowrap;letter-spacing:.01em;
+}
+.cat-btn:hover{color:var(--t2)}
+.cat-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.cat-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:middle}
+
+/* ── Hero ── */
+.hero{
+  padding:48px 32px 36px;
+  background:linear-gradient(180deg,rgba(79,163,255,.05) 0%,transparent 100%);
+  border-bottom:1px solid var(--b1);
+}
+.hero-title{font-size:38px;font-weight:800;letter-spacing:-.8px;margin-bottom:12px}
+.hero-title span{color:var(--blue)}
+.hero-sub{font-size:19px;color:var(--t2);max-width:600px;line-height:1.75}
+.hero-tags{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+.htag{padding:7px 16px;border-radius:20px;font-size:15px;font-weight:600;border:1px solid;cursor:pointer;transition:all .15s}
+.htag:hover{opacity:.8}
+
+/* ── Main content ── */
+.content{padding:36px;max-width:1400px;margin:0 auto}
+
+/* ── Category section ── */
+.cat-section{margin-bottom:56px;scroll-margin-top:120px}
+.cat-header{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.cat-icon{font-size:26px}
+.cat-name{font-size:24px;font-weight:700;letter-spacing:-.3px}
+.cat-desc{font-size:16px;color:var(--t2);margin-top:3px}
+.cat-line{flex:1;height:1px;background:var(--b1)}
+
+/* ── Strategy cards ── */
+.strat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px}
+.strat-card{
+  background:var(--card);border:1px solid var(--b1);border-radius:14px;
+  overflow:hidden;transition:all .2s;cursor:pointer;
+  display:flex;flex-direction:column;
+}
+.strat-card:hover{border-color:var(--b2);background:var(--card-h);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.strat-card.expanded{border-color:var(--blue)}
+
+.card-top{padding:20px 22px 15px;display:flex;gap:14px;align-items:flex-start}
+.card-spark{flex-shrink:0;border-radius:8px;padding:8px;background:var(--bg)}
+.card-meta{flex:1;min-width:0}
+.card-name{font-size:18px;font-weight:700;margin-bottom:3px}
+.card-en{font-size:14px;color:var(--t3);margin-bottom:9px;font-style:italic}
+.card-badges{display:flex;gap:5px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:.04em;text-transform:uppercase}
+.badge-bull{background:var(--gs);color:var(--green)}
+.badge-bear{background:var(--rs);color:var(--red)}
+.badge-neutral{background:var(--ts);color:var(--teal)}
+.badge-vol{background:var(--ps);color:var(--purple)}
+.badge-legs{background:var(--bs);color:var(--blue)}
+.badge-risk{background:var(--ys);color:var(--yellow)}
+
+.card-divider{height:1px;background:var(--b1);margin:0 22px}
+
+.card-stats{padding:13px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cs{text-align:center}
+.cs-lbl{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:4px}
+.cs-val{font-size:15px;font-weight:700}
+.cs-val.g{color:var(--green)}.cs-val.r{color:var(--red)}.cs-val.y{color:var(--yellow)}.cs-val.p{color:var(--purple)}.cs-val.b{color:var(--blue)}
+
+.card-desc{padding:0 22px 18px;font-size:16px;color:var(--t2);line-height:1.72}
+
+/* Expand detail */
+.card-expand{padding:18px 22px 22px;display:none;border-top:1px solid var(--b1)}
+.strat-card.expanded .card-expand{display:block}
+.expand-section{margin-bottom:18px}
+.expand-section:last-child{margin-bottom:0}
+.es-title{font-size:13px;font-weight:700;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.es-title::after{content:'';flex:1;height:1px;background:var(--b1)}
+.when-chips{display:flex;flex-wrap:wrap;gap:7px}
+.wc{font-size:15px;padding:6px 14px;border-radius:6px;background:var(--bs);color:var(--blue);border:1px solid rgba(79,163,255,.2)}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pc-box{background:var(--bg);border-radius:8px;padding:14px 16px;border:1px solid var(--b1)}
+.pc-title{font-size:13px;font-weight:700;margin-bottom:9px;text-transform:uppercase;letter-spacing:.06em}
+.pc-title.pro{color:var(--green)}.pc-title.con{color:var(--red)}
+.pc-item{font-size:15px;color:var(--t2);padding:3px 0;display:flex;gap:7px;align-items:flex-start}
+.pc-dot{flex-shrink:0;margin-top:8px;width:5px;height:5px;border-radius:50%}
+.pc-dot.pro{background:var(--green)}.pc-dot.con{background:var(--red)}
+.formula-box{background:var(--bg);border:1px solid var(--b1);border-radius:8px;padding:14px 18px;font-family:monospace;font-size:15px;color:var(--t1);line-height:2;white-space:pre-wrap}
+.formula-box span{color:var(--blue)}
+.expand-toggle{
+  text-align:center;padding:13px;font-size:15px;font-weight:600;
+  color:var(--blue);cursor:pointer;border-top:1px solid var(--b1);
+  transition:background .15s;
+}
+.expand-toggle:hover{background:var(--bs)}
+.strat-card.expanded .expand-toggle-text::after{content:'收起 ▲'}
+.strat-card:not(.expanded) .expand-toggle-text::after{content:'展开详情 ▼'}
+
+/* ── Quick reference table ── */
+.ref-table{width:100%;border-collapse:collapse;font-size:16px;margin-bottom:40px}
+.ref-table th{background:var(--card);padding:13px 18px;text-align:left;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);border-bottom:1px solid var(--b2);font-weight:600}
+.ref-table td{padding:13px 18px;border-bottom:1px solid var(--b1);color:var(--t2);vertical-align:middle}
+.ref-table tr:hover td{background:var(--card)}
+.ref-table td:first-child{color:var(--t1);font-weight:500}
+
+/* Greeks box */
+.greeks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:40px}
+.greek-card{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:22px}
+.greek-sym{font-size:36px;font-weight:800;margin-bottom:5px}
+.greek-name{font-size:17px;font-weight:600;margin-bottom:9px}
+.greek-desc{font-size:15px;color:var(--t2);line-height:1.65}
+.greek-example{font-size:14px;color:var(--t3);margin-top:11px;padding-top:11px;border-top:1px solid var(--b1);font-style:italic;line-height:1.6}
+
+/* Scroll to top */
+.scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:var(--blue);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(79,163,255,.4);transition:all .2s}
+.scroll-top.visible{display:flex}
+.scroll-top:hover{transform:scale(1.1)}
+
+@media(max-width:768px){
+  header{padding:0 16px}
+  .cat-nav{padding:0 16px}
+  .hero{padding:28px 16px 24px}
+  .content{padding:20px 16px}
+  .hero-title{font-size:26px}
+  .hero-sub{font-size:16px}
+  .strat-grid{grid-template-columns:1fr}
+  .pros-cons{grid-template-columns:1fr}
+  .greeks-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-btn" href="options-pnl.html">← 返回工具</a>
+  <div>
+    <div class="h-title">期权策略百科</div>
+  </div>
+  <div class="hsp"></div>
+  <div class="strat-count" id="stratCount">共 16 个策略</div>
+</header>
+
+<nav class="cat-nav" id="catNav">
+  <div class="cat-btn active" onclick="scrollToSection('basics',this)"><span class="cat-dot" style="background:#4fa3ff"></span>基础四腿</div>
+  <div class="cat-btn" onclick="scrollToSection('spreads',this)"><span class="cat-dot" style="background:#27c96f"></span>价差策略</div>
+  <div class="cat-btn" onclick="scrollToSection('vol',this)"><span class="cat-dot" style="background:#9d7bea"></span>波动率策略</div>
+  <div class="cat-btn" onclick="scrollToSection('advanced',this)"><span class="cat-dot" style="background:#f0a030"></span>进阶策略</div>
+  <div class="cat-btn" onclick="scrollToSection('greeks',this)"><span class="cat-dot" style="background:#26c0b0"></span>Greeks 速查</div>
+  <div class="cat-btn" onclick="scrollToSection('reference',this)"><span class="cat-dot" style="background:#f07840"></span>对比速查表</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-title">期权策略 <span>完全手册</span></div>
+  <div class="hero-sub">从基础四腿到复杂组合，涵盖 16 种主流策略。每个策略包含损益结构、使用场景、优缺点和关键公式。</div>
+  <div class="hero-tags">
+    <span class="htag" style="color:var(--green);border-color:rgba(39,201,111,.3)" onclick="filterCards('bull')">📈 看涨策略</span>
+    <span class="htag" style="color:var(--red);border-color:rgba(240,82,79,.3)" onclick="filterCards('bear')">📉 看跌策略</span>
+    <span class="htag" style="color:var(--teal);border-color:rgba(38,192,176,.3)" onclick="filterCards('neutral')">↔ 中性策略</span>
+    <span class="htag" style="color:var(--purple);border-color:rgba(157,123,234,.3)" onclick="filterCards('vol')">⚡ 波动率策略</span>
+    <span class="htag" style="color:var(--t2);border-color:var(--b2)" onclick="filterCards('all')">全部显示</span>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ── 基础四腿 ── -->
+<div class="cat-section" id="basics">
+  <div class="cat-header">
+    <div class="cat-icon">🧱</div>
+    <div>
+      <div class="cat-name">基础四腿策略</div>
+      <div class="cat-desc">期权世界的四块基石，所有复杂策略都由这四种基本操作组合而成</div>
+    </div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="strat-grid" id="grid-basics"></div>
+</div>
+
+<!-- ── 价差策略 ── -->
+<div class="cat-section" id="spreads">
+  <div class="cat-header">
+    <div class="cat-icon">📊</div>
+    <div>
+      <div class="cat-name">价差策略（Spread）</div>
+      <div class="cat-desc">同时买卖同类期权，锁定最大盈亏，降低资金占用</div>
+    </div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="strat-grid" id="grid-spreads"></div>
+</div>
+
+<!-- ── 波动率 ── -->
+<div class="cat-section" id="vol">
+  <div class="cat-header">
+    <div class="cat-icon">⚡</div>
+    <div>
+      <div class="cat-name">波动率策略</div>
+      <div class="cat-desc">不赌方向，只赌波动幅度的大小</div>
+    </div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="strat-grid" id="grid-vol"></div>
+</div>
+
+<!-- ── 进阶 ── -->
+<div class="cat-section" id="advanced">
+  <div class="cat-header">
+    <div class="cat-icon">🎯</div>
+    <div>
+      <div class="cat-name">进阶组合策略</div>
+      <div class="cat-desc">更复杂的多腿组合，精确匹配特定市场观点</div>
+    </div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="strat-grid" id="grid-advanced"></div>
+</div>
+
+<!-- ── Greeks ── -->
+<div class="cat-section" id="greeks">
+  <div class="cat-header">
+    <div class="cat-icon">🔬</div>
+    <div>
+      <div class="cat-name">Greeks 速查</div>
+      <div class="cat-desc">理解期权定价的五个关键敏感度指标</div>
+    </div>
+    <div class="cat-line"></div>
+  </div>
+  <div class="greeks-grid" id="greeksGrid"></div>
+</div>
+
+<!-- ── Reference table ── -->
+<div class="cat-section" id="reference">
+  <div class="cat-header">
+    <div class="cat-icon">📋</div>
+    <div>
+      <div class="cat-name">策略对比速查表</div>
+      <div class="cat-desc">一表看懂所有策略的关键参数</div>
+    </div>
+    <div class="cat-line"></div>
+  </div>
+  <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--b1)">
+  <table class="ref-table" id="refTable">
+    <thead>
+      <tr>
+        <th>策略名称</th>
+        <th>方向观点</th>
+        <th>最大盈利</th>
+        <th>最大亏损</th>
+        <th>腿数</th>
+        <th>初始现金流</th>
+        <th>难度</th>
+      </tr>
+    </thead>
+    <tbody id="refBody"></tbody>
+  </table>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ── Strategy data ─────────────────────────────────────────────────
+const STRATS = [
+  // ── Basics ──
+  {
+    id:'long_call', cat:'basics', dir:'bull',
+    name:'买入认购 Long Call', en:'Long Call',
+    badges:['bull','1腿'],
+    color:'#27c96f',
+    spark:'M0,34 L22,34 C32,34 38,20 50,2',
+    maxProfit:'无限', maxLoss:'权利金', be:'行权价+权利金', cashflow:'支出（净买方）',
+    difficulty:'★☆☆',
+    desc:'最基础的看涨策略。支付权利金获得以行权价买入标的的权利。BTC 涨得越多赚得越多，理论收益无限。最大亏损为已付权利金。',
+    when:['强烈看涨','预期大幅上涨','不想承担下行风险','资金有限做杠杆'],
+    pros:['收益无限','最大亏损固定','资金效率高（杠杆效应）','无需保证金'],
+    cons:['时间价值每天消耗（Theta 损耗）','需要价格较大涨幅才能盈利','权利金可能全部损失','IV 下降会亏损（即使方向对）'],
+    formula:'到期收益 = max(S-K, 0) - Premium\n盈亏平衡 = K + Premium'
+  },
+  {
+    id:'long_put', cat:'basics', dir:'bear',
+    name:'买入认沽 Long Put', en:'Long Put',
+    badges:['bear','1腿'],
+    color:'#f0524f',
+    spark:'M0,2 C12,20 18,34 28,34 L50,34',
+    maxProfit:'行权价-权利金（BTC归零）', maxLoss:'权利金', be:'行权价-权利金', cashflow:'支出（净买方）',
+    difficulty:'★☆☆',
+    desc:'最基础的看跌策略。支付权利金获得以行权价卖出标的的权利。BTC 跌得越多赚得越多，最大亏损为已付权利金。常用于现货持仓的对冲保险。',
+    when:['看跌行情','现货仓位对冲','预期市场崩盘','波动率上升时'],
+    pros:['亏损上限固定（权利金）','看跌行情收益可观','可作为现货保险','无需保证金'],
+    cons:['Theta 时间损耗','需要较大跌幅盈利','权利金全损风险','最大收益受限（BTC 不能低于0）'],
+    formula:'到期收益 = max(K-S, 0) - Premium\n盈亏平衡 = K - Premium'
+  },
+  {
+    id:'short_call', cat:'basics', dir:'neutral',
+    name:'卖出认购 Short Call', en:'Short Call',
+    badges:['neutral','1腿','裸卖'],
+    color:'#26c0b0',
+    spark:'M0,2 L26,2 C38,2 44,18 50,34',
+    maxProfit:'权利金', maxLoss:'无限', be:'行权价+权利金', cashflow:'收入（净卖方）',
+    difficulty:'★★☆',
+    desc:'收取权利金，承担 BTC 大涨的无限亏损风险。适合判断短期不会大幅上涨的震荡或下跌行情。需要充足的保证金，是高风险策略。',
+    when:['判断不会大涨','持有标的（备兑）','收取时间价值','IV高时卖出'],
+    pros:['立即收取权利金','时间每天帮助盈利','胜率较高（不需要涨跌）','IV下降时获益'],
+    cons:['亏损无限（裸卖）','需大量保证金','BTC突破时亏损严重','需严格止损纪律'],
+    formula:'到期收益 = Premium - max(S-K, 0)\n盈亏平衡 = K + Premium'
+  },
+  {
+    id:'short_put', cat:'basics', dir:'neutral',
+    name:'卖出认沽 Short Put', en:'Short Put',
+    badges:['neutral','1腿','裸卖'],
+    color:'#26c0b0',
+    spark:'M0,34 C6,18 12,2 26,2 L50,2',
+    maxProfit:'权利金', maxLoss:'行权价-权利金（近似）', be:'行权价-权利金', cashflow:'收入（净卖方）',
+    difficulty:'★★☆',
+    desc:'收取权利金，承担 BTC 大跌的亏损风险。适合愿意在某价格接仓的多头观点。被行权等于在行权价被迫买入标的，需准备足够现金。',
+    when:['愿意低价接仓','判断不会大跌','看涨但不激进','收取时间价值'],
+    pros:['收取权利金','被行权等于低价买入','胜率高','可反复滚动操作'],
+    cons:['BTC大跌亏损严重','需大量保证金或现金','不适合无现货支撑','跌破行权价后持续亏损'],
+    formula:'到期收益 = Premium - max(K-S, 0)\n盈亏平衡 = K - Premium'
+  },
+
+  // ── Spreads ──
+  {
+    id:'bull_call', cat:'spreads', dir:'bull',
+    name:'牛市认购价差 Bull Call Spread', en:'Bull Call Spread',
+    badges:['bull','2腿'],
+    color:'#27c96f',
+    spark:'M0,34 L14,34 L26,10 L38,10 L50,10',
+    maxProfit:'行权价差-净权利金', maxLoss:'净权利金', be:'低行权价+净权利金', cashflow:'支出（小）',
+    difficulty:'★★☆',
+    desc:'买入低行权价 Call，同时卖出高行权价 Call。减少权利金支出，换取收益上限。适合温和看涨，比单腿 Long Call 成本效率更高。',
+    when:['温和看涨','目标价位明确','想降低权利金成本','预算有限'],
+    pros:['成本低于单腿 Long Call','最大亏损固定','不需保证金','比裸买 Call 更高胜率'],
+    cons:['收益被限制（不能超过两行权价之差）','需要精确判断目标价','两腿手续费','若BTC大涨会错过超额收益'],
+    formula:'最大盈利 = (K₂-K₁) - Net Premium\n最大亏损 = Net Premium\n盈亏平衡 = K₁ + Net Premium'
+  },
+  {
+    id:'bear_call', cat:'spreads', dir:'bear',
+    name:'熊市认购价差 Bear Call Spread', en:'Bear Call Spread',
+    badges:['bear','2腿','★推荐'],
+    color:'#f0524f',
+    spark:'M0,6 L14,6 L26,28 L38,34 L50,34',
+    maxProfit:'净权利金', maxLoss:'行权价差-净权利金', be:'低行权价+净权利金', cashflow:'收入',
+    difficulty:'★★☆',
+    desc:'卖出低行权价 Call（主腿），买入高行权价 Call（保险腿）。收取净权利金为最大盈利，同时限制最大亏损。是 Short Call 的风险可控版本，最常用的卖方策略之一。',
+    when:['温和看跌或震荡','想卖 Call 但控制风险','IV 高时卖出','不想裸卖'],
+    pros:['最大亏损已知','无需大量保证金','比裸卖 Call 安全','收取权利金正向现金流'],
+    cons:['盈利有上限（净权利金）','行权价差决定风险回报','需要精选行权价','两腿手续费'],
+    formula:'最大盈利 = Net Premium\n最大亏损 = (K₂-K₁) - Net Premium\n盈亏平衡 = K₁ + Net Premium'
+  },
+  {
+    id:'bull_put', cat:'spreads', dir:'bull',
+    name:'牛市认沽价差 Bull Put Spread', en:'Bull Put Spread',
+    badges:['bull','2腿'],
+    color:'#27c96f',
+    spark:'M0,6 L14,6 L26,28 L38,34 L50,34',
+    maxProfit:'净权利金', maxLoss:'行权价差-净权利金', be:'高行权价-净权利金', cashflow:'收入',
+    difficulty:'★★☆',
+    desc:'卖出高行权价 Put，买入低行权价 Put。收取净权利金为最大盈利。BTC 在高行权价以上时全额盈利，跌穿低行权价时最大亏损。适合温和看涨或看平行情。',
+    when:['温和看涨','预期BTC不会大跌','想收取权利金','回调入场时机'],
+    pros:['正向现金流','最大亏损已知','BTC不变也能盈利','无需大量保证金'],
+    cons:['盈利有上限','BTC大跌亏损较大','需判断支撑位','两腿手续费'],
+    formula:'最大盈利 = Net Premium\n最大亏损 = (K₁-K₂) - Net Premium\n盈亏平衡 = K₁ - Net Premium'
+  },
+  {
+    id:'bear_put', cat:'spreads', dir:'bear',
+    name:'熊市认沽价差 Bear Put Spread', en:'Bear Put Spread',
+    badges:['bear','2腿'],
+    color:'#f0524f',
+    spark:'M0,34 L12,34 L26,10 L40,10 L50,10',
+    maxProfit:'行权价差-净权利金', maxLoss:'净权利金', be:'高行权价-净权利金', cashflow:'支出（小）',
+    difficulty:'★★☆',
+    desc:'买入高行权价 Put，卖出低行权价 Put 降低成本。适合温和看跌，比单腿 Long Put 成本低但收益受限。',
+    when:['温和看跌','目标下跌位置明确','降低Long Put成本','预算有限的看跌'],
+    pros:['成本低于单腿 Long Put','最大亏损固定','不需保证金','比裸买 Put 更高胜率'],
+    cons:['收益被限制','需判断目标跌幅','BTC大崩会错过超额收益','两腿手续费'],
+    formula:'最大盈利 = (K₁-K₂) - Net Premium\n最大亏损 = Net Premium\n盈亏平衡 = K₁ - Net Premium'
+  },
+
+  // ── Volatility ──
+  {
+    id:'straddle', cat:'vol', dir:'vol',
+    name:'等行权双买 Long Straddle', en:'Long Straddle',
+    badges:['vol','2腿'],
+    color:'#9d7bea',
+    spark:'M0,2 L20,24 L25,34 L30,24 L50,2',
+    maxProfit:'无限（双向）', maxLoss:'两份权利金之和', be:'行权价±总权利金', cashflow:'支出（大）',
+    difficulty:'★★☆',
+    desc:'同时买入相同行权价的 Call 和 Put。无论 BTC 大涨还是大跌都能盈利，只要波动幅度超过两份权利金之和。价格完全不动时亏损最大。本质是做多波动率（Long Vega）。',
+    when:['大事件前（财报、监管消息）','极度不确定方向','预期 IV 将上升','历史波动率低于 IV 时'],
+    pros:['方向中性（涨跌都可盈利）','理论收益无限','大行情时回报惊人','不需预测方向'],
+    cons:['权利金成本最高（两份）','需要很大波动才盈利','时间价值双重损耗','IV 下降时亏损严重'],
+    formula:'上行盈亏平衡 = K + (C + P)\n下行盈亏平衡 = K - (C + P)\n最大亏损 = C + P（BTC = K 时）'
+  },
+  {
+    id:'strangle', cat:'vol', dir:'vol',
+    name:'宽跨式双买 Long Strangle', en:'Long Strangle',
+    badges:['vol','2腿'],
+    color:'#9d7bea',
+    spark:'M0,2 L14,22 L20,34 L30,34 L36,22 L50,2',
+    maxProfit:'无限（双向）', maxLoss:'两份权利金之和', be:'Call行权价+总权利金 / Put行权价-总权利金', cashflow:'支出（中）',
+    difficulty:'★★☆',
+    desc:'买入虚值 Call 和虚值 Put（行权价不同）。成本比 Straddle 低，但需要更大幅度的波动才能盈利。适合预期极端行情但想降低成本。',
+    when:['预期极端行情','想降低Straddle成本','大事件前布局','IV相对较低时'],
+    pros:['成本低于Straddle','双向盈利','极端行情回报很高','权利金适中'],
+    cons:['需更大波动才盈利','盈亏平衡点分散','时间价值双重损耗','IV下降双重受损'],
+    formula:'需要涨幅 = Call行权价 + 总权利金 - 现价\n需要跌幅 = 现价 - Put行权价 + 总权利金'
+  },
+  {
+    id:'short_straddle', cat:'vol', dir:'neutral',
+    name:'等行权双卖 Short Straddle', en:'Short Straddle',
+    badges:['neutral','2腿','高风险'],
+    color:'#26c0b0',
+    spark:'M0,34 L20,14 L25,4 L30,14 L50,34',
+    maxProfit:'两份权利金之和', maxLoss:'无限（双向）', be:'行权价±总权利金', cashflow:'收入（大）',
+    difficulty:'★★★',
+    desc:'同时卖出相同行权价的 Call 和 Put。BTC 价格完全不动时盈利最大，大幅波动时双向亏损无限。是高风险卖方策略，需要极严格的风险管理。',
+    when:['预期极度低波动','事件过后 IV 将下降','专业做市商策略','有完善对冲机制时'],
+    pros:['收取大量权利金','低波动时盈利','时间价值双向获益','IV下降双重获益'],
+    cons:['双向亏损无限','需巨大保证金','风险极高','任何大行情都是灾难'],
+    formula:'最大盈利 = C + P（BTC = K 时）\n最大亏损 = 无限\n盈亏平衡 = K ± (C + P)'
+  },
+  {
+    id:'short_strangle', cat:'vol', dir:'neutral',
+    name:'宽跨式双卖 Short Strangle', en:'Short Strangle',
+    badges:['neutral','2腿','高风险'],
+    color:'#26c0b0',
+    spark:'M0,34 L14,14 L20,4 L30,4 L36,14 L50,34',
+    maxProfit:'两份权利金之和', maxLoss:'无限（双向）', be:'区间外双向', cashflow:'收入（中）',
+    difficulty:'★★★',
+    desc:'同时卖出虚值 Call 和虚值 Put。比 Short Straddle 有更宽的盈利区间，风险略小但仍有无限亏损风险。是许多专业卖方常用策略。',
+    when:['预期区间震荡','IV高时卖出波动率','BTC价格稳定期','配合Delta对冲使用'],
+    pros:['盈利区间比Short Straddle宽','收取权利金','区间内盈利','IV下降获益'],
+    cons:['双向亏损无限','需大量保证金','BTC突破区间损失严重','需主动管理'],
+    formula:'盈利区间 = Put行权价 ~ Call行权价\n盈亏平衡 = Call行权价 + 总权利金 / Put行权价 - 总权利金'
+  },
+
+  // ── Advanced ──
+  {
+    id:'iron_condor', cat:'advanced', dir:'neutral',
+    name:'铁鹰策略 Iron Condor', en:'Iron Condor',
+    badges:['neutral','4腿'],
+    color:'#f0a030',
+    spark:'M0,34 L8,34 L16,8 L22,8 L28,8 L34,8 L42,34 L50,34',
+    maxProfit:'净权利金', maxLoss:'行权价差-净权利金', be:'两侧各一个', cashflow:'收入',
+    difficulty:'★★★',
+    desc:'同时建立 Bear Call Spread 和 Bull Put Spread。BTC 在两个内部行权价之间横盘时盈利最大，双向亏损都有限制。是最受专业人士欢迎的中性策略，风险回报明确。',
+    when:['预期区间震荡','IV高，预期下降','月末/季末行情平淡','不想承担无限风险的卖方'],
+    pros:['最大亏损已知','四腿保护','收取净权利金','比Short Strangle更安全'],
+    cons:['4腿手续费','盈利区间有限','需要精确判断区间','管理复杂度较高'],
+    formula:'最大盈利 = Net Premium\n最大亏损 = 行权价差 - Net Premium\n盈亏平衡（上）= Call低行权 + Net Premium\n盈亏平衡（下）= Put高行权 - Net Premium'
+  },
+  {
+    id:'butterfly', cat:'advanced', dir:'neutral',
+    name:'蝴蝶价差 Butterfly Spread', en:'Butterfly Spread',
+    badges:['neutral','3腿'],
+    color:'#f0a030',
+    spark:'M0,34 L16,34 L25,4 L34,34 L50,34',
+    maxProfit:'行权价差-净权利金', maxLoss:'净权利金（很小）', be:'低行权价+净权利金 / 高行权价-净权利金', cashflow:'支出（极小）',
+    difficulty:'★★★',
+    desc:'买入低和高行权价 Call，卖出两份中间行权价 Call。成本极低，到期价格精确落在中间行权价时收益最大。适合对目标价位有强烈判断且追求成本效率的策略。',
+    when:['对目标价格有强烈判断','追求极高成本效率','震荡区间中部布局','月末时间点策略'],
+    pros:['净成本极低','盈亏比可达数十倍','最大亏损为净权利金','价格精准时回报极高'],
+    cons:['需要非常精确的判断','价格偏移略大就亏损','利润窗口很窄','3腿交易复杂'],
+    formula:'最大盈利 = (K₂-K₁) - Net Premium（在 K₂ 处）\n最大亏损 = Net Premium\n盈亏平衡 = K₁ + Net Premium / K₃ - Net Premium'
+  },
+  {
+    id:'covered_call', cat:'advanced', dir:'neutral',
+    name:'备兑认购 Covered Call', en:'Covered Call',
+    badges:['neutral','现货+1腿'],
+    color:'#f07840',
+    spark:'M0,20 L20,20 L32,20 L38,8 L50,8',
+    maxProfit:'(K-入场价)+权利金', maxLoss:'入场价-权利金（近似）', be:'入场价-权利金', cashflow:'收入',
+    difficulty:'★☆☆',
+    desc:'持有 BTC 现货的同时，卖出虚值 Call 收取权利金。相当于以更高价格卖出持仓。BTC 涨超行权价则被迫以该价格卖出，涨幅封顶；下跌时权利金提供部分保护。',
+    when:['长期持有现货','愿意在某价格卖出','增强现货收益','市场震荡期'],
+    pros:['现货增收（权利金）','下行略有保护','被行权相当于高位卖出','操作简单'],
+    cons:['BTC大涨时封顶收益','仍有下行风险','需持有大量标的','被行权后需重建仓位'],
+    formula:'备兑Call净收益 = 权利金 + max(min(S,K) - 入场价, -入场价)\n盈亏平衡 = 入场价 - 权利金'
+  },
+  {
+    id:'protective_put', cat:'advanced', dir:'bull',
+    name:'保护性认沽 Protective Put', en:'Protective Put',
+    badges:['bull','现货+1腿'],
+    color:'#4fa3ff',
+    spark:'M0,14 C10,14 14,34 22,34 L50,34',
+    maxProfit:'无限（减去权利金成本）', maxLoss:'入场价-行权价+权利金', be:'入场价+权利金', cashflow:'支出',
+    difficulty:'★☆☆',
+    desc:'持有 BTC 现货的同时，买入 Put 期权作为保险。BTC 下跌时 Put 盈利对冲现货亏损，最大亏损被锁定。相当于给持仓买了一份"保险"，适合长期持有者对冲极端下行风险。',
+    when:['持有现货担心下跌','大事件前对冲','长期持仓短期保险','熊市风险管理'],
+    pros:['现货下行风险有限','可继续享受上涨收益','心理上更安心持仓','适合大仓位保护'],
+    cons:['权利金成本侵蚀收益','需要反复续期','若BTC不跌则白付保费','时间价值损耗'],
+    formula:'最大亏损 = 入场价 - K + Premium\n盈亏平衡 = 入场价 + Premium\n收益 = BTC收益 + max(K-S,0) - Premium'
+  }
+];
+
+// ── Greeks data ───────────────────────────────────────────────────
+const GREEKS = [
+  {sym:'Δ', name:'Delta', color:'#4fa3ff',
+    desc:'期权价格对标的价格变动的敏感度。Call 的 Delta 为 0~1，Put 为 -1~0。',
+    example:'Delta=0.5：BTC 涨 $100，期权涨约 $50。近似等于期权"在价内"的概率。'},
+  {sym:'Γ', name:'Gamma', color:'#27c96f',
+    desc:'Delta 变化速度，即 Delta 对标的价格的二阶导数。临近到期和平值期权时 Gamma 最大。',
+    example:'Gamma 高的期权方向变化更剧烈，买方喜欢高 Gamma，卖方怕高 Gamma。'},
+  {sym:'Θ', name:'Theta', color:'#f0524f',
+    desc:'时间价值每天消耗速度。通常为负（对买方不利），代表期权每天"老化"多少价值。',
+    example:'Theta=-$10：每天到期前损失 $10 时间价值，周末也计算。越临近到期损耗越快。'},
+  {sym:'ν', name:'Vega', color:'#9d7bea',
+    desc:'期权价格对隐含波动率（IV）变动的敏感度。IV 每变动 1%，期权价格变动的金额。',
+    example:'Vega=50：IV 从 50% 涨到 51%，期权价格涨 $50。做多波动率 = 正 Vega。'},
+  {sym:'ρ', name:'Rho', color:'#f0a030',
+    desc:'期权价格对无风险利率变动的敏感度。通常影响较小，长期期权受利率影响更大。',
+    example:'Rho=5：利率上升 1%，Call 期权价格约涨 $5，Put 期权价格约跌 $5。'}
+];
+
+// ── Render functions ──────────────────────────────────────────────
+function makeSpark(path, color) {
+  return `<svg width="80" height="50" viewBox="0 0 50 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="0" y1="34" x2="50" y2="34" stroke="#1e2a3a" stroke-width="1"/>
+    <line x1="0" y1="2" x2="50" y2="2" stroke="#1e2a3a" stroke-width="0.5" stroke-dasharray="3,3"/>
+    <path d="${path}" stroke="${color}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+const DIR_COLORS = {bull:'badge-bull',bear:'badge-bear',neutral:'badge-neutral',vol:'badge-vol'};
+const LEG_MAP = {'1腿':'badge-legs','2腿':'badge-legs','3腿':'badge-legs','4腿':'badge-legs','现货+1腿':'badge-legs'};
+const RISK_MAP = {'裸卖':'badge-risk','高风险':'badge-risk','★推荐':'badge-risk'};
+
+function makeBadge(text) {
+  let cls = DIR_COLORS[text] || LEG_MAP[text] || RISK_MAP[text] || 'badge-legs';
+  if(text === '★推荐') cls = 'badge-risk';
+  if(text === '裸卖' || text === '高风险') cls = 'badge-risk';
+  return `<span class="badge ${cls}">${text}</span>`;
+}
+
+function makeCard(s) {
+  const div = document.createElement('div');
+  div.className = 'strat-card';
+  div.dataset.dir = s.dir;
+  div.dataset.cat = s.cat;
+
+  const prosList = s.pros.map(p=>`<div class="pc-item"><div class="pc-dot pro"></div><div>${p}</div></div>`).join('');
+  const consList = s.cons.map(c=>`<div class="pc-item"><div class="pc-dot con"></div><div>${c}</div></div>`).join('');
+  const whenChips = s.when.map(w=>`<span class="wc">${w}</span>`).join('');
+
+  div.innerHTML = `
+    <div class="card-top">
+      <div class="card-spark">${makeSpark(s.spark, s.color)}</div>
+      <div class="card-meta">
+        <div class="card-name">${s.name}</div>
+        <div class="card-en">${s.en}</div>
+        <div class="card-badges">${s.badges.map(makeBadge).join('')}</div>
+      </div>
+    </div>
+    <div class="card-divider"></div>
+    <div class="card-stats">
+      <div class="cs"><span class="cs-lbl">最大盈利</span><span class="cs-val g">${s.maxProfit}</span></div>
+      <div class="cs"><span class="cs-lbl">最大亏损</span><span class="cs-val r">${s.maxLoss}</span></div>
+      <div class="cs"><span class="cs-lbl">难度</span><span class="cs-val b">${s.difficulty}</span></div>
+    </div>
+    <div class="card-desc">${s.desc}</div>
+    <div class="card-expand">
+      <div class="expand-section">
+        <div class="es-title">适用场景</div>
+        <div class="when-chips">${whenChips}</div>
+      </div>
+      <div class="expand-section">
+        <div class="es-title">优缺点</div>
+        <div class="pros-cons">
+          <div class="pc-box"><div class="pc-title pro">✓ 优势</div>${prosList}</div>
+          <div class="pc-box"><div class="pc-title con">✗ 劣势</div>${consList}</div>
+        </div>
+      </div>
+      <div class="expand-section">
+        <div class="es-title">关键公式</div>
+        <div class="formula-box">${s.formula.replace(/([KSC][\₁₂₃]?|K[123])/g,'<span>$&</span>')}</div>
+      </div>
+    </div>
+    <div class="expand-toggle" onclick="toggleCard(this.parentElement)">
+      <span class="expand-toggle-text"></span>
+    </div>`;
+  return div;
+}
+
+function toggleCard(card) {
+  card.classList.toggle('expanded');
+}
+
+function renderAll() {
+  const cats = {basics:'grid-basics', spreads:'grid-spreads', vol:'grid-vol', advanced:'grid-advanced'};
+  Object.entries(cats).forEach(([cat, gridId]) => {
+    const grid = document.getElementById(gridId);
+    STRATS.filter(s=>s.cat===cat).forEach(s=>{
+      grid.appendChild(makeCard(s));
+    });
+  });
+
+  // Greeks
+  const gg = document.getElementById('greeksGrid');
+  GREEKS.forEach(g => {
+    const d = document.createElement('div');
+    d.className = 'greek-card';
+    d.innerHTML = `<div class="greek-sym" style="color:${g.color}">${g.sym}</div>
+      <div class="greek-name">${g.name}</div>
+      <div class="greek-desc">${g.desc}</div>
+      <div class="greek-example">例：${g.example}</div>`;
+    gg.appendChild(d);
+  });
+
+  // Reference table
+  const tbody = document.getElementById('refBody');
+  const dirLabels = {bull:'📈 看涨',bear:'📉 看跌',neutral:'↔ 中性',vol:'⚡ 波动率'};
+  STRATS.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.dataset.dir = s.dir;
+    tr.innerHTML = `<td>${s.name}</td>
+      <td>${dirLabels[s.dir]||s.dir}</td>
+      <td style="color:var(--green)">${s.maxProfit}</td>
+      <td style="color:var(--red)">${s.maxLoss}</td>
+      <td style="color:var(--blue)">${s.badges.find(b=>b.includes('腿'))||'—'}</td>
+      <td style="color:${s.cashflow.includes('收入')?'var(--green)':'var(--red)'}">${s.cashflow}</td>
+      <td>${s.difficulty}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterCards(dir) {
+  document.querySelectorAll('.strat-card').forEach(c => {
+    c.style.display = (dir==='all'||c.dataset.dir===dir) ? '' : 'none';
+  });
+  document.querySelectorAll('#refBody tr').forEach(r => {
+    r.style.display = (dir==='all'||r.dataset.dir===dir) ? '' : 'none';
+  });
+}
+
+function scrollToSection(id, btn) {
+  document.getElementById(id).scrollIntoView({behavior:'smooth'});
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+}
+
+// Scroll spy
+window.addEventListener('scroll', () => {
+  const st = document.getElementById('scrollTop');
+  st.classList.toggle('visible', window.scrollY > 400);
+  // Update active nav
+  const sections = ['basics','spreads','vol','advanced','greeks','reference'];
+  for(let i=sections.length-1;i>=0;i--){
+    const el = document.getElementById(sections[i]);
+    if(el && el.getBoundingClientRect().top < 160) {
+      document.querySelectorAll('.cat-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+      break;
+    }
+  }
+});
+
+renderAll();
+document.getElementById('stratCount').textContent = `共 ${STRATS.length} 个策略`;
+</script>
+</body>
+</html>

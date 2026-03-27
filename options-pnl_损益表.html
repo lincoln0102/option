@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>期权损益分析</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1318;--panel:#161c24;--card:#1c232f;--card-h:#222a38;
+  --b1:#252d3a;--b2:#2e3849;
+  --t1:#dde4ef;--t2:#8a97aa;--t3:#4a5568;
+  --green:#2ecc71;--gs:rgba(46,204,113,.13);
+  --red:#ee5555;--rs:rgba(238,85,85,.13);
+  --blue:#4a9eff;--bs2:rgba(74,158,255,.12);
+  --yellow:#f5a623;--ys:rgba(245,166,35,.13);
+  --purple:#a78bfa;--ps:rgba(167,139,250,.12);
+  --teal:#2dd4bf;--ts2:rgba(45,212,191,.12);
+  --orange:#ff8c42;--os:rgba(255,140,66,.12);
+}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,'SF Pro Display','Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+
+/* ── Disclaimer ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px}
+.disc{background:var(--panel);border:1px solid var(--b2);border-radius:14px;max-width:440px;width:100%;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.disc-icon{font-size:30px;margin-bottom:10px}
+.disc-title{font-size:17px;font-weight:700;margin-bottom:10px}
+.disc-body{font-size:12px;color:var(--t2);line-height:1.75;margin-bottom:20px}
+.disc-body strong{color:var(--t1)}
+.disc-btn{width:100%;padding:12px;background:var(--blue);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.disc-btn:hover{opacity:.88}
+.disc-note{font-size:10px;color:var(--t3);text-align:center;margin-top:9px}
+
+/* ── Header ── */
+header{background:var(--panel);border-bottom:1px solid var(--b1);padding:0 16px;height:50px;display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:10}
+.brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.brand-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.brand-name{font-size:14px;font-weight:700}
+.hspacer{flex:1}
+.live-pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--b2);border-radius:8px;padding:5px 10px;cursor:pointer;transition:border-color .15s}
+.live-pill:hover{border-color:var(--b2)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .3s}
+.live-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green)}
+.live-dot.loading{background:var(--yellow);animation:pulse 1s infinite}
+.live-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.live-label{font-size:10px;color:var(--t3);white-space:nowrap}
+.live-price{font-size:13px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums}
+.menu-btn{display:none;background:var(--card);border:1px solid var(--b2);border-radius:7px;padding:5px 10px;color:var(--t2);font-size:12px;cursor:pointer;white-space:nowrap}
+
+/* ── Layout ── */
+.app{display:flex;flex:1;min-height:0;overflow:hidden;position:relative}
+
+/* ── Sidebar ── */
+.sidebar{width:429px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;transition:transform .25s;z-index:5}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4}
+
+/* Mode tabs */
+.mode-bar{display:flex;border-bottom:1px solid var(--b1);flex-shrink:0}
+.mode-tab{flex:1;padding:10px 8px;text-align:center;font-size:11px;font-weight:600;color:var(--t3);border-bottom:2px solid transparent;cursor:pointer;transition:all .18s;letter-spacing:.02em}
+.mode-tab:hover{color:var(--t2)}
+.mode-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.mode-tab .tab-icon{display:block;font-size:14px;margin-bottom:2px}
+
+/* Panel content */
+.mode-panel{flex:1;overflow-y:auto;min-height:0}
+.mode-panel.hidden{display:none}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+/* ── Scenario Panel ── */
+.scene-intro{padding:14px 14px 0;font-size:11px;color:var(--t2);line-height:1.6}
+.scene-list{padding:10px 12px}
+.scene-card{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:11px 13px;margin-bottom:6px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.scene-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;transition:opacity .18s;opacity:0}
+.scene-card:hover{border-color:var(--b2);background:var(--card-h)}
+.scene-card.active{border-color:var(--blue);background:var(--bs2)}
+.scene-card.active::before{opacity:1;background:var(--blue)}
+.scene-emoji{font-size:18px;margin-bottom:6px;display:block}
+.scene-q{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:3px;line-height:1.4}
+.scene-card.active .scene-q{color:var(--blue)}
+.scene-sub{font-size:10px;color:var(--t3);line-height:1.5}
+
+/* Scenario result */
+.scene-result{background:var(--bg);border-top:1px solid var(--b1);flex-shrink:0;max-height:55%;overflow-y:auto;display:none}
+.scene-result.visible{display:block}
+.sr-header{padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--b1);position:sticky;top:0;z-index:1}
+.sr-why{font-size:11px;color:var(--t2);line-height:1.6;padding:10px 14px;border-bottom:1px solid var(--b1)}
+.sr-strats{padding:8px 12px}
+.sr-strat{background:var(--card);border:1px solid var(--b1);border-radius:9px;padding:9px 11px;margin-bottom:5px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .15s}
+.sr-strat:hover{border-color:var(--b2);background:var(--card-h);transform:translateX(2px)}
+.sr-strat.primary{border-color:rgba(74,158,255,.35);background:var(--bs2)}
+.sr-rec{font-size:9px;padding:1px 5px;border-radius:3px;background:var(--blue);color:#fff;font-weight:700;margin-left:auto;white-space:nowrap}
+
+/* ── Strategy Panel ── */
+.dir-bar{display:flex;border-bottom:1px solid var(--b1);padding:8px 12px;gap:5px;flex-wrap:wrap;flex-shrink:0}
+.chip{padding:4px 10px;border-radius:20px;border:1px solid var(--b2);background:var(--card);cursor:pointer;font-size:11px;font-weight:600;color:var(--t3);transition:all .15s;white-space:nowrap}
+.chip:hover{color:var(--t2)}
+.chip.all.on{background:var(--bs2);border-color:var(--blue);color:var(--blue)}
+.chip.bull.on{background:var(--gs);border-color:var(--green);color:var(--green)}
+.chip.bear.on{background:var(--rs);border-color:var(--red);color:var(--red)}
+.chip.neutral.on{background:var(--ts2);border-color:var(--teal);color:var(--teal)}
+.chip.vol.on{background:var(--ps);border-color:var(--purple);color:var(--purple)}
+.strat-scroll{flex:1;overflow-y:auto;padding:8px 12px;min-height:0}
+.grp-lbl{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin:8px 0 5px;display:flex;align-items:center;gap:5px}
+.grp-lbl::after{content:'';flex:1;height:1px;background:var(--b1)}
+.sc{background:var(--card);border:1px solid var(--b1);border-radius:9px;padding:9px 11px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .15s;margin-bottom:4px}
+.sc:hover{border-color:var(--b2);background:var(--card-h);transform:translateX(2px)}
+.sc.active{border-color:var(--blue);background:var(--bs2)}
+.sc-info{flex:1;min-width:0}
+.sc-name{font-size:12px;font-weight:600;color:var(--t1)}
+.sc.active .sc-name{color:var(--blue)}
+.sc-legs{font-size:10px;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-badge{flex-shrink:0;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;text-transform:uppercase}
+.bb{background:var(--gs);color:var(--green)}.br{background:var(--rs);color:var(--red)}.bn{background:var(--ts2);color:var(--teal)}.bv{background:var(--ps);color:var(--purple)}
+
+/* ── Params panel ── */
+.params-panel{border-top:1px solid var(--b1);flex-shrink:0;max-height:54%;overflow-y:auto;display:none}
+.ph{padding:8px 12px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--b1);background:var(--panel);position:sticky;top:0;z-index:1}
+.ph-name{font-size:11px;font-weight:600;color:var(--blue);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.coll-btn{background:var(--card);border:1px solid var(--b2);border-radius:5px;padding:3px 8px;font-size:10px;color:var(--t2);cursor:pointer;white-space:nowrap}
+.pb{padding:10px 12px;display:none}
+.pb.open{display:block}
+.desc-box{background:var(--card);border:1px solid var(--b1);border-radius:7px;padding:8px 10px;margin-bottom:10px;font-size:11px;color:var(--t2);line-height:1.6}
+
+/* Deribit live panel */
+.deribit-box{background:linear-gradient(135deg,rgba(46,204,113,.07),rgba(45,212,191,.07));border:1px solid rgba(46,204,113,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.db-title{font-size:10px;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.db-status{font-size:9px;color:var(--t3);margin-left:auto;font-weight:400;text-transform:none;letter-spacing:0}
+.db-row{display:flex;gap:7px;margin-bottom:7px;align-items:flex-end}
+.db-field{display:flex;flex-direction:column;gap:3px;flex:1}
+.db-field label{font-size:10px;color:var(--t3);font-weight:500}
+.db-field select,.db-field input{background:var(--bg);border:1px solid var(--b2);border-radius:6px;color:var(--t1);font-size:11px;padding:5px 7px;outline:none;font-family:inherit;width:100%;transition:border-color .15s}
+.db-field select:focus,.db-field input:focus{border-color:var(--green)}
+.db-field select option{background:var(--panel)}
+.db-btn{padding:6px 10px;background:var(--green);border:none;border-radius:6px;color:#0a1a0a;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .15s;flex-shrink:0}
+.db-btn:hover{opacity:.85}
+.db-btn:disabled{opacity:.4;cursor:default}
+.db-result{margin-top:7px;display:none}
+.db-result.visible{display:block}
+.db-leg-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1);font-size:10px}
+.db-leg-row:last-child{border-bottom:none}
+.db-leg-name{color:var(--t2);flex:1}
+.db-leg-vals{display:flex;gap:8px;align-items:center}
+.db-mark{color:var(--t1);font-weight:700;font-variant-numeric:tabular-nums}
+.db-iv{color:var(--purple);font-size:9px}
+.db-fill-btn{font-size:9px;padding:2px 7px;background:var(--gs);color:var(--green);border:none;border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap}
+.db-fill-btn:hover{background:rgba(46,204,113,.22)}
+.db-err{font-size:10px;color:var(--red);margin-top:5px;padding:5px 8px;background:var(--rs);border-radius:5px;display:none}
+.db-err.visible{display:block}
+
+/* BS estimator */
+.bs-box{background:linear-gradient(135deg,rgba(74,158,255,.07),rgba(167,139,250,.07));border:1px solid rgba(74,158,255,.18);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.bs-title{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.bs-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}
+.bs-btn{width:100%;padding:6px;background:var(--blue);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.bs-btn:hover{opacity:.85}
+.bs-hint{font-size:10px;color:var(--t3);margin-top:4px;text-align:center}
+
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px}
+.pf{display:flex;flex-direction:column;gap:3px}
+.pf label{font-size:10px;color:var(--t3);font-weight:500}
+.pf input{background:var(--bg);border:1px solid var(--b2);border-radius:6px;color:var(--t1);font-size:11px;padding:5px 8px;outline:none;transition:border-color .15s;font-family:inherit;width:100%}
+.pf input:focus{border-color:var(--blue)}
+.pf input.err{border-color:var(--red)!important;background:var(--rs)}
+.err-msg{font-size:10px;color:var(--red);margin-top:2px;display:none}
+.pf input[type=range]{padding:0;background:none;border:none;accent-color:var(--blue)}
+.range-row{display:flex;align-items:center;gap:6px}
+.range-row input{flex:1}
+.rv{font-size:11px;color:var(--blue);font-weight:600;min-width:36px;text-align:right}
+.lb{background:var(--bg);border:1px solid var(--b1);border-radius:7px;padding:9px;margin-bottom:7px}
+.lb:last-child{margin-bottom:0}
+.lh{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.ld{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ld.buy{background:var(--green)}.ld.sell{background:var(--red)}
+.ll{font-size:11px;font-weight:600;color:var(--t2);flex:1}
+.lt{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
+.lt.buy{background:var(--gs);color:var(--green)}.lt.sell{background:var(--rs);color:var(--red)}
+.qb{font-size:9px;color:var(--yellow);font-weight:700;margin-left:2px}
+.sec-lbl{font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.1em;text-transform:uppercase;margin:4px 0 7px;display:flex;align-items:center;gap:5px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--b1)}
+
+/* ── Chart area ── */
+.chart-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--b1);flex-shrink:0}
+.sc2{padding:8px 12px;border-right:1px solid var(--b1);position:relative;overflow:hidden}
+.sc2:last-child{border-right:none}
+.sc2::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.sc2.p::before{background:var(--green)}.sc2.l::before{background:var(--red)}.sc2.b::before{background:var(--yellow)}.sc2.r::before{background:var(--purple)}
+.sl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;font-weight:500}
+.sv{font-size:16px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.2}
+.sv.g{color:var(--green)}.sv.r{color:var(--red)}.sv.y{color:var(--yellow)}.sv.p{color:var(--purple)}
+.ss{font-size:9px;color:var(--t3);margin-top:1px}
+.cwrap{flex:1;position:relative;padding:14px 16px 6px;min-height:0}
+canvas{display:block}
+.no-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--t3)}
+.no-msg-icon{font-size:40px;opacity:.3}
+.legend{display:flex;align-items:center;gap:14px;padding:6px 16px;border-top:1px solid var(--b1);background:var(--panel);flex-shrink:0;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3)}
+.ll2{width:16px;height:2px;border-radius:2px}
+.ll2.p{background:var(--green)}.ll2.l{background:var(--red)}
+.ld2{width:16px;height:0;border-top:1.5px dashed}
+.ld2.s{border-color:var(--blue)}.ld2.b{border-color:var(--yellow)}
+.lsp{flex:1}
+.tip{position:fixed;pointer-events:none;z-index:50;background:var(--panel);border:1px solid var(--b2);border-radius:9px;padding:9px 12px;box-shadow:0 8px 30px rgba(0,0,0,.4);display:none;min-width:148px}
+.tp{font-size:10px;color:var(--t2);margin-bottom:4px}
+.tpnl{font-size:15px;font-weight:700}
+.tpnl.pos{color:var(--green)}.tpnl.neg{color:var(--red)}
+.tsep{height:1px;background:var(--b1);margin:5px 0}
+.trow{display:flex;justify-content:space-between;gap:12px;font-size:10px;margin-top:2px}
+.trow span:first-child{color:var(--t3)}.trow span:last-child{color:var(--t2);font-weight:600}
+
+@media(max-width:768px){
+  .menu-btn{display:block}
+  .sidebar{position:fixed;top:50px;left:0;bottom:0;z-index:5;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay.open{display:block}
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .sc2:nth-child(2){border-right:none}
+  .sc2:nth-child(3){border-top:1px solid var(--b1)}
+  .sc2:nth-child(4){border-top:1px solid var(--b1);border-right:none}
+  .brand-name{display:none}
+  .live-label{display:none}
+  .sv{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- Disclaimer -->
+<div class="overlay" id="overlay">
+  <div class="disc">
+    <div class="disc-icon">⚠️</div>
+    <div class="disc-title">使用前请阅读</div>
+    <div class="disc-body">
+      本工具仅用于<strong>教育和研究目的</strong>，展示期权策略在到期日的理论损益曲线。<br><br>
+      所有计算基于到期日行权，<strong>不含时间价值</strong>，与实际结果可能存在差异。Deribit 实时报价仅为参考。<br><br>
+      本工具<strong>不构成任何投资建议</strong>。期权交易具有高风险，请充分了解后独立判断。
+    </div>
+    <button class="disc-btn" onclick="acceptDisc()">我已了解，继续使用</button>
+    <div class="disc-note">本工具不储存任何个人数据</div>
+  </div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">📈</div>
+    <div class="brand-name">期权损益分析</div>
+  </div>
+  <div class="hspacer"></div>
+  <div class="live-pill" id="livePill" onclick="fetchSpot()" title="点击刷新现价">
+    <div class="live-dot" id="liveDot"></div>
+    <span class="live-label">BTC</span>
+    <span class="live-price" id="livePrice">—</span>
+  </div>
+  <a href="options-learn.html" target="_blank" style="display:flex;align-items:center;gap:5px;background:var(--ys);border:1px solid rgba(240,160,48,.3);border-radius:7px;padding:5px 11px;color:var(--yellow);font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0">📚 策略学习</a>
+  <button class="menu-btn" onclick="toggleSidebar()">☰ 策略</button>
+</header>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+<!-- ══ Sidebar ══ -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Mode tabs -->
+  <div class="mode-bar">
+    <div class="mode-tab active" id="tab-scene" onclick="switchMode('scene')">
+      <span class="tab-icon">💡</span>场景引导
+    </div>
+    <div class="mode-tab" id="tab-strat" onclick="switchMode('strat')">
+      <span class="tab-icon">📋</span>策略列表
+    </div>
+  </div>
+
+  <!-- ── Scene mode ── -->
+  <div class="mode-panel" id="panel-scene">
+    <div class="scene-intro">选择最符合你当前想法的场景，系统自动推荐合适的期权策略。</div>
+    <div class="scene-list" id="sceneList"></div>
+  </div>
+
+  <!-- ── Strategy mode ── -->
+  <div class="mode-panel hidden" id="panel-strat" style="display:flex;flex-direction:column;min-height:0">
+    <div class="dir-bar">
+      <div class="chip all on" id="chip-all" onclick="setDir('all')">全部</div>
+      <div class="chip bull" id="chip-bull" onclick="setDir('bull')">📈 看涨</div>
+      <div class="chip bear" id="chip-bear" onclick="setDir('bear')">📉 看跌</div>
+      <div class="chip neutral" id="chip-neutral" onclick="setDir('neutral')">↔ 震荡</div>
+      <div class="chip vol" id="chip-vol" onclick="setDir('vol')">⚡ 波动</div>
+    </div>
+    <div class="strat-scroll" id="stratScroll"></div>
+  </div>
+
+  <!-- Scene result (shared bottom panel) -->
+  <div class="scene-result" id="sceneResult">
+    <div class="sr-header">
+      <div style="font-size:11px;font-weight:600;color:var(--t1)" id="srTitle"></div>
+    </div>
+    <div class="sr-why" id="srWhy"></div>
+    <div class="sr-strats" id="srStrats"></div>
+  </div>
+
+  <!-- Params panel -->
+  <div class="params-panel" id="paramsPanel">
+    <div class="ph">
+      <div class="ph-name" id="phName"></div>
+      <button class="coll-btn" id="collBtn" onclick="toggleParams()">收起 ▲</button>
+    </div>
+    <div class="pb open" id="paramsBody">
+      <div class="desc-box" id="descBox"></div>
+
+      <!-- Deribit live quotes -->
+      <div class="deribit-box">
+        <div class="db-title">🟢 Deribit 实时报价
+          <span class="db-status" id="dbStatus">未连接</span>
+        </div>
+        <div class="db-row">
+          <div class="db-field" style="flex:1.6">
+            <label>到期日</label>
+            <select id="dbExpiry" onchange="onExpiryChange()">
+              <option value="">-- 加载中 --</option>
+            </select>
+          </div>
+          <button class="db-btn" id="dbFetchBtn" onclick="fetchDeribitQuotes()" disabled>拉取报价</button>
+        </div>
+        <div class="db-result" id="dbResult"></div>
+        <div class="db-err" id="dbErr"></div>
+      </div>
+
+      <!-- BS fallback -->
+      <div class="bs-box">
+        <div class="bs-title">✨ Black-Scholes 估算（离线）</div>
+        <div class="bs-grid">
+          <div class="pf"><label>IV (%)</label>
+            <input type="number" id="bsIV" value="50" step="1" min="1" max="300">
+          </div>
+          <div class="pf"><label>剩余天数</label>
+            <input type="number" id="bsDays" value="30" step="1" min="1" max="365">
+          </div>
+        </div>
+        <button class="bs-btn" onclick="autoFillBS()">用 BS 公式估算并填入</button>
+        <div class="bs-hint">当无法连接 Deribit 时使用</div>
+      </div>
+
+      <div class="pg">
+        <div class="pf"><label>合约规模 (BTC)</label>
+          <input type="number" id="csize" value="1" step="0.1" min="0.01" oninput="validateF(this);schedDraw()">
+          <div class="err-msg" id="err-csize">请输入正数</div>
+        </div>
+        <div class="pf"><label>价格显示范围</label>
+          <div class="range-row">
+            <input type="range" id="rng" min="10" max="60" value="30" oninput="document.getElementById('rv').textContent='±'+this.value+'%';schedDraw()">
+            <span class="rv" id="rv">±30%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-lbl">期权腿参数</div>
+      <div id="legParams"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ Chart area ══ -->
+<main class="chart-area">
+  <div class="stats-bar">
+    <div class="sc2 p"><div class="sl">最大盈利</div><div class="sv g" id="sMP">—</div><div class="ss" id="sMP2"></div></div>
+    <div class="sc2 l"><div class="sl">最大亏损</div><div class="sv r" id="sML">—</div><div class="ss" id="sML2"></div></div>
+    <div class="sc2 b"><div class="sl">盈亏平衡</div><div class="sv y" id="sBE">—</div><div class="ss" id="sBE2"></div></div>
+    <div class="sc2 r"><div class="sl">盈亏比</div><div class="sv p" id="sRR">—</div><div class="ss" id="sRR2"></div></div>
+  </div>
+  <div class="cwrap" id="cwrap">
+    <div class="no-msg" id="noMsg">
+      <div class="no-msg-icon">📊</div>
+      <div style="font-size:12px">从左侧选择场景或策略</div>
+    </div>
+    <canvas id="cv" style="display:none"></canvas>
+  </div>
+  <div class="legend">
+    <div class="li"><div class="ll2 p"></div><span>盈利</span></div>
+    <div class="li"><div class="ll2 l"></div><span>亏损</span></div>
+    <div class="li"><div class="ld2 s"></div><span>现价</span></div>
+    <div class="li"><div class="ld2 b"></div><span>盈亏平衡</span></div>
+    <div class="lsp"></div>
+    <div style="font-size:10px;color:var(--t3)">到期日损益（不含时间价值）</div>
+  </div>
+</main>
+</div>
+
+<div class="tip" id="tooltip">
+  <div class="tp" id="ttP"></div>
+  <div class="tpnl" id="ttPnl"></div>
+  <div class="tsep"></div>
+  <div class="trow"><span>距现价</span><span id="ttD"></span></div>
+  <div class="trow"><span>涨跌幅</span><span id="ttPct"></span></div>
+</div>
+
+<script>
+// ── Scenes ────────────────────────────────────────────────────────
+const SCENES = [
+  {
+    id:'s1', emoji:'🛡️',
+    q:'我卖了 Call，想买一个 Call 保险限制亏损',
+    sub:'即 Bear Call Spread，锁定最大亏损上限',
+    why:'你已经卖出认购期权（Short Call），如果 BTC 突然大涨可能面临无限亏损。买入更高行权价的 Call 作为"保险"，可以把最大亏损锁定在两个行权价之差减去净权利金。这就是 Bear Call Spread 的核心逻辑。',
+    strats:['bear_call'], primary:'bear_call'
+  },
+  {
+    id:'s2', emoji:'📈',
+    q:'我看涨 BTC，但不想花太多保证金',
+    sub:'用价差降低成本，保留上涨收益',
+    why:'直接买入 Long Call 收益无限但权利金较贵。Bull Call Spread（买低卖高）可以减少一半以上的权利金支出，换取收益上限被限制，适合资金效率优先的看涨策略。',
+    strats:['bull_call','long_call'], primary:'bull_call'
+  },
+  {
+    id:'s3', emoji:'📉',
+    q:'我看跌 BTC，想通过期权获利',
+    sub:'多种看跌策略可选',
+    why:'看跌行情可以选择买入 Long Put（成本固定，收益大）；或用 Bear Put Spread 降低成本；或卖出高行权价 Call（Bear Call Spread）收取权利金。根据你对下跌幅度和时间的判断选择。',
+    strats:['long_put','bear_put','bear_call'], primary:'long_put'
+  },
+  {
+    id:'s4', emoji:'🏦',
+    q:'我想收取权利金，判断 BTC 短期不会大跌',
+    sub:'卖出期权收取时间价值',
+    why:'Short Put 或 Bull Put Spread 是在区间内做多波动率的做法：你预期 BTC 不会跌穿某个价格，就可以卖出该行权价的 Put 收取权利金。加上买入更低的 Put 保险，成为 Bull Put Spread，风险可控。',
+    strats:['short_put','bull_put'], primary:'bull_put'
+  },
+  {
+    id:'s5', emoji:'⚡',
+    q:'我不知道方向，但感觉 BTC 近期会有大行情',
+    sub:'无论涨跌，只要波动足够大就能盈利',
+    why:'Straddle 或 Strangle 是做多波动率的策略：同时买入 Call 和 Put。当 BTC 大幅波动时，其中一腿的收益可以超过两份权利金之和。Strangle 成本稍低，但需要更大的波动才能盈利。',
+    strats:['straddle','strangle'], primary:'straddle'
+  },
+  {
+    id:'s6', emoji:'➡️',
+    q:'我判断 BTC 将在某个区间内横盘震荡',
+    sub:'卖出双向期权收取权利金',
+    why:'Iron Condor 是四腿策略：同时卖出认购价差和认沽价差。BTC 在两个内部行权价之间不动时盈利最大。这是专业做市商最常用的中性策略，但需要精确判断区间。',
+    strats:['iron_condor','short_call','short_put'], primary:'iron_condor'
+  },
+  {
+    id:'s7', emoji:'🎯',
+    q:'我认为 BTC 会精确涨到某个价格附近',
+    sub:'精准预测时收益最大化',
+    why:'Butterfly Spread 的设计是：价格精确落在中间行权价时收益最大，净成本极低。如果你对目标价格有强烈判断，这是成本效率最高的策略。风险是判断稍有偏差收益就大幅下降。',
+    strats:['butterfly'], primary:'butterfly'
+  },
+  {
+    id:'s8', emoji:'🔒',
+    q:'我持有 BTC 现货，想对冲下行风险',
+    sub:'用 Put 期权为现货买保险',
+    why:'买入 Long Put 相当于为你持有的 BTC 购买"保险"。BTC 下跌时，Put 期权的盈利可以补偿现货损失。选择行权价略低于现价（虚值 Put）成本更低，类似汽车保险的免赔额。',
+    strats:['long_put','bear_put'], primary:'long_put'
+  }
+];
+
+// ── Strategy data ─────────────────────────────────────────────────
+const STRATS = {
+  long_call:{name:'Long Call 买入认购',dir:'bull',badge:'bb',bt:'看涨',
+    desc:'支付权利金买入认购期权。BTC 上涨越多收益越大，理论无限；最大亏损仅限权利金，风险明确。',
+    spark:'M0,32 L20,32 Q36,32 50,4',
+    legs:[{t:'call',d:'buy',lbl:'买入 Call',rel:+6000,dp:1500}]},
+  long_put:{name:'Long Put 买入认沽',dir:'bear',badge:'br',bt:'看跌',
+    desc:'支付权利金买入认沽期权。BTC 下跌越多收益越大，最大亏损为权利金。',
+    spark:'M0,4 Q14,32 30,32 L50,32',
+    legs:[{t:'put',d:'buy',lbl:'买入 Put',rel:-6000,dp:1200}]},
+  short_call:{name:'Short Call 卖出认购',dir:'neutral',badge:'bn',bt:'中性偏空',
+    desc:'卖出认购期权收取权利金。BTC 若涨超行权价则亏损无限，需充足保证金。',
+    spark:'M0,4 L25,4 Q40,4 50,32',
+    legs:[{t:'call',d:'sell',lbl:'卖出 Call',rel:+6000,dp:1500}]},
+  short_put:{name:'Short Put 卖出认沽',dir:'neutral',badge:'bn',bt:'中性偏多',
+    desc:'卖出认沽期权收取权利金。BTC 若大跌则亏损。适合愿意低价接仓的行情。',
+    spark:'M0,32 Q12,4 25,4 L50,4',
+    legs:[{t:'put',d:'sell',lbl:'卖出 Put',rel:-6000,dp:1200}]},
+  bear_call:{name:'Bear Call Spread 卖call买call保险',dir:'bear',badge:'br',bt:'温和看跌',
+    desc:'卖出低行权价 Call，买入高行权价 Call 限制亏损。净权利金 = 最大盈利；最大亏损 = 行权价差 − 净权利金。是最常用的限风险卖方策略。',
+    spark:'M0,4 L14,4 L26,28 L40,32 L50,32',
+    legs:[{t:'call',d:'sell',lbl:'卖出 Call（主腿，低行权）',rel:+6000,dp:1500},{t:'call',d:'buy',lbl:'买入 Call（保险，高行权）',rel:+11000,dp:700}]},
+  bull_call:{name:'Bull Call Spread 买call卖call',dir:'bull',badge:'bb',bt:'温和看涨',
+    desc:'买入低行权价 Call，卖出高行权价 Call 降低成本。最大盈利 = 行权价差 − 净权利金；最大亏损 = 净权利金。',
+    spark:'M0,32 L12,32 L24,8 L38,8 L50,8',
+    legs:[{t:'call',d:'buy',lbl:'买入 Call（低行权）',rel:+2000,dp:2500},{t:'call',d:'sell',lbl:'卖出 Call（高行权）',rel:+7000,dp:1500}]},
+  bull_put:{name:'Bull Put Spread 卖put买put保险',dir:'bull',badge:'bb',bt:'温和看涨',
+    desc:'卖出高行权价 Put，买入低行权价 Put 限制亏损。净权利金 = 最大盈利；最大亏损 = 行权价差 − 净权利金。',
+    spark:'M0,4 L12,4 L25,28 L38,32 L50,32',
+    legs:[{t:'put',d:'sell',lbl:'卖出 Put（主腿，高行权）',rel:-2000,dp:1500},{t:'put',d:'buy',lbl:'买入 Put（保险，低行权）',rel:-7000,dp:700}]},
+  bear_put:{name:'Bear Put Spread 买put卖put',dir:'bear',badge:'br',bt:'温和看跌',
+    desc:'买入高行权价 Put，卖出低行权价 Put 降低成本。最大盈利 = 行权价差 − 净权利金；最大亏损 = 净权利金。',
+    spark:'M0,32 L12,32 L26,8 L40,8 L50,8',
+    legs:[{t:'put',d:'buy',lbl:'买入 Put（高行权）',rel:-2000,dp:1500},{t:'put',d:'sell',lbl:'卖出 Put（低行权）',rel:-7000,dp:700}]},
+  straddle:{name:'Long Straddle 等行权双买',dir:'vol',badge:'bv',bt:'高波动',
+    desc:'同时买入相同行权价的 Call 和 Put。无论大涨大跌都能盈利，最大亏损 = 两份权利金之和。',
+    spark:'M0,4 L20,24 L25,32 L30,24 L50,4',
+    legs:[{t:'call',d:'buy',lbl:'买入 Call',rel:0,dp:2000},{t:'put',d:'buy',lbl:'买入 Put',rel:0,dp:2000}]},
+  strangle:{name:'Long Strangle 宽跨式双买',dir:'vol',badge:'bv',bt:'高波动',
+    desc:'买入虚值 Call 和虚值 Put。成本低于 Straddle，但需更大波动才盈利。',
+    spark:'M0,4 L14,22 L18,32 L32,32 L36,22 L50,4',
+    legs:[{t:'call',d:'buy',lbl:'买入 Call（虚值）',rel:+6000,dp:1200},{t:'put',d:'buy',lbl:'买入 Put（虚值）',rel:-6000,dp:1000}]},
+  iron_condor:{name:'Iron Condor 铁鹰策略',dir:'neutral',badge:'bn',bt:'区间震荡',
+    desc:'双向卖出价差，收取权利金。BTC 在两内部行权价之间横盘时盈利最大，适合低波动行情。',
+    spark:'M0,32 L8,32 L14,8 L22,8 L28,8 L36,8 L42,32 L50,32',
+    legs:[{t:'put',d:'buy',lbl:'买入 Put（最低保险）',rel:-12000,dp:500},{t:'put',d:'sell',lbl:'卖出 Put（低）',rel:-6000,dp:1000},{t:'call',d:'sell',lbl:'卖出 Call（高）',rel:+6000,dp:1200},{t:'call',d:'buy',lbl:'买入 Call（最高保险）',rel:+12000,dp:600}]},
+  butterfly:{name:'Butterfly 蝴蝶价差',dir:'neutral',badge:'bn',bt:'精准中性',
+    desc:'买入低和高行权价 Call，卖出两份中间 Call。价格精确落在中间行权价时收益最大，净成本低。',
+    spark:'M0,32 L15,32 L25,4 L35,32 L50,32',
+    legs:[{t:'call',d:'buy',lbl:'买入 Call（低）',rel:-5000,dp:3000},{t:'call',d:'sell',lbl:'卖出 Call ×2（中）',rel:0,dp:2000,q:2},{t:'call',d:'buy',lbl:'买入 Call（高）',rel:+5000,dp:1000}]}
+};
+
+const DIR_ORDER={
+  bear:['bear_call','long_put','bear_put','short_call'],
+  bull:['bull_call','bull_put','long_call','short_put'],
+  neutral:['iron_condor','short_call','short_put','butterfly'],
+  vol:['straddle','strangle']
+};
+const GN={bear:'看跌策略',bull:'看涨策略',neutral:'中性/震荡策略',vol:'高波动策略'};
+const DC={bull:'#2ecc71',bear:'#ee5555',neutral:'#2dd4bf',vol:'#a78bfa'};
+
+// ── State ─────────────────────────────────────────────────────────
+let curMode='scene', curDir='all', curStrat=null, curScene=null;
+let paramsOpen=true, hasErrors=false;
+let bePoints=[],curPrices=[],curPnls=[],curSpot=68912;
+let hovX=null,hovRawX=0,hovRawY=0,drawTimer=null,animFrame=null;
+let dbExpiries=[], dbQuoteCache={};
+
+// ── Disclaimer ────────────────────────────────────────────────────
+function acceptDisc(){
+  document.getElementById('overlay').style.display='none';
+  sessionStorage.setItem('disc_ok','1');
+  fetchSpot();
+  loadExpiries();
+}
+if(sessionStorage.getItem('disc_ok')==='1'){
+  document.getElementById('overlay').style.display='none';
+  fetchSpot();
+  loadExpiries();
+}
+
+// ── Mobile ────────────────────────────────────────────────────────
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sbOverlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbOverlay').classList.remove('open');}
+
+// ── Mode switch ───────────────────────────────────────────────────
+function switchMode(m){
+  curMode=m;
+  ['scene','strat'].forEach(k=>{
+    document.getElementById('tab-'+k).classList.toggle('active',k===m);
+    document.getElementById('panel-'+k).classList.toggle('hidden',k!==m);
+  });
+  if(m==='strat')renderList();
+}
+
+// ── Deribit API ───────────────────────────────────────────────────
+const DERIBIT='https://www.deribit.com/api/v2/public';
+
+async function fetchSpot(){
+  const dot=document.getElementById('liveDot');
+  const priceEl=document.getElementById('livePrice');
+  dot.className='live-dot loading';
+  try{
+    const r=await fetch(`${DERIBIT}/get_index_price?index_name=btc_usd`);
+    const d=await r.json();
+    curSpot=d.result.index_price;
+    priceEl.textContent='$'+Math.round(curSpot).toLocaleString();
+    dot.className='live-dot connected';
+    // Update spot input if it exists
+    const si=document.getElementById('spotInput2');
+    if(si)si.textContent='$'+Math.round(curSpot).toLocaleString();
+    if(curStrat)schedDraw();
+  }catch(e){
+    dot.className='live-dot error';
+    priceEl.textContent='离线';
+  }
+}
+
+// Format Deribit date: timestamp -> "27MAR26"
+function fmtDeribitDate(ts){
+  const d=new Date(ts);
+  const months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const day=String(d.getUTCDate()).padStart(2,'0');
+  const mon=months[d.getUTCMonth()];
+  const yr=String(d.getUTCFullYear()).slice(-2);
+  return `${day}${mon}${yr}`;
+}
+
+function parseDeribitDate(s){
+  // "27MAR26" -> Date
+  const months={JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+  const day=parseInt(s.slice(0,2));
+  const mon=months[s.slice(2,5)];
+  const yr=2000+parseInt(s.slice(5,7));
+  return new Date(Date.UTC(yr,mon,day,8,0,0));
+}
+
+async function loadExpiries(){
+  try{
+    const r=await fetch(`${DERIBIT}/get_instruments?currency=BTC&kind=option&expired=false`);
+    const d=await r.json();
+    const expSet=new Set();
+    d.result.forEach(inst=>{
+      const parts=inst.instrument_name.split('-');
+      if(parts.length===4)expSet.add(parts[1]);
+    });
+    dbExpiries=[...expSet].sort((a,b)=>{
+      return parseDeribitDate(a)-parseDeribitDate(b);
+    });
+    const sel=document.getElementById('dbExpiry');
+    sel.innerHTML='';
+    dbExpiries.forEach(e=>{
+      const opt=document.createElement('option');
+      opt.value=e;opt.textContent=e;
+      sel.appendChild(opt);
+    });
+    document.getElementById('dbFetchBtn').disabled=false;
+    document.getElementById('dbStatus').textContent='已连接';
+    document.getElementById('dbStatus').style.color='var(--green)';
+  }catch(e){
+    document.getElementById('dbStatus').textContent='连接失败';
+    document.getElementById('dbStatus').style.color='var(--red)';
+  }
+}
+
+function onExpiryChange(){dbQuoteCache={};}
+
+async function fetchDeribitQuotes(){
+  if(!curStrat)return;
+  const s=STRATS[curStrat];
+  const expiry=document.getElementById('dbExpiry').value;
+  if(!expiry)return;
+  const btn=document.getElementById('dbFetchBtn');
+  const errEl=document.getElementById('dbErr');
+  const resEl=document.getElementById('dbResult');
+  btn.disabled=true;btn.textContent='加载中...';
+  errEl.classList.remove('visible');resEl.classList.remove('visible');
+  try{
+    const results=await Promise.all(s.legs.map(async(leg,i)=>{
+      const kEl=document.getElementById('l'+i+'k');
+      if(!kEl)return null;
+      const strike=parseFloat(kEl.value);
+      const type=leg.t==='call'?'C':'P';
+      const instName=`BTC-${expiry}-${strike}-${type}`;
+      // Check cache
+      if(dbQuoteCache[instName])return{...dbQuoteCache[instName],leg,i,instName};
+      const r=await fetch(`${DERIBIT}/ticker?instrument_name=${instName}`);
+      const d=await r.json();
+      if(d.error)throw new Error(d.error.message||'Not found');
+      const res=d.result;
+      const markUSD=res.mark_price*curSpot;
+      const iv=res.mark_iv;
+      dbQuoteCache[instName]={markUSD,iv};
+      return{markUSD,iv,leg,i,instName};
+    }));
+
+    // Build result UI
+    resEl.innerHTML='';
+    results.forEach(r=>{
+      if(!r)return;
+      const q=r.leg.q||1;
+      const row=document.createElement('div');row.className='db-leg-row';
+      row.innerHTML=`<div class="db-leg-name">${r.leg.lbl}${q>1?` ×${q}`:''}</div>
+        <div class="db-leg-vals">
+          <span class="db-iv">IV ${r.iv.toFixed(1)}%</span>
+          <span class="db-mark">$${Math.round(r.markUSD).toLocaleString()}</span>
+          <button class="db-fill-btn" onclick="fillOneLeg(${r.i},${Math.round(r.markUSD)})">填入</button>
+        </div>`;
+      resEl.appendChild(row);
+    });
+    // Add fill all button
+    const fillAll=document.createElement('div');
+    fillAll.style.cssText='margin-top:7px;text-align:right';
+    fillAll.innerHTML=`<button onclick="fillAllLegs(${JSON.stringify(results.map(r=>({i:r.i,v:Math.round(r.markUSD)})))})" style="font-size:10px;padding:4px 10px;background:var(--green);border:none;border-radius:5px;color:#0a1a0a;font-weight:700;cursor:pointer">全部填入 →</button>`;
+    resEl.appendChild(fillAll);
+    resEl.classList.add('visible');
+
+    // Auto update BS days from expiry
+    const expDate=parseDeribitDate(expiry);
+    const days=Math.max(1,Math.round((expDate-Date.now())/(1000*60*60*24)));
+    document.getElementById('bsDays').value=days;
+
+  }catch(e){
+    errEl.textContent='报价获取失败：'+e.message+' (行权价可能不存在于该到期日)';
+    errEl.classList.add('visible');
+  }finally{
+    btn.disabled=false;btn.textContent='拉取报价';
+  }
+}
+
+function fillOneLeg(idx,val){
+  const el=document.getElementById('l'+idx+'p');
+  if(el){el.value=val;validateF(el);schedDraw();}
+}
+function fillAllLegs(arr){
+  arr.forEach(({i,v})=>fillOneLeg(i,v));
+}
+
+// ── BS ────────────────────────────────────────────────────────────
+function normCDF(x){
+  const a=[0.254829592,-0.284496736,1.421413741,-1.453152027,1.061405429],p=0.3275911;
+  const s=x<0?-1:1;x=Math.abs(x)/Math.sqrt(2);
+  const t=1/(1+p*x);
+  const y=1-((((a[4]*t+a[3])*t+a[2])*t+a[1])*t+a[0])*t*Math.exp(-x*x);
+  return 0.5*(1+s*y);
+}
+function bsPrice(S,K,T,sigma,type){
+  if(T<=0)return type==='call'?Math.max(0,S-K):Math.max(0,K-S);
+  const r=0.05;
+  const d1=(Math.log(S/K)+(r+sigma*sigma/2)*T)/(sigma*Math.sqrt(T));
+  const d2=d1-sigma*Math.sqrt(T);
+  return type==='call'?S*normCDF(d1)-K*Math.exp(-r*T)*normCDF(d2):K*Math.exp(-r*T)*normCDF(-d2)-S*normCDF(-d1);
+}
+function autoFillBS(){
+  if(!curStrat)return;
+  const s=STRATS[curStrat];
+  const iv=parseFloat(document.getElementById('bsIV').value)/100;
+  const days=parseFloat(document.getElementById('bsDays').value);
+  if(!iv||!days||iv<=0||days<=0)return;
+  const T=days/365;
+  s.legs.forEach((leg,i)=>{
+    const kEl=document.getElementById('l'+i+'k');
+    const pEl=document.getElementById('l'+i+'p');
+    if(!kEl||!pEl)return;
+    const K=parseFloat(kEl.value);
+    const price=bsPrice(curSpot,K,T,iv,leg.t);
+    pEl.value=Math.max(1,Math.round(price));
+    validateF(pEl);
+  });
+  schedDraw();
+}
+
+// ── Validation ────────────────────────────────────────────────────
+function validateF(el){
+  const v=parseFloat(el.value);
+  const id=el.id;
+  const errEl=document.getElementById('err-'+id);
+  const ok=!isNaN(v)&&v>0&&(id.endsWith('k')?v>=100:true);
+  el.classList.toggle('err',!ok);
+  if(errEl){errEl.style.display=ok?'none':'block';errEl.textContent=id.endsWith('k')?'行权价需≥100':'请输入正数';}
+  hasErrors=document.querySelectorAll('.pf input.err').length>0;
+  return ok;
+}
+
+// ── Scene rendering ───────────────────────────────────────────────
+function renderScenes(){
+  const c=document.getElementById('sceneList');c.innerHTML='';
+  SCENES.forEach(sc=>{
+    const d=document.createElement('div');d.className='scene-card'+(curScene===sc.id?' active':'');
+    d.innerHTML=`<span class="scene-emoji">${sc.emoji}</span>
+      <div class="scene-q">${sc.q}</div>
+      <div class="scene-sub">${sc.sub}</div>`;
+    d.onclick=()=>selectScene(sc.id);
+    c.appendChild(d);
+  });
+}
+
+function selectScene(id){
+  curScene=id;
+  renderScenes();
+  const sc=SCENES.find(s=>s.id===id);
+  if(!sc)return;
+  // Show result panel
+  const res=document.getElementById('sceneResult');
+  res.classList.add('visible');
+  document.getElementById('srTitle').textContent=sc.emoji+' '+sc.q;
+  document.getElementById('srWhy').textContent=sc.why;
+  // Render recommended strats
+  const sc2=document.getElementById('srStrats');sc2.innerHTML='';
+  sc.strats.forEach(k=>{
+    const s=STRATS[k];
+    const d=document.createElement('div');
+    d.className='sr-strat'+(k===sc.primary?' primary':'');
+    d.innerHTML=`<div style="flex-shrink:0">${makeSpark(s.spark,s.dir)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:${k===sc.primary?'var(--blue)':'var(--t1)'}">${s.name}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">${s.desc.slice(0,60)}…</div>
+      </div>
+      ${k===sc.primary?'<div class="sr-rec">推荐</div>':''}`;
+    d.onclick=()=>{selectStrat(k);if(window.innerWidth<=768)closeSidebar();};
+    sc2.appendChild(d);
+  });
+  // Auto-select primary
+  selectStrat(sc.primary);
+}
+
+// ── Strategy list ─────────────────────────────────────────────────
+function makeSpark(path,dir){
+  const c=DC[dir]||'#4a9eff';
+  return `<svg width="44" height="30" viewBox="0 0 50 36" fill="none"><line x1="0" y1="18" x2="50" y2="18" stroke="#252d3a" stroke-width="1"/><path d="${path}" stroke="${c}" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function setDir(d){
+  curDir=d;
+  ['all','bull','bear','neutral','vol'].forEach(k=>document.getElementById('chip-'+k).classList.toggle('on',k===d));
+  renderList();
+}
+function renderList(){
+  const c=document.getElementById('stratScroll');c.innerHTML='';
+  if(curDir==='all'){
+    ['bear','bull','neutral','vol'].forEach(dir=>{
+      const grp=document.createElement('div');
+      grp.innerHTML=`<div class="grp-lbl">${GN[dir]}</div>`;
+      DIR_ORDER[dir].forEach(k=>grp.appendChild(makeCard(k)));
+      c.appendChild(grp);
+    });
+  }else{
+    DIR_ORDER[curDir].forEach(k=>c.appendChild(makeCard(k)));
+  }
+}
+function makeCard(k){
+  const s=STRATS[k];
+  const d=document.createElement('div');
+  d.className='sc'+(curStrat===k?' active':'');
+  d.innerHTML=`<div>${makeSpark(s.spark,s.dir)}</div>
+    <div class="sc-info"><div class="sc-name">${s.name}</div><div class="sc-legs">${s.legs.map(l=>l.lbl).join(' + ')}</div></div>
+    <div class="sc-badge ${s.badge}">${s.bt}</div>`;
+  d.onclick=()=>{selectStrat(k);if(window.innerWidth<=768)closeSidebar();};
+  return d;
+}
+
+function selectStrat(k){
+  curStrat=k;
+  if(curMode==='strat')renderList();
+  const s=STRATS[k];
+  const pp=document.getElementById('paramsPanel');pp.style.display='block';
+  document.getElementById('phName').textContent=s.name;
+  document.getElementById('descBox').textContent=s.desc;
+  paramsOpen=true;
+  document.getElementById('paramsBody').classList.add('open');
+  document.getElementById('collBtn').textContent='收起 ▲';
+  buildLegs(k);
+  dbQuoteCache={};
+  document.getElementById('dbResult').classList.remove('visible');
+  document.getElementById('dbErr').classList.remove('visible');
+  schedDraw();
+  setTimeout(()=>pp.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
+}
+
+function toggleParams(){
+  paramsOpen=!paramsOpen;
+  document.getElementById('paramsBody').classList.toggle('open',paramsOpen);
+  document.getElementById('collBtn').textContent=paramsOpen?'收起 ▲':'展开 ▼';
+}
+
+function buildLegs(k){
+  const s=STRATS[k];
+  const c=document.getElementById('legParams');c.innerHTML='';
+  s.legs.forEach((leg,i)=>{
+    const q=leg.q||1;
+    const defK=Math.round((curSpot+(leg.rel||0))/500)*500;
+    const d=document.createElement('div');d.className='lb';
+    d.innerHTML=`<div class="lh">
+      <div class="ld ${leg.d}"></div>
+      <div class="ll">${leg.lbl}</div>
+      <span class="lt ${leg.d}">${leg.d==='buy'?'BUY':'SELL'}</span>
+      ${q>1?`<span class="qb">×${q}</span>`:''}
+    </div>
+    <div class="pg">
+      <div class="pf"><label>行权价 (USD)</label>
+        <input type="number" id="l${i}k" value="${defK}" step="500" min="100" oninput="validateF(this);schedDraw()">
+        <div class="err-msg" id="err-l${i}k">行权价需≥100</div>
+      </div>
+      <div class="pf"><label>权利金 (USD)</label>
+        <input type="number" id="l${i}p" value="${leg.dp}" step="10" min="1" oninput="validateF(this);schedDraw()">
+        <div class="err-msg" id="err-l${i}p">请输入正数</div>
+      </div>
+    </div>`;
+    c.appendChild(d);
+  });
+}
+
+// ── P&L ──────────────────────────────────────────────────────────
+function calcPnL(price){
+  if(!curStrat)return 0;
+  const s=STRATS[curStrat];
+  const csize=parseFloat(document.getElementById('csize').value)||1;
+  let pnl=0;
+  s.legs.forEach((leg,i)=>{
+    const kEl=document.getElementById('l'+i+'k');const pEl=document.getElementById('l'+i+'p');
+    if(!kEl||!pEl)return;
+    const k=parseFloat(kEl.value),pm=parseFloat(pEl.value),q=leg.q||1;
+    if(isNaN(k)||isNaN(pm))return;
+    const mult=leg.d==='buy'?1:-1;
+    const intr=leg.t==='call'?Math.max(0,price-k):Math.max(0,k-price);
+    pnl+=mult*(intr-pm)*q*csize;
+  });
+  return pnl;
+}
+function schedDraw(){if(drawTimer)clearTimeout(drawTimer);drawTimer=setTimeout(draw,50);}
+function draw(){
+  if(!curStrat||hasErrors)return;
+  const rng=parseInt(document.getElementById('rng').value)/100;
+  const lo=curSpot*(1-rng),hi=curSpot*(1+rng);
+  const N=500;curPrices=[];curPnls=[];
+  for(let i=0;i<=N;i++){const p=lo+(hi-lo)*i/N;curPrices.push(p);curPnls.push(calcPnL(p));}
+  bePoints=[];
+  for(let i=1;i<curPnls.length;i++){
+    if((curPnls[i-1]<0&&curPnls[i]>=0)||(curPnls[i-1]>=0&&curPnls[i]<0)){
+      const r=Math.abs(curPnls[i-1])/(Math.abs(curPnls[i-1])+Math.abs(curPnls[i]));
+      bePoints.push(curPrices[i-1]+(curPrices[i]-curPrices[i-1])*r);
+    }
+  }
+  updateStats();
+  document.getElementById('noMsg').style.display='none';
+  document.getElementById('cv').style.display='block';
+  renderCanvas();
+}
+function fmtK(v,inf){
+  if(inf&&v>1e9)return '无限';if(inf&&v<-1e9)return '-无限';
+  const a=Math.abs(v),s=v>=0?'+':'-';
+  return a>=1000?s+'$'+(a/1000).toFixed(1)+'K':s+'$'+Math.round(a);
+}
+function updateStats(){
+  const mp=Math.max(...curPnls),ml=Math.min(...curPnls);
+  document.getElementById('sMP').textContent=mp>1e9?'无限':fmtK(mp,true);
+  document.getElementById('sMP2').textContent='最大可盈';
+  document.getElementById('sML').textContent=ml<-1e9?'-无限':fmtK(ml,true);
+  document.getElementById('sML2').textContent='最大可亏';
+  if(bePoints.length){
+    document.getElementById('sBE').textContent=bePoints.map(b=>'$'+Math.round(b/1000)+'K').join('/');
+    document.getElementById('sBE2').textContent=bePoints.map(b=>((b-curSpot)/curSpot*100).toFixed(1)+'%').join('/');
+  }else{
+    document.getElementById('sBE').textContent=curPnls[0]>=0?'全程盈利':'全程亏损';
+    document.getElementById('sBE2').textContent='';
+  }
+  if(Math.abs(ml)>1&&ml>-1e9&&mp>1&&mp<1e9){
+    const rr=mp/Math.abs(ml);
+    document.getElementById('sRR').textContent='1 : '+(1/rr).toFixed(2);
+    document.getElementById('sRR2').textContent=rr>=1?'盈利潜力大':'风险相对大';
+  }else{document.getElementById('sRR').textContent='—';document.getElementById('sRR2').textContent='';}
+}
+
+// ── Canvas ────────────────────────────────────────────────────────
+function renderCanvas(){
+  const wrap=document.getElementById('cwrap'),cv=document.getElementById('cv');
+  const dpr=window.devicePixelRatio||1;
+  const W=wrap.clientWidth,H=wrap.clientHeight-8;
+  if(W<=0||H<=0||!curPrices.length)return;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const PL=62,PR=12,PT=22,PB=30;
+  const pw=W-PL-PR,ph=H-PT-PB;
+  const mn=Math.min(...curPnls),mx=Math.max(...curPnls);
+  const pnlR=mx-mn||1,prR=curPrices[curPrices.length-1]-curPrices[0]||1;
+  const tx=p=>PL+(p-curPrices[0])/prR*pw;
+  const ty=v=>PT+ph-(v-mn)/pnlR*ph;
+  ctx.fillStyle='#0f1318';ctx.fillRect(0,0,W,H);
+  for(let i=0;i<=6;i++){const v=mn+pnlR*i/6,y=ty(v);ctx.strokeStyle='#1c232f';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(PL+pw,y);ctx.stroke();}
+  for(let i=0;i<=8;i++){const p=curPrices[0]+prR*i/8,x=tx(p);ctx.strokeStyle='#1c232f';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,PT);ctx.lineTo(x,PT+ph);ctx.stroke();}
+  if(0>=mn&&0<=mx){const zy=ty(0);ctx.strokeStyle='#2e3849';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(PL,zy);ctx.lineTo(PL+pw,zy);ctx.stroke();}
+  const zy0=Math.min(Math.max(ty(0),PT),PT+ph);
+  function fillSeg(idxs,pos){
+    if(idxs.length<2)return;
+    ctx.beginPath();ctx.moveTo(tx(curPrices[idxs[0]]),zy0);
+    idxs.forEach(i=>ctx.lineTo(tx(curPrices[i]),ty(curPnls[i])));
+    ctx.lineTo(tx(curPrices[idxs[idxs.length-1]]),zy0);ctx.closePath();
+    ctx.fillStyle=pos?'rgba(46,204,113,.11)':'rgba(238,85,85,.11)';ctx.fill();
+  }
+  let seg=[];
+  curPnls.forEach((v,i)=>{const pos=v>=0;if(seg.length&&(curPnls[seg[0]]>=0)!==pos){fillSeg(seg,curPnls[seg[0]]>=0);seg=[];}seg.push(i);});
+  if(seg.length)fillSeg(seg,curPnls[seg[0]]>=0);
+  ctx.lineWidth=5;ctx.globalAlpha=0.11;
+  for(let i=1;i<curPrices.length;i++){ctx.strokeStyle=(curPnls[i-1]+curPnls[i])/2>=0?'#2ecc71':'#ee5555';ctx.beginPath();ctx.moveTo(tx(curPrices[i-1]),ty(curPnls[i-1]));ctx.lineTo(tx(curPrices[i]),ty(curPnls[i]));ctx.stroke();}
+  ctx.globalAlpha=1;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';
+  for(let i=1;i<curPrices.length;i++){ctx.strokeStyle=(curPnls[i-1]+curPnls[i])/2>=0?'#2ecc71':'#ee5555';ctx.beginPath();ctx.moveTo(tx(curPrices[i-1]),ty(curPnls[i-1]));ctx.lineTo(tx(curPrices[i]),ty(curPnls[i]));ctx.stroke();}
+  if(curSpot>=curPrices[0]&&curSpot<=curPrices[curPrices.length-1]){
+    const sx=tx(curSpot);
+    ctx.strokeStyle='rgba(74,158,255,.5)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(sx,PT);ctx.lineTo(sx,PT+ph);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(74,158,255,.15)';rr(ctx,sx-18,PT-17,36,13,4);ctx.fill();
+    ctx.fillStyle='#4a9eff';ctx.font='bold 10px monospace';ctx.textAlign='center';ctx.fillText('现价',sx,PT-7);
+  }
+  bePoints.forEach(bp=>{
+    if(bp<curPrices[0]||bp>curPrices[curPrices.length-1])return;
+    const bx=tx(bp);
+    ctx.strokeStyle='rgba(245,166,35,.4)';ctx.lineWidth=1.2;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(bx,PT);ctx.lineTo(bx,PT+ph);ctx.stroke();ctx.setLineDash([]);
+    const bl='$'+Math.round(bp/1000)+'K',blw=ctx.measureText(bl).width+8;
+    ctx.fillStyle='rgba(245,166,35,.15)';rr(ctx,bx-blw/2,PT+ph+4,blw,13,4);ctx.fill();
+    ctx.fillStyle='#f5a623';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText(bl,bx,PT+ph+13);
+  });
+  ctx.fillStyle='#4a5568';ctx.font='10px monospace';ctx.textAlign='right';
+  for(let i=0;i<=6;i++){
+    const v=mn+pnlR*i/6,y=ty(v),a=Math.abs(v);
+    let lb;if(a>=1000000)lb=(v>=0?'+':'-')+'$'+(a/1000).toFixed(0)+'K';
+    else if(a>=1000)lb=(v>=0?'+':'-')+'$'+(a/1000).toFixed(1)+'K';
+    else lb=(v>=0?'+':'-')+'$'+Math.round(a);
+    ctx.fillText(lb,PL-5,y+3);
+  }
+  ctx.textAlign='center';
+  for(let i=0;i<=8;i++){const p=curPrices[0]+prR*i/8,x=tx(p);ctx.fillText('$'+Math.round(p/1000)+'K',x,PT+ph+14);}
+  if(hovX!==null&&hovX>=PL&&hovX<=PL+pw){
+    const idx=Math.max(0,Math.min(curPrices.length-1,Math.round((hovX-PL)/pw*(curPrices.length-1))));
+    const price=curPrices[idx],pnl=curPnls[idx],cy=ty(pnl);
+    ctx.strokeStyle='rgba(138,151,170,.2)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(hovX,PT);ctx.lineTo(hovX,PT+ph);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(PL,cy);ctx.lineTo(PL+pw,cy);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(hovX,cy,5,0,Math.PI*2);
+    ctx.fillStyle=pnl>=0?'#2ecc71':'#ee5555';ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.5;ctx.stroke();
+    showTip(price,pnl);
+  }
+}
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+function showTip(price,pnl){
+  const tt=document.getElementById('tooltip');tt.style.display='block';
+  document.getElementById('ttP').textContent='BTC $'+Math.round(price).toLocaleString();
+  const pe=document.getElementById('ttPnl');pe.className='tpnl '+(pnl>=0?'pos':'neg');
+  pe.textContent=(pnl>=0?'盈利 +$':'亏损 -$')+Math.abs(Math.round(pnl)).toLocaleString();
+  const dist=price-curSpot;
+  document.getElementById('ttD').textContent=(dist>=0?'+':'')+Math.round(dist).toLocaleString()+' USD';
+  document.getElementById('ttPct').textContent=(dist>=0?'+':'')+(dist/curSpot*100).toFixed(2)+'%';
+  const TW=150,TH=104;
+  let lx=hovRawX+14,ly=hovRawY-TH/2;
+  if(lx+TW>window.innerWidth-6)lx=hovRawX-TW-14;
+  if(ly<6)ly=6;if(ly+TH>window.innerHeight-6)ly=window.innerHeight-TH-6;
+  tt.style.left=lx+'px';tt.style.top=ly+'px';
+}
+const cv=document.getElementById('cv');
+cv.addEventListener('mousemove',e=>{
+  const rect=cv.getBoundingClientRect();
+  hovX=e.clientX-rect.left;hovRawX=e.clientX;hovRawY=e.clientY;
+  if(curPrices.length){if(animFrame)cancelAnimationFrame(animFrame);animFrame=requestAnimationFrame(renderCanvas);}
+});
+cv.addEventListener('mouseleave',()=>{hovX=null;document.getElementById('tooltip').style.display='none';if(curPrices.length)renderCanvas();});
+window.addEventListener('resize',()=>{if(curStrat)renderCanvas();});
+
+// ── Init ──────────────────────────────────────────────────────────
+renderScenes();
+renderList();
+</script>
+</body>
+</html>
