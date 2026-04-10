@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牛市冷却系统 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=JetBrains+Mono:wght@300;400;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #20262f;
+  --surface: #272e38;
+  --surface2: #2d3540;
+  --border: #3d4f62;
+  --border2: #4a5e72;
+  --cold: #00c8f0;
+  --cold-dim: #1a5a6e;
+  --cold-glow: rgba(0,200,240,0.15);
+  --hot: #ff5555;
+  --hot-glow: rgba(255,85,85,0.15);
+  --warn: #f0a500;
+  --warn-glow: rgba(240,165,0,0.15);
+  --green: #00e87a;
+  --green-dim: #0d3d28;
+  --purple: #c084fc;
+  --text: #e8f0f8;
+  --text-bright: #ffffff;
+  --text-dim: #8aa0b8;
+  --text-muted: #5a7088;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Noto Serif SC', serif;
+  --font-display: 'Bebas Neue', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-serif);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+
+
+/* AMBIENT */
+.amb { position: fixed; border-radius: 50%; filter: blur(140px); pointer-events: none; z-index: 0; }
+.amb-1 { width:700px;height:700px;background:var(--cold);opacity:.04;top:-200px;right:-100px; }
+.amb-2 { width:500px;height:500px;background:var(--hot);opacity:.05;bottom:-150px;left:-80px; }
+.amb-3 { width:400px;height:400px;background:var(--purple);opacity:.03;top:50%;left:40%; }
+
+/* ═══════════════════════════════
+   NAV
+═══════════════════════════════ */
+nav {
+  position: sticky; top: 0; z-index: 500;
+  background: rgba(32,38,47,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 48px;
+}
+.nav-brand {
+  font-family: var(--font-display);
+  font-size: 14px; letter-spacing: 4px; color: var(--cold);
+}
+.nav-links { display: flex; gap: 2px; }
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 1.5px;
+  color: var(--text-dim); text-decoration: none;
+  padding: 6px 12px; border-radius: 3px;
+  transition: all 0.2s;
+}
+.nav-links a:hover { color: var(--cold); background: var(--cold-glow); }
+.nav-heat {
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-heat-label { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 2px; }
+.nav-heat-bar { width: 80px; height: 3px; background: var(--border); border-radius: 2px; overflow:hidden; }
+.nav-heat-fill { height: 100%; background: linear-gradient(90deg,var(--cold),var(--warn),var(--hot)); transition: width 0.5s; }
+.nav-heat-val { font-family: var(--font-display); font-size: 16px; color: var(--hot); min-width: 40px; text-align:right; transition: color 0.5s; }
+
+/* ═══════════════════════════════
+   HERO
+═══════════════════════════════ */
+.hero {
+  position: relative; z-index: 10;
+  padding: 64px 40px 48px;
+  border-bottom: 1px solid var(--border);
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; align-items: center;
+}
+.hero-main {}
+.hero-en { font-family:var(--font-mono); font-size:10px; letter-spacing:5px; color:var(--cold); margin-bottom:12px; }
+.hero-cn { font-family:var(--font-serif); font-size:40px; font-weight:700; color:#fff; letter-spacing:3px; line-height:1; margin-bottom:12px; }
+.hero-desc { font-size:13px; color:var(--text-dim); line-height:1.8; max-width:320px; font-weight:300; }
+
+/* Fear-Greed Dial */
+.fg-dial {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.fg-title { font-family:var(--font-mono); font-size:10px; letter-spacing:3px; color:var(--text-dim); }
+.dial-wrap { position:relative; width:160px; height:88px; overflow:hidden; }
+.dial-svg { width:160px; height:160px; }
+.dial-needle { transform-origin: 80px 80px; transition: transform 1s cubic-bezier(0.34,1.56,0.64,1); }
+.fg-val { font-family:var(--font-display); font-size:48px; color:#fff; line-height:1; }
+.fg-label { font-size:12px; font-weight:600; letter-spacing:1px; }
+
+/* Mini Stats */
+.hero-stats { display:flex; flex-direction:column; gap:12px; }
+.stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
+}
+.stat-name { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:1px; }
+.stat-val { font-family:var(--font-display); font-size:20px; }
+
+/* ═══════════════════════════════
+   SECTION LABELS
+═══════════════════════════════ */
+.section-header {
+  position: relative; z-index:10;
+  padding: 20px 40px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+}
+.sh-num { font-family:var(--font-display); font-size:11px; color:var(--cold); letter-spacing:3px; }
+.sh-title { font-size:15px; font-weight:600; color:var(--text-bright); letter-spacing:1px; }
+.sh-sub { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:1px; margin-left:auto; }
+
+/* ═══════════════════════════════
+   GRID SYSTEM
+═══════════════════════════════ */
+.panel-grid {
+  position:relative; z-index:10;
+  display:grid; gap:1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.g12 { grid-template-columns: 1fr 2fr; }
+.g21 { grid-template-columns: 2fr 1fr; }
+.gfull { grid-template-columns: 1fr; }
+
+.panel {
+  background: var(--bg);
+  padding: 28px 32px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.25s;
+}
+.panel:hover { background: var(--surface); }
+.panel.span2 { grid-column: span 2; }
+
+.panel-tag {
+  font-family:var(--font-mono); font-size:9px; letter-spacing:3px;
+  color:var(--cold); margin-bottom:10px;
+  display:flex; align-items:center; gap:8px;
+}
+.panel-tag::before { content:''; width:16px; height:1px; background:var(--cold); display:block; }
+.panel-title { font-size:16px; font-weight:600; color:var(--text-bright); margin-bottom:18px; line-height:1.3; }
+.panel-num {
+  font-family:var(--font-display); font-size:80px; color:var(--text-muted);
+  position:absolute; bottom:-8px; right:16px; line-height:1; user-select:none;
+  transition: color 0.3s;
+}
+.panel:hover .panel-num { color:var(--border); }
+
+/* ═══════════════════════════════
+   STEP 1 — 物理隔离
+═══════════════════════════════ */
+.checklist-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  cursor:pointer;
+}
+.checklist-item:last-child { border-bottom:none; }
+.check-box {
+  width:18px; height:18px; border:1px solid var(--text-dim); border-radius:3px;
+  flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center;
+  transition: all 0.2s; background:transparent;
+}
+.checklist-item.done .check-box { background:var(--cold); border-color:var(--cold); }
+.check-icon { color:var(--bg); font-size:11px; opacity:0; transition:opacity 0.2s; }
+.checklist-item.done .check-icon { opacity:1; }
+.check-content { flex:1; }
+.check-title { font-size:13px; font-weight:600; color:var(--text-bright); margin-bottom:3px; }
+.checklist-item.done .check-title { color:var(--text-dim); text-decoration:line-through; }
+.check-desc { font-size:11.5px; color:var(--text-dim); line-height:1.6; font-weight:300; }
+.check-badge {
+  font-family:var(--font-mono); font-size:9px; padding:2px 7px; border-radius:2px;
+  background:var(--cold-dim); color:var(--cold); letter-spacing:1px; align-self:flex-start; margin-top:3px; flex-shrink:0;
+}
+
+/* Noise sources */
+.noise-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.noise-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:4px;
+  padding:12px; text-align:center;
+  cursor:pointer; transition: all 0.3s; position:relative;
+}
+.noise-card.muted { opacity:0.4; }
+.noise-card.muted::after { content:'已屏蔽'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:9px; color:var(--cold); letter-spacing:2px; background:rgba(0,200,240,0.06); }
+.noise-icon { font-size:22px; margin-bottom:4px; display:block; }
+.noise-name { font-size:11px; color:var(--text-dim); }
+.noise-score { font-family:var(--font-display); font-size:20px; color:var(--hot); }
+
+/* ═══════════════════════════════
+   STEP 2 — 逻辑自检
+═══════════════════════════════ */
+.inversion-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-left: 3px solid var(--cold-dim);
+  border-radius:4px; padding:16px 18px; margin-bottom:10px;
+  cursor:pointer; transition: all 0.3s; position:relative;
+}
+.inversion-card.answered { border-left-color:var(--green); }
+.inversion-card.danger   { border-left-color:var(--hot); }
+.inv-q-num { font-family:var(--font-mono); font-size:9px; color:var(--cold); letter-spacing:2px; margin-bottom:6px; }
+.inv-question { font-size:13.5px; color:var(--text-bright); line-height:1.6; margin-bottom:10px; }
+.inv-hint { font-size:11px; color:var(--text-dim); line-height:1.5; }
+.inv-answer-btns { display:flex; gap:8px; margin-top:12px; display:none; }
+.inversion-card.open .inv-answer-btns { display:flex; }
+.ans-btn {
+  font-family:var(--font-mono); font-size:10px; letter-spacing:1px;
+  padding:6px 14px; border-radius:3px; border:1px solid; cursor:pointer; transition:all 0.2s;
+  background:transparent;
+}
+.ans-yes { border-color:var(--green); color:var(--green); }
+.ans-yes:hover { background:rgba(0,232,122,0.1); }
+.ans-no  { border-color:var(--hot); color:var(--hot); }
+.ans-no:hover  { background:rgba(255,61,61,0.1); }
+
+/* Cognitive biases */
+.bias-list { display:flex; flex-direction:column; gap:8px; }
+.bias-item {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:4px;
+}
+.bias-icon { font-size:18px; flex-shrink:0; }
+.bias-name { font-size:12.5px; color:var(--text-bright); font-weight:600; margin-bottom:2px; }
+.bias-desc { font-size:11px; color:var(--text-dim); line-height:1.5; }
+.bias-meter { width:50px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-left:auto; flex-shrink:0; }
+.bias-fill { height:100%; border-radius:2px; transition:width 1s; }
+
+/* ═══════════════════════════════
+   STEP 3 — 定量风控
+═══════════════════════════════ */
+.slider-group { margin-bottom:22px; }
+.slider-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:6px; }
+.slider-name { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:1.5px; }
+.slider-value { font-family:var(--font-display); font-size:22px; }
+.slider-desc { font-size:11px; color:var(--text-dim); margin-bottom:8px; line-height:1.5; }
+input[type=range] {
+  width:100%; -webkit-appearance:none; height:3px; background:var(--border); border-radius:2px; outline:none; cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+  border:2px solid var(--bg); transition:transform 0.2s, box-shadow 0.2s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.4); }
+
+/* Position ladder */
+.ladder { margin-top:4px; }
+.ladder-title { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:var(--text-dim); margin-bottom:10px; }
+.ladder-row {
+  display:flex; align-items:center; gap:10px; margin-bottom:8px;
+}
+.ladder-label { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); width:70px; flex-shrink:0; }
+.ladder-bar-wrap { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.ladder-bar { height:100%; border-radius:3px; transition:width 0.5s; }
+.ladder-pct { font-family:var(--font-display); font-size:14px; width:36px; text-align:right; }
+
+/* Position size calculator */
+.calc-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.calc-field label { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); letter-spacing:2px; display:block; margin-bottom:5px; }
+.calc-field input {
+  width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text-bright);
+  font-family:var(--font-mono); font-size:13px; padding:9px 12px; border-radius:4px; outline:none;
+  transition:border-color 0.2s;
+}
+.calc-field input:focus { border-color:var(--cold-dim); }
+.calc-result {
+  background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--green);
+  border-radius:4px; padding:14px 16px;
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;
+}
+.cr-item {}
+.cr-label { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); letter-spacing:1px; margin-bottom:4px; }
+.cr-val { font-family:var(--font-display); font-size:24px; color:var(--green); }
+.cr-sub { font-size:10px; color:var(--text-dim); margin-top:2px; }
+
+/* ═══════════════════════════════
+   STEP 4 — BTC历史牛市对照
+═══════════════════════════════ */
+.cycle-table { width:100%; border-collapse:collapse; }
+.cycle-table th {
+  font-family:var(--font-mono); font-size:9px; letter-spacing:2px; color:var(--text-dim);
+  padding:8px 12px; text-align:left; border-bottom:1px solid var(--border);
+}
+.cycle-table td {
+  padding:10px 12px; border-bottom:1px solid var(--border);
+  font-size:12px; color:var(--text);
+}
+.cycle-table tr:last-child td { border-bottom:none; }
+.cycle-table tr:hover td { background:var(--surface); }
+.td-cycle { font-weight:600; color:var(--text-bright); }
+.td-peak { font-family:var(--font-display); font-size:15px; color:var(--warn); }
+.td-drop { font-family:var(--font-display); font-size:15px; color:var(--hot); }
+.td-gain { font-family:var(--font-display); font-size:15px; color:var(--green); }
+.td-signal { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); }
+.current-row td { background:rgba(0,200,240,0.04); }
+.current-row .td-cycle { color:var(--cold); }
+
+/* Historical bar chart */
+.bar-chart { display:flex; align-items:flex-end; gap:8px; height:100px; margin-top:8px; padding-top:8px; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.bar-body { width:100%; border-radius:2px 2px 0 0; transition:height 0.8s; min-height:2px; }
+.bar-label { font-family:var(--font-mono); font-size:8px; color:var(--text-dim); letter-spacing:0.5px; }
+
+/* ═══════════════════════════════
+   STEP 5 — 情绪偏差测试
+═══════════════════════════════ */
+.quiz-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  padding:20px 22px; margin-bottom:12px;
+  transition: border-color 0.3s;
+}
+.quiz-card.answered-well { border-color: var(--green); }
+.quiz-card.answered-bad  { border-color: var(--hot); }
+.quiz-q { font-size:13.5px; color:var(--text-bright); line-height:1.7; margin-bottom:14px; }
+.quiz-q-num { font-family:var(--font-mono); font-size:9px; color:var(--cold); letter-spacing:2px; margin-bottom:8px; }
+.quiz-options { display:flex; flex-direction:column; gap:7px; }
+.quiz-opt {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 14px; background:var(--bg); border:1px solid var(--border); border-radius:4px;
+  cursor:pointer; transition:all 0.2s; font-size:12.5px; color:var(--text);
+}
+.quiz-opt:hover { border-color:var(--cold-dim); background:var(--cold-glow); }
+.quiz-opt.selected-good { border-color:var(--green); background:rgba(0,232,122,0.06); color:var(--green); }
+.quiz-opt.selected-bad  { border-color:var(--hot);  background:rgba(255,61,61,0.06);  color:var(--hot); }
+.quiz-opt-dot {
+  width:8px; height:8px; border-radius:50%; border:1px solid var(--text-dim); flex-shrink:0; transition:all 0.2s;
+}
+.quiz-opt.selected-good .quiz-opt-dot { background:var(--green); border-color:var(--green); }
+.quiz-opt.selected-bad  .quiz-opt-dot { background:var(--hot);   border-color:var(--hot); }
+.quiz-explain {
+  margin-top:10px; padding:10px 14px; border-radius:4px;
+  font-size:11.5px; line-height:1.6; display:none;
+}
+.quiz-card.answered-well .quiz-explain { display:block; background:rgba(0,232,122,0.06); color:var(--green); border:1px solid rgba(0,232,122,0.2); }
+.quiz-card.answered-bad  .quiz-explain { display:block; background:rgba(255,61,61,0.06);  color:var(--hot);  border:1px solid rgba(255,61,61,0.2); }
+
+/* Emotion signals */
+.signal-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.signal-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  padding:14px 16px; cursor:pointer; transition:all 0.3s; user-select:none;
+}
+.signal-card.active { border-color:var(--hot); background:var(--hot-glow); box-shadow:0 0 20px rgba(255,61,61,0.08); }
+.sig-icon { font-size:24px; margin-bottom:8px; display:block; filter:grayscale(1); transition:filter 0.3s; }
+.signal-card.active .sig-icon { filter:grayscale(0); }
+.sig-title { font-size:12px; font-weight:600; color:var(--text-bright); margin-bottom:4px; transition:color 0.3s; }
+.signal-card.active .sig-title { color:var(--hot); }
+.sig-desc { font-size:11px; color:var(--text-dim); line-height:1.5; }
+.signal-alert {
+  grid-column:1/-1; padding:14px 18px;
+  background:var(--hot-glow); border:1px solid rgba(255,61,61,0.3); border-radius:4px;
+  font-family:var(--font-mono); font-size:11px; color:var(--hot); letter-spacing:1px;
+  opacity:0; transform:translateY(6px); transition:all 0.4s; pointer-events:none;
+}
+.signal-alert.visible { opacity:1; transform:translateY(0); }
+
+/* ═══════════════════════════════
+   STEP 6 — 书面决策日志
+═══════════════════════════════ */
+.log-form {
+  background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  padding:20px 22px; margin-bottom:16px;
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.form-full { grid-column:1/-1; }
+.f-label { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); letter-spacing:2px; display:block; margin-bottom:5px; }
+textarea, .f-input {
+  width:100%; background:var(--bg); border:1px solid var(--border);
+  color:var(--text-bright); font-family:var(--font-serif); font-size:13px;
+  padding:10px 14px; border-radius:4px; outline:none; transition:border-color 0.2s;
+  line-height:1.7;
+}
+textarea { resize:vertical; min-height:72px; }
+.f-input { font-family:var(--font-mono); font-size:12px; }
+textarea:focus, .f-input:focus { border-color:var(--cold-dim); }
+textarea::placeholder, .f-input::placeholder { color:var(--text-muted); }
+
+.trade-type-btns { display:flex; gap:8px; margin-bottom:12px; }
+.type-btn {
+  font-family:var(--font-mono); font-size:10px; letter-spacing:1.5px;
+  padding:7px 16px; border-radius:3px; border:1px solid var(--border); cursor:pointer;
+  background:transparent; color:var(--text-dim); transition:all 0.2s;
+}
+.type-btn.active-buy  { border-color:var(--green); color:var(--green); background:rgba(0,232,122,0.06); }
+.type-btn.active-sell { border-color:var(--hot);   color:var(--hot);   background:rgba(255,61,61,0.06); }
+.type-btn:hover { border-color:var(--cold-dim); color:var(--cold); }
+
+.submit-btn {
+  width:100%; background:transparent; border:1px solid var(--cold-dim);
+  color:var(--cold); font-family:var(--font-mono); font-size:11px; letter-spacing:2px;
+  padding:13px; border-radius:4px; cursor:pointer; transition:all 0.3s; margin-top:4px;
+}
+.submit-btn:hover { background:var(--cold-glow); border-color:var(--cold); }
+
+.log-entries { display:flex; flex-direction:column; gap:8px; }
+.log-entry {
+  background:var(--surface); border:1px solid var(--border); border-radius:4px;
+  padding:14px 16px; animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.entry-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.entry-type { font-family:var(--font-mono); font-size:9px; letter-spacing:2px; padding:3px 8px; border-radius:2px; }
+.entry-type.buy  { background:rgba(0,232,122,0.1); color:var(--green); border:1px solid rgba(0,232,122,0.2); }
+.entry-type.sell { background:rgba(255,61,61,0.1);  color:var(--hot);  border:1px solid rgba(255,61,61,0.2); }
+.entry-time { font-family:var(--font-mono); font-size:9px; color:var(--text-dim); }
+.entry-reason { font-size:12.5px; color:var(--text); line-height:1.6; margin-bottom:6px; }
+.entry-rules { display:flex; gap:16px; }
+.entry-rule { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); }
+.entry-rule span { color:var(--text-bright); }
+
+/* ═══════════════════════════════
+   STEP 7 — 心法与认知
+═══════════════════════════════ */
+.wisdom-cards { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.wisdom-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  padding:18px 16px; transition:all 0.3s; cursor:default;
+}
+.wisdom-card:hover { border-color:var(--cold-dim); background:var(--cold-glow); transform:translateY(-2px); }
+.wc-icon { font-size:28px; margin-bottom:10px; }
+.wc-title { font-size:13px; font-weight:600; color:var(--text-bright); margin-bottom:6px; }
+.wc-body { font-size:11.5px; color:var(--text-dim); line-height:1.65; font-weight:300; }
+.wc-author { font-family:var(--font-mono); font-size:9px; color:var(--cold); letter-spacing:1px; margin-top:10px; }
+
+.quote-block {
+  background:var(--surface); border:1px solid var(--border);
+  border-left:4px solid var(--cold); border-radius:4px;
+  padding:20px 24px; margin-top:12px;
+}
+.quote-text { font-size:16px; color:#fff; line-height:1.7; font-weight:300; font-style:italic; }
+.quote-src { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); margin-top:10px; letter-spacing:1px; }
+
+/* ═══════════════════════════════
+   PRINCIPLE / FOOTER
+═══════════════════════════════ */
+.principle {
+  position:relative; z-index:10;
+  padding:48px 40px; text-align:center;
+  border-top:1px solid var(--border);
+}
+.principle-main { font-size:24px; font-weight:700; color:#fff; line-height:1.6; letter-spacing:1px; margin-bottom:10px; }
+.principle-en { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:4px; }
+
+footer {
+  position:relative; z-index:10;
+  padding:18px 40px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.footer-l { font-family:var(--font-mono); font-size:9px; color:var(--text-muted); letter-spacing:2px; }
+.footer-r { display:flex; gap:20px; align-items:center; }
+.cool-idx { font-family:var(--font-display); font-size:16px; color:var(--cold); letter-spacing:3px; }
+
+/* ═══════════════════════════════
+   EMERGENCY COOL BTN
+═══════════════════════════════ */
+.panic-btn {
+  position:fixed; bottom:28px; right:28px; z-index:400;
+  background:var(--hot); color:#fff;
+  font-family:var(--font-display); font-size:13px; letter-spacing:3px;
+  padding:13px 22px; border:none; border-radius:4px; cursor:pointer;
+  box-shadow:0 0 30px rgba(255,61,61,0.35);
+  transition:all 0.3s;
+}
+.panic-btn:hover { transform:scale(1.05); box-shadow:0 0 50px rgba(255,61,61,0.55); }
+
+/* ═══════════════════════════════
+   COOL OVERLAY
+═══════════════════════════════ */
+#coolOverlay {
+  position:fixed; inset:0; background:rgba(28,34,42,0.98);
+  z-index:800; display:none; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center; gap:24px;
+}
+#coolOverlay.active { display:flex; }
+.cool-header { font-family:var(--font-display); font-size:56px; letter-spacing:10px; color:var(--cold); }
+.cool-pulse { animation:coolPulse 2s infinite; }
+@keyframes coolPulse { 0%,100%{opacity:1;text-shadow:0 0 40px var(--cold)} 50%{opacity:0.6;text-shadow:0 0 100px var(--cold)} }
+.cool-timer-ring { position:relative; width:80px; height:80px; }
+.cool-timer-ring svg { transform:rotate(-90deg); }
+.cool-timer-ring circle { fill:none; stroke-width:3; }
+.cool-ring-bg { stroke:var(--border); }
+.cool-ring-fill { stroke:var(--cold); stroke-dasharray:220; stroke-dashoffset:0; transition:stroke-dashoffset 1s linear; stroke-linecap:round; }
+.cool-num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:28px; color:#fff; }
+.cool-question {
+  max-width:520px; font-size:19px; color:#fff; line-height:1.8; font-weight:300;
+  padding:24px 36px; border:1px solid var(--cold-dim); border-radius:8px;
+  background:rgba(0,200,240,0.04);
+}
+.cool-hint { font-family:var(--font-mono); font-size:10px; color:var(--text-dim); letter-spacing:2px; max-width:380px; line-height:1.8; }
+.cool-close {
+  background:transparent; border:1px solid var(--text-dim); color:var(--text-dim);
+  font-family:var(--font-mono); font-size:10px; letter-spacing:2px;
+  padding:10px 28px; border-radius:4px; cursor:pointer; transition:all 0.3s;
+}
+.cool-close:hover { border-color:var(--text); color:var(--text); }
+.cool-close:disabled { opacity:0.3; cursor:not-allowed; }
+
+/* ═══════════════════════════════
+   MISC UTILITIES
+═══════════════════════════════ */
+.tag { font-family:var(--font-mono); font-size:9px; letter-spacing:1.5px; padding:2px 8px; border-radius:2px; }
+.tag-cold { background:var(--cold-dim); color:var(--cold); }
+.tag-hot  { background:rgba(255,61,61,0.15); color:var(--hot); }
+.tag-warn { background:rgba(240,165,0,0.15); color:var(--warn); }
+.tag-green{ background:var(--green-dim); color:var(--green); }
+
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+@media (max-width:760px) {
+  .g2,.g3,.g12,.g21 { grid-template-columns:1fr; }
+  .hero { grid-template-columns:1fr; padding:36px 20px; }
+  .panel { padding:22px 20px; }
+  .wisdom-cards { grid-template-columns:1fr; }
+  .calc-grid,.form-row { grid-template-columns:1fr; }
+  .signal-grid { grid-template-columns:1fr; }
+  nav { padding:0 16px; }
+  .nav-links { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="amb amb-1"></div>
+<div class="amb amb-2"></div>
+<div class="amb amb-3"></div>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav>
+  <div class="nav-brand">BMCS · 牛市冷却</div>
+  <div class="nav-links">
+    <a href="#s1">物理隔离</a>
+    <a href="#s2">逻辑自检</a>
+    <a href="#s3">定量风控</a>
+    <a href="#s4">历史镜鉴</a>
+    <a href="#s5">情绪测试</a>
+    <a href="#s6">决策日志</a>
+    <a href="#s7">核心心法</a>
+  </div>
+  <div class="nav-heat">
+    <span class="nav-heat-label">HEAT</span>
+    <div class="nav-heat-bar"><div class="nav-heat-fill" id="navHeatFill"></div></div>
+    <div class="nav-heat-val" id="navHeatVal">--°</div>
+  </div>
+</nav>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<div class="hero">
+  <div class="hero-main">
+    <div class="hero-en">BULL MARKET COOLING SYSTEM · v2.0</div>
+    <div class="hero-cn">牛市冷却系统</div>
+    <div class="hero-desc">结构化决策框架 · 在狂热中保持理性是一场与本能的博弈<br>当噪音诱导你追高或梭哈时，让这套系统把你拽回地面</div>
+  </div>
+
+  <!-- Fear & Greed Dial -->
+  <div class="fg-dial">
+    <div class="fg-title">MARKET HEAT INDEX</div>
+    <div class="dial-wrap">
+      <svg class="dial-svg" viewBox="0 0 160 160">
+        <defs>
+          <linearGradient id="dialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#00c8f0"/>
+            <stop offset="50%"  stop-color="#f0a500"/>
+            <stop offset="100%" stop-color="#ff3d3d"/>
+          </linearGradient>
+        </defs>
+        <path d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="#1a2230" stroke-width="12" stroke-linecap="round"/>
+        <path d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="url(#dialGrad)" stroke-width="12" stroke-linecap="round" opacity="0.7"/>
+        <line id="dialNeedle" x1="80" y1="80" x2="80" y2="28" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90,80,80)"/>
+        <circle cx="80" cy="80" r="5" fill="white"/>
+      </svg>
+    </div>
+    <div class="fg-val" id="fgVal">--</div>
+    <div class="fg-label" id="fgLabel" style="color:var(--hot)">EXTREME GREED</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="hero-stats">
+    <div class="stat-row">
+      <span class="stat-name">DECISIONS_LOGGED</span>
+      <span class="stat-val" id="statDecisions" style="color:var(--green)">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-name">SIGNALS_ACTIVE</span>
+      <span class="stat-val" id="statSignals" style="color:var(--warn)">0/4</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-name">COOLING_SCORE</span>
+      <span class="stat-val" id="statCool" style="color:var(--cold)">--%</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-name">CHECKLIST_DONE</span>
+      <span class="stat-val" id="statCheck" style="color:var(--purple)">0/5</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ S1 · 物理隔离 ═══════════════ -->
+<div id="s1" class="section-header">
+  <span class="sh-num">STEP 01</span>
+  <span class="sh-title">物理隔离与信息降噪</span>
+  <span class="sh-sub">INFORMATION DETOX PROTOCOL</span>
+</div>
+<div class="panel-grid g2">
+  <div class="panel">
+    <div class="panel-tag">执行清单</div>
+    <div class="panel-title">信息环境重建 · 5项强制行动</div>
+    <div class="panel-num">01</div>
+
+    <div class="checklist-item" onclick="toggleCheck(this)">
+      <div class="check-box"><span class="check-icon">✓</span></div>
+      <div class="check-content">
+        <div class="check-title">关闭所有社交媒体通知</div>
+        <div class="check-desc">朋友圈/群聊满屏晒收益图 = 市场见顶信号。情绪传染比病毒更快，噪音是仓位杀手。</div>
+      </div>
+      <div class="check-badge">HIGH RISK</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this)">
+      <div class="check-box"><span class="check-icon">✓</span></div>
+      <div class="check-content">
+        <div class="check-title">建立专属观察列表</div>
+        <div class="check-desc">只追踪预设标的（如BTC价格/DVOL/期权Greeks），不被涨幅榜和推荐算法被动驱动。</div>
+      </div>
+      <div class="check-badge">REQUIRED</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this)">
+      <div class="check-box"><span class="check-icon">✓</span></div>
+      <div class="check-content">
+        <div class="check-title">强制无屏时间（每日≥2h）</div>
+        <div class="check-desc">规定固定时段断开所有数字设备，让大脑从多巴胺循环中强制复位。</div>
+      </div>
+      <div class="check-badge">DAILY</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this)">
+      <div class="check-box"><span class="check-icon">✓</span></div>
+      <div class="check-content">
+        <div class="check-title">设置交易检查时间窗口</div>
+        <div class="check-desc">每天固定1-2个时间点查看行情（如9:00 / 21:00），其余时间不主动盯盘。</div>
+      </div>
+      <div class="check-badge">SCHEDULE</div>
+    </div>
+    <div class="checklist-item" onclick="toggleCheck(this)">
+      <div class="check-box"><span class="check-icon">✓</span></div>
+      <div class="check-content">
+        <div class="check-title">将部分利润转为实体资产</div>
+        <div class="check-desc">把账面浮盈变成家庭生活改善，让你更真实感受金钱价值而非数字跳动。</div>
+      </div>
+      <div class="check-badge">ANCHOR</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">噪音源风险评级</div>
+    <div class="panel-title">信息来源 · 毒性等级评估</div>
+    <div class="panel-num">01</div>
+    <div class="noise-grid" id="noiseGrid">
+      <div class="noise-card" onclick="muteNoise(this)">
+        <span class="noise-icon">📱</span>
+        <div class="noise-name">微信群聊</div>
+        <div class="noise-score">危险</div>
+      </div>
+      <div class="noise-card" onclick="muteNoise(this)">
+        <span class="noise-icon">🐦</span>
+        <div class="noise-name">Twitter/X</div>
+        <div class="noise-score">危险</div>
+      </div>
+      <div class="noise-card" onclick="muteNoise(this)">
+        <span class="noise-icon">📺</span>
+        <div class="noise-name">财经直播</div>
+        <div class="noise-score">高风险</div>
+      </div>
+      <div class="noise-card" onclick="muteNoise(this)">
+        <span class="noise-icon">📰</span>
+        <div class="noise-name">新闻推送</div>
+        <div class="noise-score">中风险</div>
+      </div>
+      <div class="noise-card" onclick="muteNoise(this)">
+        <span class="noise-icon">📊</span>
+        <div class="noise-name">涨幅榜</div>
+        <div class="noise-score">极危险</div>
+      </div>
+      <div class="noise-card" onclick="muteNoise(this)">
+        <span class="noise-icon">💬</span>
+        <div class="noise-name">KOL喊单</div>
+        <div class="noise-score">极危险</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:1px;">点击卡片模拟屏蔽该信息源 · 已屏蔽 <span id="mutedCount" style="color:var(--cold)">0</span>/6</div>
+  </div>
+</div>
+
+<!-- ═══════════════ S2 · 逻辑自检 ═══════════════ -->
+<div id="s2" class="section-header">
+  <span class="sh-num">STEP 02</span>
+  <span class="sh-title">逻辑自检 · 芒格反转测试</span>
+  <span class="sh-sub">THE INVERSION TEST · CHARLIE MUNGER</span>
+</div>
+<div class="panel-grid g12">
+  <div class="panel">
+    <div class="panel-tag">核心自问</div>
+    <div class="panel-title">交易前必须回答的5个反向问题</div>
+    <div class="panel-num">02</div>
+
+    <div class="inversion-card" onclick="openInv(this)">
+      <div class="inv-q-num">Q1 · 极端情景测试</div>
+      <div class="inv-question">如果现在价格腰斩，我是否有应对方案？</div>
+      <div class="inv-hint">不仅是心理准备，更是具体的财务措施：杠杆是否能撑住？有无对冲仓位（Put保护）？清算线在哪里？</div>
+      <div class="inv-answer-btns">
+        <button class="ans-btn ans-yes" onclick="answerInv(event,this.closest('.inversion-card'),'yes','有完整应对预案，已设置止损和对冲')">✓ 有方案</button>
+        <button class="ans-btn ans-no"  onclick="answerInv(event,this.closest('.inversion-card'),'no', '⚠ 警告：未做压力测试即入场，是赌博而非交易')">✗ 没想过</button>
+      </div>
+    </div>
+
+    <div class="inversion-card" onclick="openInv(this)">
+      <div class="inv-q-num">Q2 · 买入逻辑溯源</div>
+      <div class="inv-question">我的买入理由是"它在涨"，还是"内在价值/基本面质变"？</div>
+      <div class="inv-hint">价格动量≠投资逻辑。能否用一句话解释：此资产为何在此价格值得持有？能否量化？</div>
+      <div class="inv-answer-btns">
+        <button class="ans-btn ans-yes" onclick="answerInv(event,this.closest('.inversion-card'),'yes','基于基本面分析，买入逻辑清晰可量化')">✓ 基本面驱动</button>
+        <button class="ans-btn ans-no"  onclick="answerInv(event,this.closest('.inversion-card'),'no', '⚠ 动量追涨是散户最常见的亏损原因之一')">✗ 就是在涨</button>
+      </div>
+    </div>
+
+    <div class="inversion-card" onclick="openInv(this)">
+      <div class="inv-q-num">Q3 · 对手盘思维</div>
+      <div class="inv-question">谁在接我的盘？这笔交易的对手方是谁？</div>
+      <div class="inv-hint">每一笔买入都有人在卖出。如果对面是做市商/机构/鲸鱼，你是否有信息优势？</div>
+      <div class="inv-answer-btns">
+        <button class="ans-btn ans-yes" onclick="answerInv(event,this.closest('.inversion-card'),'yes','已分析对手盘结构，有相对信息/结构优势')">✓ 有优势</button>
+        <button class="ans-btn ans-no"  onclick="answerInv(event,this.closest('.inversion-card'),'no', '⚠ 在信息不对称市场中，不清楚对手是谁，你往往就是那个人')">✗ 不清楚</button>
+      </div>
+    </div>
+
+    <div class="inversion-card" onclick="openInv(this)">
+      <div class="inv-q-num">Q4 · 仓位一致性检验</div>
+      <div class="inv-question">这笔交易的规模，是否和我对它的把握程度相匹配？</div>
+      <div class="inv-hint">Kelly准则：最优仓位 = 胜率×赔率比 / 总资金。高确信度才配高仓位，不确定时小仓位试错。</div>
+      <div class="inv-answer-btns">
+        <button class="ans-btn ans-yes" onclick="answerInv(event,this.closest('.inversion-card'),'yes','仓位与判断置信度匹配，符合资金管理规则')">✓ 成比例</button>
+        <button class="ans-btn ans-no"  onclick="answerInv(event,this.closest('.inversion-card'),'no', '⚠ 仓位过重 = 情绪押注，不是理性交易')">✗ 仓位过重</button>
+      </div>
+    </div>
+
+    <div class="inversion-card" onclick="openInv(this)">
+      <div class="inv-q-num">Q5 · 后悔测试</div>
+      <div class="inv-question">如果明天跌30%，我会后悔今天的决定吗？</div>
+      <div class="inv-hint">后悔最小化原则：在最坏情景下，你是否仍能接受这个结果？如果不能，调整仓位直到可以接受。</div>
+      <div class="inv-answer-btns">
+        <button class="ans-btn ans-yes" onclick="answerInv(event,this.closest('.inversion-card'),'yes','最坏情景在接受范围内，不会影响生活质量')">✓ 能接受</button>
+        <button class="ans-btn ans-no"  onclick="answerInv(event,this.closest('.inversion-card'),'no', '⚠ 不能接受最坏结果 = 当前仓位超出风险承受上限')">✗ 无法接受</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">认知偏差识别</div>
+    <div class="panel-title">牛市中最危险的6种心理陷阱</div>
+    <div class="panel-num">02</div>
+    <div class="bias-list">
+      <div class="bias-item">
+        <div class="bias-icon">🎯</div>
+        <div>
+          <div class="bias-name">锚定效应 Anchoring</div>
+          <div class="bias-desc">以买入价或近期高点作为判断参照，导致拒绝止损或过早止盈</div>
+        </div>
+        <div class="bias-meter"><div class="bias-fill" style="width:85%;background:var(--hot)"></div></div>
+      </div>
+      <div class="bias-item">
+        <div class="bias-icon">📈</div>
+        <div>
+          <div class="bias-name">近因效应 Recency Bias</div>
+          <div class="bias-desc">过度外推最近的涨势，认为"这次不同"，忽视历史均值回归规律</div>
+        </div>
+        <div class="bias-meter"><div class="bias-fill" style="width:90%;background:var(--hot)"></div></div>
+      </div>
+      <div class="bias-item">
+        <div class="bias-icon">😰</div>
+        <div>
+          <div class="bias-name">损失厌恶 Loss Aversion</div>
+          <div class="bias-desc">亏损的痛苦是盈利快感的2.5倍，导致持亏杀盈，系统性伤害收益</div>
+        </div>
+        <div class="bias-meter"><div class="bias-fill" style="width:80%;background:var(--warn)"></div></div>
+      </div>
+      <div class="bias-item">
+        <div class="bias-icon">🐑</div>
+        <div>
+          <div class="bias-name">从众效应 Herding</div>
+          <div class="bias-desc">将大多数人的行为视为信号，在市场顶部加速追涨，在底部加速抛售</div>
+        </div>
+        <div class="bias-meter"><div class="bias-fill" style="width:75%;background:var(--warn)"></div></div>
+      </div>
+      <div class="bias-item">
+        <div class="bias-icon">🏆</div>
+        <div>
+          <div class="bias-name">自我归因偏差 Self-Attribution</div>
+          <div class="bias-desc">牛市盈利归功于个人能力，亏损归咎于外部因素，阻碍真实能力评估</div>
+        </div>
+        <div class="bias-meter"><div class="bias-fill" style="width:70%;background:var(--warn)"></div></div>
+      </div>
+      <div class="bias-item">
+        <div class="bias-icon">🔮</div>
+        <div>
+          <div class="bias-name">过度自信 Overconfidence</div>
+          <div class="bias-desc">交易越多越觉得自己掌握规律，实则是幸存者偏差在强化错误认知</div>
+        </div>
+        <div class="bias-meter"><div class="bias-fill" style="width:88%;background:var(--hot)"></div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="quote-block">
+      <div class="quote-text">"反过来想，永远要反过来想。" 如果你问自己如何在牛市赚更多，你应该先问：牛市中哪些行为最容易让人倾家荡产？</div>
+      <div class="quote-src">— CHARLIE MUNGER · Poor Charlie's Almanack</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ S3 · 定量风控 ═══════════════ -->
+<div id="s3" class="section-header">
+  <span class="sh-num">STEP 03</span>
+  <span class="sh-title">定量风控 · 分段组数法</span>
+  <span class="sh-sub">POSITION SIZING & RISK MANAGEMENT</span>
+</div>
+<div class="panel-grid g3">
+  <div class="panel">
+    <div class="panel-tag">止盈/止损参数</div>
+    <div class="panel-title">动态风控参数设置</div>
+    <div class="panel-num">03</div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-name">TAKE_PROFIT_TRIGGER</span>
+        <span class="slider-value" id="tpv" style="color:var(--green)">+15%</span>
+      </div>
+      <div class="slider-desc">每上涨此幅度，触发一次分批止盈操作</div>
+      <input type="range" min="5" max="50" value="15" oninput="updateTP(this.value)" style="--c:var(--green)">
+      <input type="range" min="5" max="50" value="15" oninput="updateTP(this.value)" id="tpSlider" style="display:none">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-name">POSITION_SELL_PCT</span>
+        <span class="slider-value" id="spv" style="color:var(--warn)">20%</span>
+      </div>
+      <div class="slider-desc">每次触发止盈时，卖出总仓位的比例</div>
+      <input type="range" min="5" max="50" value="20" oninput="document.getElementById('spv').textContent=this.value+'%';updateLadder()">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-name">TRAILING_STOP_PCT</span>
+        <span class="slider-value" id="tsv" style="color:var(--hot)">-8%</span>
+      </div>
+      <div class="slider-desc">从最高点回撤此幅度，无条件执行清仓/减仓</div>
+      <input type="range" min="3" max="25" value="8" oninput="document.getElementById('tsv').textContent='-'+this.value+'%'">
+    </div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="slider-name">MAX_POSITION_PCT</span>
+        <span class="slider-value" id="mpv" style="color:var(--purple)">30%</span>
+      </div>
+      <div class="slider-desc">单一资产最大仓位占总资金比例上限</div>
+      <input type="range" min="5" max="80" value="30" oninput="document.getElementById('mpv').textContent=this.value+'%'">
+    </div>
+
+    <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--hot);border-radius:4px;font-family:var(--font-mono);font-size:10px;color:var(--hot);letter-spacing:0.8px;line-height:1.7;">
+      ⚠ 移动止损触发后无条件执行<br>
+      不听任何"利好"解释 · 不等"反弹确认"
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">分批止盈阶梯</div>
+    <div class="panel-title">持仓逐步释放计划 · 可视化</div>
+    <div class="panel-num">03</div>
+    <div class="ladder" id="ladderViz"></div>
+
+    <div class="divider"></div>
+
+    <div class="panel-tag" style="margin-top:0">核心原则</div>
+    <div class="item-text" style="font-size:12px;line-height:1.8;color:var(--text-dim);">
+      <p style="margin-bottom:8px;">• <strong style="color:var(--text-bright)">不要幻想卖在最高点。</strong> 止盈的目标是"落袋为安"，不是"利益最大化"。</p>
+      <p style="margin-bottom:8px;">• <strong style="color:var(--text-bright)">分批≠犹豫。</strong> 分批是数学上最优的不确定性处理策略，是纪律，不是软弱。</p>
+      <p>• <strong style="color:var(--text-bright)">价格越高，防守越严。</strong> 随价格上涨持续上移移动止损位，锁定浮盈。</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">仓位计算器</div>
+    <div class="panel-title">Kelly准则 · 最优仓位计算</div>
+    <div class="panel-num">03</div>
+
+    <div class="calc-grid">
+      <div class="calc-field">
+        <label class="f-label">总资金 (USDT)</label>
+        <input type="number" id="c_capital" value="100000" oninput="calcKelly()">
+      </div>
+      <div class="calc-field">
+        <label class="f-label">预估胜率 (%)</label>
+        <input type="number" id="c_winrate" value="55" min="1" max="99" oninput="calcKelly()">
+      </div>
+      <div class="calc-field">
+        <label class="f-label">平均盈亏比</label>
+        <input type="number" id="c_rr" value="2" step="0.1" oninput="calcKelly()">
+      </div>
+      <div class="calc-field">
+        <label class="f-label">单笔最大风险 (%)</label>
+        <input type="number" id="c_maxrisk" value="2" step="0.1" oninput="calcKelly()">
+      </div>
+    </div>
+
+    <div class="calc-result" id="kellyResult">
+      <div class="cr-item">
+        <div class="cr-label">KELLY仓位</div>
+        <div class="cr-val" id="kPct">--%</div>
+        <div class="cr-sub">理论最优占比</div>
+      </div>
+      <div class="cr-item">
+        <div class="cr-label">建议仓位</div>
+        <div class="cr-val" id="kSafe">--$</div>
+        <div class="cr-sub">Half-Kelly保守值</div>
+      </div>
+      <div class="cr-item">
+        <div class="cr-label">最大止损</div>
+        <div class="cr-val" id="kStop">--$</div>
+        <div class="cr-sub">单笔风险敞口</div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;font-size:11px;color:var(--text-dim);line-height:1.6;">
+      <strong style="color:var(--text-bright)">Kelly公式：</strong> f* = (p·b - q) / b<br>
+      其中 p=胜率, q=1-p, b=盈亏比<br>
+      <span style="color:var(--warn)">实际使用建议取Half-Kelly（÷2）降低波动</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ S4 · 历史镜鉴 ═══════════════ -->
+<div id="s4" class="section-header">
+  <span class="sh-num">STEP 04</span>
+  <span class="sh-title">历史镜鉴 · BTC牛熊周期数据</span>
+  <span class="sh-sub">HISTORICAL CYCLES · LEARN FROM THE PAST</span>
+</div>
+<div class="panel-grid g21">
+  <div class="panel">
+    <div class="panel-tag">周期对照表</div>
+    <div class="panel-title">BTC历次牛市顶部特征与随后崩跌数据</div>
+    <div class="panel-num">04</div>
+    <table class="cycle-table">
+      <thead>
+        <tr>
+          <th>周期</th>
+          <th>顶部价格</th>
+          <th>随后最大跌幅</th>
+          <th>顶部历时</th>
+          <th>顶部共同信号</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-cycle">2013 牛市</td>
+          <td class="td-peak">$1,163</td>
+          <td class="td-drop">-87%</td>
+          <td>~2周</td>
+          <td class="td-signal">散户大量涌入 · 媒体狂欢</td>
+        </tr>
+        <tr>
+          <td class="td-cycle">2017 牛市</td>
+          <td class="td-peak">$19,783</td>
+          <td class="td-drop">-84%</td>
+          <td>~3周</td>
+          <td class="td-signal">ICO热潮 · 出租司机谈币</td>
+        </tr>
+        <tr>
+          <td class="td-cycle">2021 牛市</td>
+          <td class="td-peak">$69,000</td>
+          <td class="td-drop">-77%</td>
+          <td>~4周</td>
+          <td class="td-signal">NFT/元宇宙 · 上市公司囤币</td>
+        </tr>
+        <tr class="current-row">
+          <td class="td-cycle">2024-25 牛市</td>
+          <td class="td-peak">$109,500</td>
+          <td class="td-drop">进行中</td>
+          <td>进行中</td>
+          <td class="td-signal">ETF批准 · 机构入场</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <div class="panel-tag" style="margin-top:0">历次顶部共同规律</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+      <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--hot);letter-spacing:1px;margin-bottom:4px;">SOCIAL SIGNAL</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.6;">不懂金融的亲友开始讨论"哪个币能翻倍"，媒体版面被加密货币占据</div>
+      </div>
+      <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--hot);letter-spacing:1px;margin-bottom:4px;">SENTIMENT SIGNAL</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.6;">交易者开始计划辞职专职，认为找到了"躺赚"密码</div>
+      </div>
+      <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--warn);letter-spacing:1px;margin-bottom:4px;">LEVERAGE SIGNAL</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.6;">资金费率持续为正 · 合约多空比极度偏多 · 期权偏度陡峭</div>
+      </div>
+      <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--warn);letter-spacing:1px;margin-bottom:4px;">ON-CHAIN SIGNAL</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.6;">长期持币者大量转出 · 交易所流入激增 · MVRV > 3.5</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">跌幅可视化</div>
+    <div class="panel-title">历次熊市最大回撤</div>
+    <div class="panel-num">04</div>
+    <div class="bar-chart">
+      <div class="bar-col">
+        <div class="bar-body" style="height:87%;background:linear-gradient(to top,var(--hot),rgba(255,61,61,0.4))"></div>
+        <div class="bar-label">2013</div>
+        <div class="bar-label" style="color:var(--hot)">-87%</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-body" style="height:84%;background:linear-gradient(to top,var(--hot),rgba(255,61,61,0.4))"></div>
+        <div class="bar-label">2017</div>
+        <div class="bar-label" style="color:var(--hot)">-84%</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-body" style="height:77%;background:linear-gradient(to top,var(--warn),rgba(240,165,0,0.4))"></div>
+        <div class="bar-label">2021</div>
+        <div class="bar-label" style="color:var(--warn)">-77%</div>
+      </div>
+      <div class="bar-col">
+        <div class="bar-body" style="height:30%;background:linear-gradient(to top,var(--cold),rgba(0,200,240,0.3));border:1px dashed var(--cold);"></div>
+        <div class="bar-label">2025?</div>
+        <div class="bar-label" style="color:var(--cold)">TBD</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel-tag" style="margin-top:0">关键链上指标参考值</div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">MVRV Ratio</span>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-display);font-size:15px;color:var(--warn)">顶部 > 3.5</div>
+          <div style="font-size:9px;color:var(--text-muted)">底部 &lt; 1.0</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">NUPL</span>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-display);font-size:15px;color:var(--hot)">顶部 > 0.75</div>
+          <div style="font-size:9px;color:var(--text-muted)">底部 &lt; 0</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">Funding Rate</span>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-display);font-size:15px;color:var(--warn)">危险 > 0.1%/8h</div>
+          <div style="font-size:9px;color:var(--text-muted)">持续为正=过热</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">BTC DVOL (期权波动率)</span>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-display);font-size:15px;color:var(--green)">卖期权 > 60</div>
+          <div style="font-size:9px;color:var(--text-muted)">你的卖权时机</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ S5 · 情绪测试 ═══════════════ -->
+<div id="s5" class="section-header">
+  <span class="sh-num">STEP 05</span>
+  <span class="sh-title">情绪偏差测试 · 反向情绪指标</span>
+  <span class="sh-sub">BEHAVIORAL BIAS ASSESSMENT</span>
+</div>
+<div class="panel-grid g2">
+  <div class="panel">
+    <div class="panel-tag">情绪自测</div>
+    <div class="panel-title">当前情绪状态评估 · 选择最接近你的选项</div>
+    <div class="panel-num">05</div>
+
+    <div class="quiz-card" id="qq1">
+      <div class="quiz-q-num">SCENARIO 01 · 市场连涨5天</div>
+      <div class="quiz-q">BTC连续5天上涨，你的第一反应是？</div>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="answerQuiz('qq1',this,'bad','FOMO驱动。价格连涨后，风险实际在增加，不是减少。应检视止盈计划是否已执行。')">
+          <div class="quiz-opt-dot"></div>兴奋，想加仓，担心踏空
+        </div>
+        <div class="quiz-opt" onclick="answerQuiz('qq1',this,'good','理性反应。逢涨减仓才是分段止盈策略的核心，抵抗FOMO是专业交易者的基本功。')">
+          <div class="quiz-opt-dot"></div>警觉，检查止盈计划是否该执行
+        </div>
+        <div class="quiz-opt" onclick="answerQuiz('qq1',this,'bad','适度观察可以，但"感觉还会涨"是典型近因偏差，不能作为持仓理由。')">
+          <div class="quiz-opt-dot"></div>平静观察，感觉还会继续涨
+        </div>
+      </div>
+      <div class="quiz-explain" id="qq1-explain"></div>
+    </div>
+
+    <div class="quiz-card" id="qq2">
+      <div class="quiz-q-num">SCENARIO 02 · 账面浮盈50%</div>
+      <div class="quiz-q">你的BTC仓位浮盈已达50%，此时你会？</div>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="answerQuiz('qq2',this,'good','正确。50%浮盈是绝佳止盈机会，分批锁定利润，同时保留剩余仓位享受后续涨幅。')">
+          <div class="quiz-opt-dot"></div>按计划分批止盈，锁定部分利润
+        </div>
+        <div class="quiz-opt" onclick="answerQuiz('qq2',this,'bad','锚定效应。你已经赚到了，继续持有的机会成本和风险都在上升，"目标价"应动态调整。')">
+          <div class="quiz-opt-dot"></div>继续持有，等待达到目标价再卖
+        </div>
+        <div class="quiz-opt" onclick="answerQuiz('qq2',this,'bad','高风险。浮盈≠已实现盈利。市场随时可以抹掉50%涨幅，加仓会放大回撤时的损失。')">
+          <div class="quiz-opt-dot"></div>加仓，趋势明显还能涨更多
+        </div>
+      </div>
+      <div class="quiz-explain" id="qq2-explain"></div>
+    </div>
+
+    <div class="quiz-card" id="qq3">
+      <div class="quiz-q-num">SCENARIO 03 · 错过一波上涨</div>
+      <div class="quiz-q">你因没有重仓错过了一波30%的上涨，你感到？</div>
+      <div class="quiz-options">
+        <div class="quiz-opt" onclick="answerQuiz('qq3',this,'good','健康心态。无法预测每一波行情是正常的，轻仓保护了你在下行时的资产安全。')">
+          <div class="quiz-opt-dot"></div>略有遗憾，但这是风控策略的代价
+        </div>
+        <div class="quiz-opt" onclick="answerQuiz('qq3',this,'bad','FOMO最危险的形式。愤怒会驱使你在高位追入，成为接盘者。少赚≠亏损。')">
+          <div class="quiz-opt-dot"></div>非常愤怒，想着下次一定要重仓
+        </div>
+        <div class="quiz-opt" onclick="answerQuiz('qq3',this,'bad','焦虑导致的冲动决策往往在最糟糕的时机入场。先冷静，再评估是否有新的逻辑。')">
+          <div class="quiz-opt-dot"></div>焦虑，现在还想不想追进去
+        </div>
+      </div>
+      <div class="quiz-explain" id="qq3-explain"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">市场顶部信号检测</div>
+    <div class="panel-title">防守模式触发条件 · 点击激活已出现的信号</div>
+    <div class="panel-num">05</div>
+
+    <div class="signal-grid" id="signalGrid">
+      <div class="signal-card" onclick="toggleSig(this)">
+        <span class="sig-icon">💬</span>
+        <div class="sig-title">亲友开始问币</div>
+        <div class="sig-desc">久未联系的朋友问"现在买什么能翻倍"，非金融人士开始讨论加密货币</div>
+      </div>
+      <div class="signal-card" onclick="toggleSig(this)">
+        <span class="sig-icon">🚪</span>
+        <div class="sig-title">想辞职全职交易</div>
+        <div class="sig-desc">开始觉得工作赚钱太慢，认为自己找到了"更好的方式"</div>
+      </div>
+      <div class="signal-card" onclick="toggleSig(this)">
+        <span class="sig-icon">😤</span>
+        <div class="sig-title">FOMO愤怒</div>
+        <div class="sig-desc">因"少赚"而愤怒或焦虑，开始追悔"当时没有重仓"</div>
+      </div>
+      <div class="signal-card" onclick="toggleSig(this)">
+        <span class="sig-icon">📱</span>
+        <div class="sig-title">群里满屏收益图</div>
+        <div class="sig-desc">各种交流群开始大量转发盈利截图，"多头"氛围极度乐观</div>
+      </div>
+      <div class="signal-alert" id="signalAlertMain">
+        ⚡ 防守模式已激活 · 检测到顶部信号<br>
+        <span style="font-size:10px;opacity:0.8;">立即暂停新建仓位 · 审查现有止盈计划 · 执行减仓</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="panel-tag" style="margin-top:0">韦氏恐慌/贪婪模型参考</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:4px;">
+      <div style="padding:8px 6px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-display);font-size:18px;color:var(--green)">0-20</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">极度恐惧<br>买入区间</div>
+      </div>
+      <div style="padding:8px 6px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-display);font-size:18px;color:var(--cold)">20-40</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">恐惧<br>关注区间</div>
+      </div>
+      <div style="padding:8px 6px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-display);font-size:18px;color:#fff">40-60</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">中性<br>均衡区间</div>
+      </div>
+      <div style="padding:8px 6px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;">
+        <div style="font-family:var(--font-display);font-size:18px;color:var(--warn)">60-80</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">贪婪<br>警戒区间</div>
+      </div>
+      <div style="padding:8px 6px;text-align:center;background:var(--surface);border:1px solid rgba(255,61,61,0.4);border-radius:4px;">
+        <div style="font-family:var(--font-display);font-size:18px;color:var(--hot)">80+</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:2px;">极度贪婪<br>减仓区间</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ S6 · 决策日志 ═══════════════ -->
+<div id="s6" class="section-header">
+  <span class="sh-num">STEP 06</span>
+  <span class="sh-title">书面决策日志 · 交易前强制记录</span>
+  <span class="sh-sub">PRE-TRADE DECISION LOG · ANTI-HINDSIGHT SYSTEM</span>
+</div>
+<div class="panel-grid g12">
+  <div class="panel">
+    <div class="panel-tag">新建记录</div>
+    <div class="panel-title">交易前必须写下 · 白纸黑字对抗记忆重塑</div>
+    <div class="panel-num">06</div>
+
+    <div class="log-form">
+      <div class="trade-type-btns">
+        <button class="type-btn" id="btnBuy"  onclick="setType('buy')">▲ 买入 / BUY</button>
+        <button class="type-btn" id="btnSell" onclick="setType('sell')">▼ 卖出 / SELL</button>
+        <button class="type-btn" id="btnOpt"  onclick="setType('option')">◈ 期权 / OPTION</button>
+      </div>
+
+      <div class="form-row">
+        <div class="calc-field">
+          <label class="f-label">标的资产</label>
+          <input class="f-input" id="lAsset" placeholder="如：BTC、ETH">
+        </div>
+        <div class="calc-field">
+          <label class="f-label">当前价格</label>
+          <input class="f-input" id="lPrice" placeholder="如：84000">
+        </div>
+        <div class="calc-field">
+          <label class="f-label">止损触发价</label>
+          <input class="f-input" id="lStop" placeholder="如：76000">
+        </div>
+        <div class="calc-field">
+          <label class="f-label">止盈目标价</label>
+          <input class="f-input" id="lTarget" placeholder="如：95000">
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label class="f-label">买入/卖出的核心理由（必须是基本面，不能是"在涨"）</label>
+        <textarea id="lReason" placeholder="例：BTC完成减半后供应减少，ETF净流入连续3周正值，宏观流动性改善，DVOL处于历史低位适合买入期权..."></textarea>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label class="f-label">触发止损后的具体行动（不能是"再看看"）</label>
+        <textarea id="lAction" placeholder="例：跌破74000立即平仓50%，跌破70000全部清仓，不论当时有任何利好消息..." style="min-height:56px;"></textarea>
+      </div>
+
+      <button class="submit-btn" onclick="addLog()">▸ 锁定决策记录 · 开始执行</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-tag">历史记录</div>
+    <div class="panel-title">决策档案 · 追责与复盘</div>
+    <div class="panel-num">06</div>
+    <div class="log-entries" id="logEntries">
+      <div style="text-align:center;padding:32px 0;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);letter-spacing:2px;">
+        尚无记录 · 写下你的第一笔交易逻辑
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ S7 · 核心心法 ═══════════════ -->
+<div id="s7" class="section-header">
+  <span class="sh-num">STEP 07</span>
+  <span class="sh-title">核心心法 · 区分运气与能力</span>
+  <span class="sh-sub">LUCK VS SKILL · MENTAL FRAMEWORK</span>
+</div>
+<div class="panel-grid gfull">
+  <div class="panel">
+    <div class="wisdom-cards">
+      <div class="wisdom-card">
+        <div class="wc-icon">🎲</div>
+        <div class="wc-title">牛市中赚钱是常态</div>
+        <div class="wc-body">在单边上涨行情中，绝大多数参与者都会盈利。这不证明你具备系统性的交易能力，只证明你在对的时间站在了对的方向上。</div>
+        <div class="wc-author">SURVIVORSHIP BIAS · 幸存者偏差</div>
+      </div>
+      <div class="wisdom-card">
+        <div class="wc-icon">⚙️</div>
+        <div class="wc-title">系统胜于情绪</div>
+        <div class="wc-body">专业交易者与散户的核心区别不是"眼光"，而是在极端情绪下仍能执行既定计划的能力。系统是对抗本能的唯一武器。</div>
+        <div class="wc-author">PROCESS OVER OUTCOME · 过程先于结果</div>
+      </div>
+      <div class="wisdom-card">
+        <div class="wc-icon">⚓</div>
+        <div class="wc-title">将利润锚定现实</div>
+        <div class="wc-body">定期将浮盈转化为实体资产或家庭生活改善，让你真实感受金钱的价值。账面数字永远不是真正的财富。</div>
+        <div class="wc-author">PROFIT REALIZATION · 利润实体化</div>
+      </div>
+      <div class="wisdom-card">
+        <div class="wc-icon">🔬</div>
+        <div class="wc-title">区分alpha与beta</div>
+        <div class="wc-body">Beta收益：市场整体上涨带来的被动收益。Alpha收益：超越市场基准的超额收益。牛市中大多数盈利是Beta，不是Alpha。</div>
+        <div class="wc-author">ALPHA vs BETA · 超额收益识别</div>
+      </div>
+      <div class="wisdom-card">
+        <div class="wc-icon">📐</div>
+        <div class="wc-title">用赔率思维决策</div>
+        <div class="wc-body">不要问"会涨吗"，要问"这个价格的赔率是多少"。预期价值 = 胜率×盈利 - 败率×亏损。正期望值才值得入场。</div>
+        <div class="wc-author">EXPECTED VALUE · 期望值思维</div>
+      </div>
+      <div class="wisdom-card">
+        <div class="wc-icon">🧊</div>
+        <div class="wc-title">克制是核心策略</div>
+        <div class="wc-body">在牛市中，"不做"往往比"做"更难，也更有价值。FOMO是散户最贵的学费。克制本身就是一种技术含量极高的交易能力。</div>
+        <div class="wc-author">INACTION AS STRATEGY · 不动即策略</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINCIPLE -->
+<div class="principle">
+  <div class="principle-main">理性不是一种状态，而是一系列重复且枯燥的行为准则</div>
+  <div class="principle-en">RATIONALITY IS A SYSTEM, NOT A FEELING · DISCIPLINE IS THE ONLY EDGE</div>
+</div>
+
+<footer>
+  <div class="footer-l">BULL MARKET COOLING SYSTEM v2.0 · 仅供个人决策参考，不构成投资建议</div>
+  <div class="footer-r">
+    <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-muted)">COOLING INDEX</span>
+    <span class="cool-idx" id="footCoolIdx">--%</span>
+  </div>
+</footer>
+
+<button class="panic-btn" onclick="activatePanic()">🧊 紧急冷静</button>
+
+<!-- COOLING OVERLAY -->
+<div id="coolOverlay">
+  <div class="cool-header cool-pulse">COOLING DOWN</div>
+  <div class="cool-timer-ring">
+    <svg viewBox="0 0 80 80" width="80" height="80">
+      <circle class="cool-ring-bg" cx="40" cy="40" r="35"/>
+      <circle class="cool-ring-fill" id="coolRing" cx="40" cy="40" r="35" stroke-dasharray="220" stroke-dashoffset="0"/>
+    </svg>
+    <div class="cool-num" id="coolNum">60</div>
+  </div>
+  <div class="cool-question" id="coolQ">...</div>
+  <div class="cool-hint" id="coolHint">...</div>
+  <button class="cool-close" id="coolClose" onclick="closePanic()" disabled>请思考后再关闭...</button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let heat = Math.floor(Math.random()*30)+60;
+let decisions = 0;
+let activeSignals = 0;
+let checkedItems = 0;
+let currentTradeType = null;
+let coolTimer = null;
+
+const coolQuestions = [
+  {q:"如果现在价格腰斩，我的杠杆还能撑住吗？具体数字是多少？", hint:"计算你的清算线和最大亏损额，而非感受。"},
+  {q:"我的买入理由是「它在涨」，还是「我能用数据解释的基本面」？", hint:"无法用一句话解释逻辑的仓位，是情绪仓位。"},
+  {q:"此刻在这个价格买入的对手盘是谁？他们的动机是什么？", hint:"市场上总有人在卖。做市商、矿工、长期持有者——谁在卖？"},
+  {q:"如果这笔交易亏损50%，会影响我的生活质量吗？", hint:"只用「闲钱」入市不是口号，是可量化的风险边界。"},
+  {q:"历史上所有的「这次不同」，有多少次真的不同了？", hint:"2013、2017、2021，每一个顶部都有「新叙事」支撑。"},
+  {q:"我现在的操作，是在执行计划，还是在应对情绪？", hint:"区分「执行」和「反应」是专业交易者的核心能力。"},
+];
+
+// ══════════════════════════════════════
+// HEAT ENGINE
+// ══════════════════════════════════════
+function updateHeat(v) {
+  heat = Math.max(0, Math.min(100, v));
+  ['navHeatFill'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.width = heat+'%';
+  });
+  const hv = document.getElementById('navHeatVal');
+  if(hv){ hv.textContent = Math.round(heat)+'°'; hv.style.color = heat>75?'var(--hot)':heat>50?'var(--warn)':'var(--cold)'; }
+
+  // dial needle
+  const needle = document.getElementById('dialNeedle');
+  if(needle){ const angle = -90 + (heat/100)*180; needle.setAttribute('transform',`rotate(${angle},80,80)`); }
+
+  // FG val
+  const fgv = document.getElementById('fgVal');
+  const fgl = document.getElementById('fgLabel');
+  if(fgv) fgv.textContent = Math.round(heat);
+  if(fgl){
+    if(heat>80){ fgl.textContent='EXTREME GREED'; fgl.style.color='var(--hot)'; }
+    else if(heat>60){ fgl.textContent='GREED'; fgl.style.color='var(--warn)'; }
+    else if(heat>40){ fgl.textContent='NEUTRAL'; fgl.style.color='#fff'; }
+    else if(heat>20){ fgl.textContent='FEAR'; fgl.style.color='var(--cold)'; }
+    else { fgl.textContent='EXTREME FEAR'; fgl.style.color='var(--green)'; }
+  }
+
+  const cool = 100 - heat;
+  const sc = document.getElementById('statCool');
+  const fi = document.getElementById('footCoolIdx');
+  if(sc) sc.textContent = Math.round(cool)+'%';
+  if(fi) fi.textContent = Math.round(cool)+'%';
+}
+
+setInterval(()=> updateHeat(heat + (Math.random()-0.47)*1.5), 2500);
+updateHeat(heat);
+
+// ══════════════════════════════════════
+// CHECKLIST
+// ══════════════════════════════════════
+function toggleCheck(el){
+  el.classList.toggle('done');
+  checkedItems = document.querySelectorAll('.checklist-item.done').length;
+  const total = document.querySelectorAll('.checklist-item').length;
+  document.getElementById('statCheck').textContent = checkedItems+'/'+total;
+  updateHeat(heat - (el.classList.contains('done') ? 3 : -3));
+}
+
+// ══════════════════════════════════════
+// NOISE MUTE
+// ══════════════════════════════════════
+let mutedCount = 0;
+function muteNoise(el){
+  el.classList.toggle('muted');
+  mutedCount = document.querySelectorAll('.noise-card.muted').length;
+  document.getElementById('mutedCount').textContent = mutedCount;
+  updateHeat(heat - (el.classList.contains('muted') ? 2 : -2));
+}
+
+// ══════════════════════════════════════
+// INVERSION CARDS
+// ══════════════════════════════════════
+function openInv(el){
+  if(el.classList.contains('answered')) return;
+  document.querySelectorAll('.inversion-card.open').forEach(c=>{ if(c!==el) c.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+function answerInv(e, card, type, msg){
+  e.stopPropagation();
+  card.classList.remove('open');
+  card.classList.add(type==='yes'?'answered':'danger');
+  // show feedback
+  let fb = card.querySelector('.inv-feedback');
+  if(!fb){ fb=document.createElement('div'); fb.style.cssText='margin-top:10px;font-size:11px;padding:8px 12px;border-radius:4px;'; card.appendChild(fb); }
+  fb.style.background = type==='yes'?'rgba(0,232,122,0.06)':'rgba(255,61,61,0.06)';
+  fb.style.color = type==='yes'?'var(--green)':'var(--hot)';
+  fb.style.border = type==='yes'?'1px solid rgba(0,232,122,0.2)':'1px solid rgba(255,61,61,0.2)';
+  fb.textContent = msg;
+  updateHeat(heat - (type==='yes' ? 3 : 2));
+}
+
+// ══════════════════════════════════════
+// KELLY CALCULATOR
+// ══════════════════════════════════════
+function calcKelly(){
+  const cap = parseFloat(document.getElementById('c_capital').value)||100000;
+  const wr  = parseFloat(document.getElementById('c_winrate').value)/100||0.55;
+  const rr  = parseFloat(document.getElementById('c_rr').value)||2;
+  const mr  = parseFloat(document.getElementById('c_maxrisk').value)/100||0.02;
+  const q = 1 - wr;
+  const kelly = ((wr * rr) - q) / rr;
+  const kellyPct = Math.max(0, kelly * 100);
+  const halfKelly = cap * Math.min(kelly/2, 0.5);
+  const maxLoss = cap * mr;
+  document.getElementById('kPct').textContent  = kellyPct.toFixed(1)+'%';
+  document.getElementById('kSafe').textContent = '$'+(halfKelly).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('kStop').textContent = '$'+(maxLoss).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('kPct').style.color  = kellyPct>50?'var(--hot)':kellyPct>25?'var(--warn)':'var(--green)';
+}
+calcKelly();
+
+// ══════════════════════════════════════
+// POSITION LADDER
+// ══════════════════════════════════════
+function updateTP(v){
+  document.getElementById('tpv').textContent = '+'+v+'%';
+  updateLadder();
+}
+function updateLadder(){
+  const tp = parseInt(document.getElementById('tpv').textContent)||15;
+  const sp = parseInt(document.getElementById('spv').textContent)||20;
+  const container = document.getElementById('ladderViz');
+  let remaining = 100;
+  let html = '<div class="ladder-title">// 预计止盈路径模拟（当前设置）</div>';
+  const steps = 5;
+  const colors = ['var(--green)','#00cc66','#66aa44','var(--warn)','var(--hot)'];
+  for(let i=0;i<steps;i++){
+    const sell = Math.min(sp, remaining);
+    const priceTrigger = (i+1)*tp;
+    html += `<div class="ladder-row">
+      <div class="ladder-label">+${priceTrigger}%</div>
+      <div class="ladder-bar-wrap"><div class="ladder-bar" style="width:${sell}%;background:${colors[i]}"></div></div>
+      <div class="ladder-pct" style="color:${colors[i]}">-${sell.toFixed(0)}%</div>
+    </div>`;
+    remaining = Math.max(0, remaining - sell);
+    if(remaining <= 0) break;
+  }
+  if(remaining > 0) html += `<div class="ladder-row"><div class="ladder-label" style="color:var(--text-dim)">剩余</div><div class="ladder-bar-wrap"><div class="ladder-bar" style="width:${remaining}%;background:var(--cold)"></div></div><div class="ladder-pct" style="color:var(--cold)">${remaining.toFixed(0)}%</div></div>`;
+  container.innerHTML = html;
+}
+updateLadder();
+
+// ══════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════
+function answerQuiz(cardId, optEl, type, explanation){
+  const card = document.getElementById(cardId);
+  if(card.classList.contains('answered-well')||card.classList.contains('answered-bad')) return;
+  card.querySelectorAll('.quiz-opt').forEach(o=>o.style.pointerEvents='none');
+  optEl.classList.add(type==='good'?'selected-good':'selected-bad');
+  card.classList.add(type==='good'?'answered-well':'answered-bad');
+  const expl = card.querySelector('.quiz-explain');
+  if(expl){ expl.textContent = (type==='good'?'✓ ':'⚠ ') + explanation; }
+  updateHeat(heat - (type==='good' ? 4 : 1));
+}
+
+// ══════════════════════════════════════
+// SIGNALS
+// ══════════════════════════════════════
+function toggleSig(el){
+  el.classList.toggle('active');
+  activeSignals = document.querySelectorAll('.signal-card.active').length;
+  document.getElementById('statSignals').textContent = activeSignals+'/4';
+  const alert = document.getElementById('signalAlertMain');
+  if(activeSignals >= 2){ alert.classList.add('visible'); updateHeat(heat+6); }
+  else { alert.classList.remove('visible'); }
+}
+
+// ══════════════════════════════════════
+// TRADE LOG
+// ══════════════════════════════════════
+function setType(t){
+  currentTradeType = t;
+  ['Buy','Sell','Opt'].forEach(x=>{ document.getElementById('btn'+x).className='type-btn'; });
+  const m = {buy:'active-buy',sell:'active-sell',option:'active-buy'};
+  const b = {buy:'btnBuy',sell:'btnSell',option:'btnOpt'};
+  document.getElementById(b[t]).classList.add(m[t]);
+}
+
+function addLog(){
+  const reason = document.getElementById('lReason').value.trim();
+  const asset  = document.getElementById('lAsset').value.trim();
+  const price  = document.getElementById('lPrice').value.trim();
+  const stop   = document.getElementById('lStop').value.trim();
+  const target = document.getElementById('lTarget').value.trim();
+  const action = document.getElementById('lAction').value.trim();
+  if(!reason){ document.getElementById('lReason').focus(); return; }
+
+  decisions++;
+  document.getElementById('statDecisions').textContent = decisions;
+
+  const now = new Date().toLocaleString('zh-CN',{hour12:false});
+  const typeLabel = currentTradeType||'trade';
+  const typeClass = typeLabel==='sell'?'sell':'buy';
+  const typeText  = {buy:'▲ 买入',sell:'▼ 卖出',option:'◈ 期权',trade:'◈ 交易'}[typeLabel]||'交易';
+
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = `
+    <div class="entry-header">
+      <span class="entry-type ${typeClass}">${typeText}${asset?' · '+asset:''}</span>
+      <span class="entry-time">${now}</span>
+    </div>
+    <div class="entry-reason">${reason}</div>
+    <div class="entry-rules">
+      ${price  ? `<span class="entry-rule">入场价 <span>${price}</span></span>` : ''}
+      ${stop   ? `<span class="entry-rule">止损 <span style="color:var(--hot)">${stop}</span></span>` : ''}
+      ${target ? `<span class="entry-rule">目标 <span style="color:var(--green)">${target}</span></span>` : ''}
+    </div>
+    ${action ? `<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);line-height:1.6;">止损行动：${action}</div>` : ''}
+  `;
+
+  const container = document.getElementById('logEntries');
+  const placeholder = container.querySelector('div[style*="尚无记录"]');
+  if(placeholder) placeholder.remove();
+  container.prepend(el);
+
+  // clear
+  ['lReason','lAction'].forEach(id=>document.getElementById(id).value='');
+  ['lAsset','lPrice','lStop','lTarget'].forEach(id=>document.getElementById(id).value='');
+  updateHeat(heat - 6);
+}
+
+// ══════════════════════════════════════
+// PANIC / COOL OVERLAY
+// ══════════════════════════════════════
+function activatePanic(){
+  const q = coolQuestions[Math.floor(Math.random()*coolQuestions.length)];
+  document.getElementById('coolQ').textContent = q.q;
+  document.getElementById('coolHint').textContent = q.hint;
+  document.getElementById('coolOverlay').classList.add('active');
+  updateHeat(heat - 10);
+
+  const closeBtn = document.getElementById('coolClose');
+  closeBtn.disabled = true;
+  closeBtn.textContent = '请认真思考后再关闭...';
+
+  let secs = 60;
+  const ring = document.getElementById('coolRing');
+  const num  = document.getElementById('coolNum');
+  clearInterval(coolTimer);
+  coolTimer = setInterval(()=>{
+    secs--;
+    num.textContent = secs;
+    ring.style.strokeDashoffset = (220 * (1 - secs/60)).toFixed(2);
+    if(secs <= 0){
+      clearInterval(coolTimer);
+      closeBtn.disabled = false;
+      closeBtn.textContent = '✓ 我已冷静 · 关闭';
+    }
+  }, 1000);
+}
+function closePanic(){
+  document.getElementById('coolOverlay').classList.remove('active');
+  clearInterval(coolTimer);
+}
+</script>
+</body>
+</html>
