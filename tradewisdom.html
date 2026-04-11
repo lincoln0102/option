@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>牛市冷却系统 · 二十条心法</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════
+   TOKENS
+════════════════════════════════════════ */
+:root {
+  --bg:        #1c2330;
+  --bg2:       #232d3d;
+  --card:      #2a3547;
+  --card2:     #313f55;
+  --line:      #3a4e66;
+  --line2:     #5a7590;
+
+  --gold:      #d4a84b;
+  --gold-lt:   #edc97a;
+  --gold-bg:   rgba(212,168,75,0.12);
+  --gold-glow: rgba(212,168,75,0.22);
+
+  --ice:       #5bc4e8;
+  --ice-bg:    rgba(91,196,232,0.10);
+  --red:       #e05a5a;
+  --red-bg:    rgba(224,90,90,0.10);
+  --sage:      #52c97d;
+  --sage-bg:   rgba(82,201,125,0.10);
+
+  /* Text: high-contrast, no guessing */
+  --text:      #e8eef4;   /* main body — almost white */
+  --text2:     #ffffff;   /* headings */
+  --dim:       #a0b4c8;   /* secondary — clearly readable */
+  --muted:     #6e8fa8;   /* tertiary — labels only */
+
+  --sans:      'Noto Sans SC', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+  --r:         16px;
+  --r-sm:      10px;
+  --tap:       52px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.8;
+  min-height: 100vh;
+  padding-bottom: 72px;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ════════════════════════════════════════
+   AMBIENT LIGHT
+════════════════════════════════════════ */
+.light {
+  position: fixed; border-radius: 50%;
+  filter: blur(120px); pointer-events: none; z-index: 0;
+}
+.l1 { width:600px;height:600px; background:var(--gold); opacity:.04; top:-200px; right:-100px; }
+.l2 { width:500px;height:500px; background:var(--ice);  opacity:.04; bottom:-100px; left:-80px; }
+
+/* ════════════════════════════════════════
+   TOPBAR
+════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 600;
+  background: rgba(28,35,48,0.96);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 0;
+  height: 52px; padding: 0 16px;
+}
+.tb-logo {
+  font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: 2px; color: var(--gold);
+  margin-right: auto;
+}
+.tb-heat { display: flex; align-items: center; gap: 8px; }
+.tb-bar  { width: 56px; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.tb-fill { height: 100%; background: linear-gradient(90deg, var(--ice), var(--gold), var(--red)); transition: width .5s; }
+.tb-val  { font-family: var(--mono); font-size: 16px; color: var(--gold); min-width: 36px; text-align: right; transition: color .4s; }
+.tb-menu-btn {
+  display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  width: 40px; height: 40px; border: none; background: none; cursor: pointer; padding: 8px; margin-left: 10px;
+}
+.tb-menu-btn span { display: block; height: 1.5px; background: var(--dim); border-radius: 1px; transition: all .2s; }
+
+/* ════════════════════════════════════════
+   SIDE DRAWER
+════════════════════════════════════════ */
+#drawer {
+  position: fixed; inset: 0; z-index: 700;
+  pointer-events: none; opacity: 0; transition: opacity .25s;
+}
+#drawer.open { pointer-events: all; opacity: 1; }
+.drawer-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(4px); }
+.drawer-panel {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  width: min(300px, 82vw);
+  background: var(--bg2); border-right: 1px solid var(--line);
+  padding: 24px 0; overflow-y: auto;
+  transform: translateX(-100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+}
+#drawer.open .drawer-panel { transform: translateX(0); }
+.drawer-brand {
+  font-family: var(--sans); font-size: 20px; font-weight: 700; color: var(--gold-lt);
+  padding: 0 20px 20px; border-bottom: 1px solid var(--line);
+  margin-bottom: 8px; line-height: 1.4;
+  font-style: normal;
+}
+.drawer-section-label {
+  font-family: var(--mono); font-size: 14px; letter-spacing: 3px;
+  color: var(--muted); padding: 12px 20px 6px; text-transform: uppercase;
+}
+.drawer-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 20px; cursor: pointer; transition: background .15s;
+  min-height: var(--tap); text-decoration: none; color: var(--text);
+}
+.drawer-item:active { background: var(--card); }
+.drawer-item.active { background: var(--gold-bg); }
+.drawer-item.active .di-num { color: var(--gold); }
+.drawer-item.active .di-label { color: var(--text2); }
+.di-num {
+  font-family: var(--mono); font-size: 13px; color: var(--muted);
+  width: 24px; flex-shrink: 0; letter-spacing: 1px;
+}
+.di-label { font-size: 14px; color: var(--dim); flex: 1; }
+.di-tag {
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
+  padding: 2px 7px; border-radius: 4px; background: var(--card2); color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════
+   PAGES
+════════════════════════════════════════ */
+.page { display: none; position: relative; z-index: 10; }
+.page.active { display: block; animation: fadeUp .25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ════════════════════════════════════════
+   HOME — WISDOM HALL
+════════════════════════════════════════ */
+.home-hero {
+  padding: 32px 20px 24px;
+  border-bottom: 1px solid var(--line);
+  position: relative; overflow: hidden;
+}
+.hh-eyebrow {
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
+  color: var(--gold); margin-bottom: 10px;
+}
+.hh-title {
+  font-family: var(--sans); font-size: 44px; font-weight: 800; color: var(--text2);
+  line-height: 1.1; margin-bottom: 8px;
+  font-style: normal; letter-spacing: -0.5px;
+}
+.hh-title em { color: var(--gold-lt); font-style: normal; }
+.hh-sub {
+  font-size: 13px; color: var(--dim); line-height: 1.75; max-width: 340px;
+}
+.hh-deco {
+  position: absolute; right: -20px; top: 10px;
+  font-size: 100px; opacity: .04; user-select: none;
+  font-family: var(--mono); color: var(--gold); line-height: 1;
+}
+
+/* progress bar */
+.wisdom-progress-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; background: var(--bg2);
+  border-bottom: 1px solid var(--line);
+}
+.wpb-label { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 1px; white-space: nowrap; }
+.wpb-track { flex: 1; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.wpb-fill  { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-lt)); border-radius: 2px; transition: width .5s; }
+.wpb-count { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--gold); white-space: nowrap; }
+
+/* categories */
+.cat-tabs {
+  display: flex; overflow-x: auto; gap: 8px;
+  padding: 14px 20px; border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab {
+  flex-shrink: 0; padding: 7px 14px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 20px; font-family: var(--mono); font-size: 13px;
+  color: var(--dim); cursor: pointer; transition: all .2s; letter-spacing: 1px;
+  white-space: nowrap;
+}
+.cat-tab.active { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
+.cat-tab:active { transform: scale(.95); }
+
+/* wisdom list */
+.wisdom-list { padding: 12px 16px 0; }
+.wisdom-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 16px; margin-bottom: 8px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); cursor: pointer;
+  transition: all .2s; position: relative; overflow: hidden;
+  min-height: var(--tap);
+}
+.wisdom-row::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--gold); transform: scaleY(0); transition: transform .2s;
+  transform-origin: bottom;
+}
+.wisdom-row.read::before { transform: scaleY(1); background: var(--sage); }
+.wisdom-row:active { transform: scale(.98); background: var(--card2); }
+.wr-num {
+  font-family: var(--mono); font-size: 13px; color: var(--muted);
+  width: 22px; flex-shrink: 0; text-align: center;
+}
+.wisdom-row.read .wr-num { color: var(--sage); }
+.wr-icon { font-size: 26px; flex-shrink: 0; }
+.wr-body { flex: 1; min-width: 0; }
+.wr-title { font-size: 16px; font-weight: 700; color: var(--text2); line-height: 1.35; margin-bottom: 3px; }
+.wisdom-row.read .wr-title { color: var(--dim); }
+.wr-src { font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 1.5px; }
+.wr-arrow { font-size: 18px; color: var(--line2); flex-shrink: 0; transition: transform .2s; }
+.wisdom-row:active .wr-arrow { transform: translateX(3px); }
+.wr-badge {
+  position: absolute; top: 10px; right: 32px;
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
+  padding: 2px 7px; border-radius: 3px;
+}
+.wr-badge.new  { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold); }
+.wr-badge.done { background: var(--sage-bg); color: var(--sage); border: 1px solid var(--sage); }
+
+/* ════════════════════════════════════════
+   WISDOM DETAIL SHEET (bottom sheet)
+════════════════════════════════════════ */
+#wSheet {
+  position: fixed; inset: 0; z-index: 800;
+  pointer-events: none; opacity: 0; transition: opacity .25s;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+#wSheet.open { pointer-events: all; opacity: 1; }
+.ws-bg {
+  position: absolute; inset: 0;
+  background: rgba(10,15,22,.75); backdrop-filter: blur(8px);
+}
+.ws-panel {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 780px;
+  background: var(--bg2); border-top: 1px solid var(--line);
+  border-radius: 22px 22px 0 0;
+  max-height: 92vh; display: flex; flex-direction: column;
+  transform: translateY(60px); transition: transform .35s cubic-bezier(.34,1.3,.64,1);
+}
+#wSheet.open .ws-panel { transform: translateY(0); }
+.ws-handle-bar {
+  padding: 12px 0 0; display: flex; justify-content: center; flex-shrink: 0;
+}
+.ws-handle { width: 40px; height: 4px; background: var(--line2); border-radius: 2px; }
+.ws-scroll { flex: 1; overflow-y: auto; padding: 20px 24px 40px; }
+.ws-num    { font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 3px; margin-bottom: 6px; }
+.ws-category { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 2px; margin-bottom: 14px; }
+.ws-icon   { font-size: 52px; margin-bottom: 14px; }
+.ws-title  { font-family: var(--sans); font-size: 26px; font-weight: 800; color: var(--text2); line-height: 1.3; margin-bottom: 20px; }
+.ws-divider { height: 1px; background: var(--line); margin-bottom: 20px; }
+.ws-body   { font-size: 16px; color: var(--text); line-height: 1.9; font-weight: 300; }
+.ws-body p { margin-bottom: 16px; }
+.ws-insight {
+  margin-top: 20px;
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--gold); border-radius: var(--r-sm); padding: 16px;
+}
+.ws-insight-label {
+  font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px;
+}
+.ws-insight-text { font-size: 13px; color: var(--dim); line-height: 1.75; }
+.ws-nav {
+  display: flex; gap: 10px; margin-top: 20px; flex-shrink: 0;
+  padding: 12px 24px 16px; border-top: 1px solid var(--line);
+}
+.ws-nav-btn {
+  flex: 1; padding: 14px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: transparent;
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
+  color: var(--dim); cursor: pointer; transition: all .2s;
+  min-height: var(--tap);
+}
+.ws-nav-btn:active { border-color: var(--gold); color: var(--gold); }
+.ws-mark-btn {
+  padding: 14px 20px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--gold); background: var(--gold-bg);
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
+  color: var(--gold); cursor: pointer; transition: all .2s; flex-shrink: 0;
+  min-height: var(--tap);
+}
+.ws-mark-btn.done { background: var(--sage-bg); border-color: var(--sage); color: var(--sage); }
+.ws-mark-btn:active { opacity: .7; }
+
+/* ════════════════════════════════════════
+   TOOLS PAGE (快捷决策工具)
+════════════════════════════════════════ */
+.page-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.ph-eyebrow { font-family: var(--mono); font-size: 14px; letter-spacing: 3px; color: var(--gold); margin-bottom: 6px; }
+.ph-title   { font-family: var(--sans); font-size: 32px; font-weight: 800; color: var(--text2); font-style: normal; }
+.ph-sub     { font-size: 14px; color: var(--dim); margin-top: 6px; line-height: 1.65; }
+
+.tool-section { padding: 16px 16px 0; }
+.ts-label {
+  font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 3px;
+  margin-bottom: 10px; padding-left: 4px;
+}
+
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 18px 16px; margin-bottom: 12px;
+}
+.card-hd { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.card-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.card-title { font-size: 17px; font-weight: 700; color: var(--text2); line-height: 1.35; }
+.card-sub   { font-size: 14px; color: var(--dim); margin-top: 3px; }
+
+/* checklist */
+.check-row {
+  display: flex; align-items: flex-start; gap: 12px; padding: 13px 0;
+  border-bottom: 1px solid var(--line); cursor: pointer; min-height: var(--tap);
+}
+.check-row:last-child { border-bottom: none; }
+.chkbox {
+  width: 22px; height: 22px; border: 2px solid var(--line2); border-radius: 5px;
+  flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: transparent; transition: all .2s; background: transparent;
+}
+.check-row.done .chkbox { background: var(--sage); border-color: var(--sage); color: var(--bg); }
+.chk-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 3px; transition: all .2s; }
+.check-row.done .chk-title { color: var(--dim); text-decoration: line-through; }
+.chk-desc  { font-size: 14px; color: var(--dim); line-height: 1.6; }
+.chk-tag   {
+  font-family: var(--mono); font-size: 14px; padding: 2px 7px; border-radius: 3px;
+  background: var(--gold-bg); color: var(--gold); letter-spacing: 1px; flex-shrink: 0; align-self: flex-start; margin-top: 2px;
+}
+
+/* inversion questions */
+.inv-card {
+  background: var(--card2); border: 1px solid var(--line); border-left: 3px solid var(--line2);
+  border-radius: var(--r-sm); padding: 15px; margin-bottom: 9px;
+  cursor: pointer; transition: all .2s;
+}
+.inv-card.open { border-left-color: var(--ice); background: rgba(91,196,232,.05); }
+.inv-card.ok  { border-left-color: var(--sage); }
+.inv-card.bad { border-left-color: var(--red); }
+.inv-num  { font-family: var(--mono); font-size: 14px; color: var(--ice); letter-spacing: 2px; margin-bottom: 6px; }
+.inv-q    { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.inv-hint { font-size: 14px; color: var(--dim); line-height: 1.55; margin-top: 8px; display: none; }
+.inv-card.open .inv-hint { display: block; }
+.inv-btns { display: none; gap: 10px; margin-top: 12px; }
+.inv-card.open .inv-btns { display: flex; }
+.inv-btn {
+  flex: 1; padding: 12px; border-radius: var(--r-sm); border: 1.5px solid;
+  font-family: var(--mono); font-size: 14px; cursor: pointer; background: transparent; transition: all .2s; min-height: 44px;
+}
+.inv-btn.yes { border-color: var(--sage); color: var(--sage); }
+.inv-btn.yes:active { background: var(--sage-bg); }
+.inv-btn.no  { border-color: var(--red); color: var(--red); }
+.inv-btn.no:active  { background: var(--red-bg); }
+.inv-fb { margin-top: 10px; padding: 10px 12px; border-radius: var(--r-sm); font-size: 14px; line-height: 1.6; display: none; }
+.inv-card.ok  .inv-fb { display:block; background: var(--sage-bg); color: var(--sage); border: 1px solid rgba(109,191,138,.25); }
+.inv-card.bad .inv-fb { display:block; background: var(--red-bg);  color: var(--red);  border: 1px solid rgba(224,90,90,.25); }
+
+/* sliders */
+.sl-row { margin-bottom: 20px; }
+.sl-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px; }
+.sl-name { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 1px; }
+.sl-val  { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.sl-desc { font-size: 14px; color: var(--dim); margin-bottom: 8px; line-height: 1.5; }
+input[type=range] {
+  width: 100%; -webkit-appearance: none; height: 4px;
+  background: var(--line); border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--bg2); transition: transform .15s;
+}
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
+
+/* kelly calc */
+.calc-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.cf label { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 2px; display: block; margin-bottom: 5px; }
+.cf input {
+  width: 100%; background: var(--bg2); border: 1px solid var(--line); color: var(--text2);
+  font-family: var(--mono); font-size: 14px; padding: 11px 12px; border-radius: var(--r-sm);
+  outline: none; transition: border-color .2s; -webkit-appearance: none;
+}
+.cf input:focus { border-color: var(--gold); }
+.kelly-out { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.ko-cell { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px; text-align: center; }
+.ko-lbl { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 1px; margin-bottom: 4px; }
+.ko-val { font-family: var(--mono); font-size: 18px; color: var(--sage); }
+
+/* ladder */
+.ladder-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.lad-lbl { font-family: var(--mono); font-size: 13px; color: var(--dim); width: 54px; flex-shrink: 0; }
+.lad-track { flex: 1; height: 7px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.lad-bar { height: 100%; border-radius: 4px; transition: width .4s; }
+.lad-pct { font-family: var(--mono); font-size: 13px; width: 36px; text-align: right; flex-shrink: 0; }
+
+/* signals */
+.sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sig-card {
+  background: var(--card2); border: 1.5px solid var(--line); border-radius: var(--r-sm);
+  padding: 15px; cursor: pointer; transition: all .2s; user-select: none;
+  min-height: 100px; display: flex; flex-direction: column; gap: 5px;
+}
+.sig-card.on { border-color: var(--red); background: var(--red-bg); }
+.sig-icon  { font-size: 24px; filter: grayscale(1); transition: filter .2s; }
+.sig-card.on .sig-icon { filter: none; }
+.sig-title { font-size: 13px; font-weight: 600; color: var(--text2); transition: color .2s; }
+.sig-card.on .sig-title { color: var(--red); }
+.sig-body  { font-size: 14px; color: var(--dim); line-height: 1.55; }
+.sig-alert {
+  grid-column: 1/-1; padding: 14px 16px; border-radius: var(--r-sm);
+  background: var(--red-bg); border: 1px solid rgba(224,90,90,.4);
+  font-family: var(--mono); font-size: 14px; color: var(--red); line-height: 1.7;
+  display: none; animation: fadeUp .3s ease;
+}
+.sig-alert.on { display: block; }
+
+/* quiz */
+.quiz-card {
+  background: var(--card2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 16px; margin-bottom: 10px; transition: border-color .2s;
+}
+.quiz-card.good { border-color: var(--sage); }
+.quiz-card.bad  { border-color: var(--red); }
+.qz-num  { font-family: var(--mono); font-size: 14px; color: var(--ice); letter-spacing: 2px; margin-bottom: 8px; }
+.qz-q    { font-size: 14px; color: var(--text2); line-height: 1.65; margin-bottom: 14px; }
+.qz-opts { display: flex; flex-direction: column; gap: 8px; }
+.qz-opt {
+  display: flex; align-items: center; gap: 11px;
+  padding: 12px 14px; background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r-sm); cursor: pointer; font-size: 13px; color: var(--text);
+  transition: all .15s; min-height: var(--tap);
+}
+.qz-opt:active { background: var(--card2); }
+.qz-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--dim); flex-shrink: 0; transition: all .2s; }
+.qz-opt.sg .qz-dot { background: var(--sage); border-color: var(--sage); }
+.qz-opt.sg { border-color: var(--sage); color: var(--sage); }
+.qz-opt.sb .qz-dot { background: var(--red); border-color: var(--red); }
+.qz-opt.sb { border-color: var(--red); color: var(--red); }
+.qz-explain { margin-top: 10px; padding: 10px 13px; border-radius: var(--r-sm); font-size: 14px; line-height: 1.65; display: none; }
+.quiz-card.good .qz-explain { display: block; background: var(--sage-bg); color: var(--sage); border: 1px solid rgba(109,191,138,.2); }
+.quiz-card.bad  .qz-explain { display: block; background: var(--red-bg);  color: var(--red);  border: 1px solid rgba(224,90,90,.2); }
+
+/* ════════════════════════════════════════
+   LOG PAGE
+════════════════════════════════════════ */
+.type-pills { display: flex; gap: 8px; margin-bottom: 14px; }
+.pill {
+  flex: 1; padding: 12px 0; border-radius: var(--r-sm); border: 1.5px solid var(--line);
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px; text-align: center;
+  cursor: pointer; background: transparent; color: var(--dim); transition: all .2s;
+  min-height: var(--tap);
+}
+.pill.buy  { border-color: var(--sage); color: var(--sage); background: var(--sage-bg); }
+.pill.sell { border-color: var(--red);  color: var(--red);  background: var(--red-bg); }
+.pill.opt  { border-color: var(--ice);  color: var(--ice);  background: var(--ice-bg); }
+.form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.field label { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 2px; display: block; margin-bottom: 5px; }
+.field input, .field textarea {
+  width: 100%; background: var(--bg2); border: 1px solid var(--line);
+  color: var(--text2); font-family: var(--sans); font-size: 14px;
+  padding: 12px 13px; border-radius: var(--r-sm); outline: none; transition: border-color .2s;
+  line-height: 1.65; -webkit-appearance: none;
+}
+.field input { font-family: var(--mono); font-size: 13px; }
+.field input:focus, .field textarea:focus { border-color: var(--gold); }
+.field textarea { resize: vertical; min-height: 76px; }
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+.submit-btn {
+  width: 100%; background: transparent; border: 1.5px solid var(--gold);
+  color: var(--gold); font-family: var(--mono); font-size: 14px; letter-spacing: 2px;
+  padding: 15px; border-radius: var(--r-sm); cursor: pointer; transition: all .2s;
+  min-height: var(--tap); margin-top: 12px;
+}
+.submit-btn:active { background: var(--gold-bg); }
+
+.log-entry {
+  background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--sage);
+  border-radius: var(--r-sm); padding: 14px; margin-bottom: 10px; animation: fadeUp .3s ease;
+}
+.le-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+.le-type { font-family: var(--mono); font-size: 14px; padding: 3px 9px; border-radius: 4px; letter-spacing: 1px; }
+.le-type.buy  { background: var(--sage-bg); color: var(--sage); border: 1px solid rgba(109,191,138,.2); }
+.le-type.sell { background: var(--red-bg);  color: var(--red);  border: 1px solid rgba(224,90,90,.2); }
+.le-type.opt  { background: var(--ice-bg);  color: var(--ice);  border: 1px solid rgba(91,196,232,.2); }
+.le-time { font-family: var(--mono); font-size: 14px; color: var(--dim); }
+.le-reason { font-size: 13px; color: var(--text); line-height: 1.65; margin-bottom: 8px; }
+.le-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.le-pill { font-family: var(--mono); font-size: 13px; color: var(--dim); background: var(--bg2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px; }
+.le-pill span { color: var(--text2); }
+
+/* ════════════════════════════════════════
+   PANIC / COOL OVERLAY
+════════════════════════════════════════ */
+.panic-fab {
+  position: fixed; bottom: 82px; right: 16px; z-index: 650;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--red); border: none; cursor: pointer;
+  font-size: 22px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(224,90,90,.4); transition: transform .15s;
+}
+.panic-fab:active { transform: scale(.9); }
+
+#coolOverlay {
+  position: fixed; inset: 0; background: rgba(10,14,20,0.97);
+  z-index: 900; display: none; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; gap: 20px; padding: 24px;
+}
+#coolOverlay.on { display: flex; }
+.co-title { font-family: var(--sans); font-size: 40px; font-weight: 800; letter-spacing: 4px; color: var(--gold-lt); font-style: normal; animation: breathe 2.5s infinite; }
+@keyframes breathe { 0%,100%{opacity:1} 50%{opacity:.5} }
+.co-ring { position: relative; width: 88px; height: 88px; }
+.co-ring svg { transform: rotate(-90deg); }
+.co-ring circle { fill: none; stroke-width: 4; }
+.co-ring .bg { stroke: var(--line); }
+.co-ring .fill { stroke: var(--gold); stroke-dasharray: 251; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.co-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 28px; color: var(--text2); }
+.co-q { max-width: 480px; font-family: var(--sans); font-size: 18px; color: var(--text2); line-height: 1.85; font-style: normal; padding: 22px 28px; border: 1px solid var(--gold-bg); border-radius: var(--r); background: rgba(201,168,76,.04); width: 100%; }
+.co-hint { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 1.5px; max-width: 360px; line-height: 1.8; }
+.co-close { background: transparent; border: 1.5px solid var(--line2); color: var(--dim); font-family: var(--mono); font-size: 14px; letter-spacing: 2px; padding: 14px 32px; border-radius: var(--r-sm); cursor: pointer; transition: all .2s; min-height: var(--tap); width: 100%; max-width: 280px; }
+.co-close:disabled { opacity: .3; cursor: not-allowed; }
+.co-close:not(:disabled):active { border-color: var(--gold); color: var(--gold); }
+
+/* ════════════════════════════════════════
+   BOTTOM TAB BAR
+════════════════════════════════════════ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 600;
+  background: rgba(28,35,48,.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--line);
+  display: flex; padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 10px 4px 8px; cursor: pointer; border: none; background: none; color: var(--muted);
+  transition: all .2s; min-height: 56px;
+}
+.tab.active { color: var(--gold); }
+.tab-icon  { font-size: 20px; margin-bottom: 2px; }
+.tab-label { font-family: var(--mono); font-size: 14px; letter-spacing: 1px; }
+
+/* ════════════════════════════════════════
+   CYCLE TABLE (mobile cards)
+════════════════════════════════════════ */
+.cycle-card {
+  background: var(--card2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 16px; margin-bottom: 10px;
+}
+.cycle-card.current { border-color: var(--ice); background: var(--ice-bg); }
+.cy-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.cy-name { font-size: 16px; font-weight: 700; color: var(--text2); }
+.cy-badge { font-family: var(--mono); font-size: 14px; padding: 3px 8px; border-radius: 4px; background: var(--card); color: var(--dim); letter-spacing: 1px; }
+.cycle-card.current .cy-badge { background: var(--ice); color: var(--bg); }
+.cy-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+.cy-stat-lbl { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 1px; margin-bottom: 3px; }
+.cy-stat-val { font-family: var(--mono); font-size: 18px; font-weight: 600; }
+.cy-sig { font-size: 14px; color: var(--dim); line-height: 1.55; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* on-chain metrics */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 14px; background: var(--card2); border: 1px solid var(--line);
+  border-radius: var(--r-sm); margin-bottom: 8px;
+}
+.metric-name { font-family: var(--mono); font-size: 14px; color: var(--dim); }
+.metric-val  { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+.metric-sub  { font-size: 13px; color: var(--muted); text-align: right; margin-top: 2px; }
+
+/* bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 100px; margin-bottom: 6px; }
+.bc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bc-bar { width: 100%; border-radius: 4px 4px 0 0; }
+.bc-yr  { font-family: var(--mono); font-size: 13px; color: var(--dim); }
+.bc-pct { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+
+/* fg scale */
+.fg-scale { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
+.fgs-cell { background: var(--card2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 4px; text-align: center; }
+.fgs-val { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+.fgs-lbl { font-size: 14px; color: var(--dim); margin-top: 3px; line-height: 1.4; }
+
+/* divider */
+.divider { height: 1px; background: var(--line); margin: 14px 0; }
+
+/* warn box */
+.warn-box { padding: 12px 14px; background: var(--red-bg); border: 1px solid rgba(224,90,90,.3); border-radius: var(--r-sm); font-family: var(--mono); font-size: 14px; color: var(--red); line-height: 1.65; }
+
+/* section padding util */
+.sec { padding: 16px 16px 0; }
+
+@media (min-width: 640px) {
+  .home-hero { padding: 40px 28px 28px; }
+  .hh-title { font-size: 54px; font-weight: 800; }
+  .wisdom-list { padding: 14px 20px 0; }
+  .wisdom-row { padding: 18px 20px; }
+  .sec { padding: 20px 24px 0; }
+}
+@media (min-width: 900px) {
+  body { max-width: 780px; margin: 0 auto; }
+  .tab-bar { max-width: 780px; left: 50%; transform: translateX(-50%); }
+  .panic-fab { right: calc(50% - 390px + 16px); }
+  .topbar { max-width: 780px; left: 50%; transform: translateX(-50%); }
+  #drawer .drawer-panel { width: 280px; }
+}
+
+/* ════════════════════════════════════════
+   V5 ADDITIONS
+════════════════════════════════════════ */
+
+/* streak badge in topbar */
+.tb-streak {
+  font-family: var(--mono); font-size: 13px; color: var(--gold);
+  background: var(--gold-bg); border: 1px solid rgba(212,168,75,.3);
+  border-radius: 20px; padding: 3px 10px; margin-right: 8px;
+  letter-spacing: 1px; white-space: nowrap;
+}
+
+/* today's wisdom button */
+.today-btn {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 16px 0; padding: 13px 16px;
+  background: linear-gradient(135deg, rgba(212,168,75,.08), rgba(91,196,232,.06));
+  border: 1px solid rgba(212,168,75,.25); border-radius: var(--r);
+  cursor: pointer; transition: all .2s;
+}
+.today-btn:active { transform: scale(.98); }
+.today-icon { font-size: 22px; }
+.today-body { flex: 1; }
+.today-label { font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 2px; margin-bottom: 2px; }
+.today-title { font-size: 14px; color: var(--text2); font-weight: 600; }
+.today-arrow { font-size: 18px; color: var(--gold); }
+
+/* wisdom sheet — quote block */
+.ws-quote {
+  margin-top: 20px; padding: 16px 18px;
+  background: rgba(212,168,75,.05);
+  border-left: 3px solid var(--gold-lt);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.ws-quote-text {
+  font-size: 16px; color: var(--gold-lt); line-height: 1.75;
+  font-style: italic; margin-bottom: 8px;
+}
+.ws-quote-by {
+  font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 1px;
+}
+
+/* wisdom sheet — case study */
+.ws-case {
+  margin-top: 14px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 16px;
+}
+.ws-case-label {
+  font-family: var(--mono); font-size: 12px; color: var(--ice);
+  letter-spacing: 2.5px; margin-bottom: 10px;
+}
+.ws-case-text { font-size: 14px; color: var(--dim); line-height: 1.75; }
+
+/* daily ritual */
+.ritual-block {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r); overflow: hidden; margin-bottom: 12px;
+}
+.ritual-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.ritual-head-left { display: flex; align-items: center; gap: 10px; }
+.ritual-time-badge {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 2px;
+  padding: 3px 9px; border-radius: 20px;
+}
+.ritual-time-badge.morning { background: rgba(212,168,75,.15); color: var(--gold); border: 1px solid rgba(212,168,75,.3); }
+.ritual-time-badge.evening { background: rgba(91,196,232,.1); color: var(--ice); border: 1px solid rgba(91,196,232,.3); }
+.ritual-head-title { font-size: 15px; font-weight: 700; color: var(--text2); }
+.ritual-progress { font-family: var(--mono); font-size: 13px; color: var(--dim); }
+.ritual-body { padding: 12px 16px; display: none; }
+.ritual-block.open .ritual-body { display: block; }
+.ritual-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid var(--line);
+  cursor: pointer; min-height: 48px;
+}
+.ritual-item:last-child { border-bottom: none; }
+.ritual-chk {
+  width: 20px; height: 20px; border: 1.5px solid var(--line2);
+  border-radius: 4px; flex-shrink: 0; margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: transparent; transition: all .2s;
+}
+.ritual-item.done .ritual-chk { background: var(--sage); border-color: var(--sage); color: var(--bg); }
+.ritual-item-title { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 2px; transition: all .2s; }
+.ritual-item.done .ritual-item-title { color: var(--muted); text-decoration: line-through; }
+.ritual-item-sub { font-size: 13px; color: var(--dim); line-height: 1.55; }
+
+/* evening review fields */
+.eve-row { margin-bottom: 12px; }
+.eve-label { font-family: var(--mono); font-size: 12px; color: var(--dim); letter-spacing: 2px; margin-bottom: 6px; display: block; }
+.eve-btns { display: flex; gap: 8px; }
+.eve-btn {
+  flex: 1; padding: 11px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: transparent;
+  font-family: var(--mono); font-size: 13px; color: var(--dim);
+  cursor: pointer; transition: all .2s; letter-spacing: 1px;
+}
+.eve-btn.yes.active { border-color: var(--sage); color: var(--sage); background: var(--sage-bg); }
+.eve-btn.no.active  { border-color: var(--red);  color: var(--red);  background: var(--red-bg); }
+.emotion-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 4px; }
+.emo-btn {
+  padding: 10px 4px; border-radius: 8px; border: 1.5px solid var(--line);
+  background: transparent; cursor: pointer; transition: all .15s;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.emo-emoji { font-size: 20px; }
+.emo-label { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.emo-btn.selected { border-color: var(--gold); background: var(--gold-bg); }
+.emo-btn.selected .emo-label { color: var(--gold); }
+.eve-submit {
+  width: 100%; background: transparent; border: 1px solid var(--ice);
+  color: var(--ice); font-family: var(--mono); font-size: 13px;
+  letter-spacing: 2px; padding: 12px; border-radius: var(--r-sm);
+  cursor: pointer; transition: all .2s; margin-top: 4px;
+}
+.eve-submit:active { background: var(--ice-bg); }
+
+/* journal stats */
+.jstats-row {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px;
+}
+.jstat {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 12px; text-align: center;
+}
+.jstat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text2); }
+.jstat-lbl { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 1px; margin-top: 3px; }
+.jtype-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.jtype-seg { transition: width .5s; }
+.jtype-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.jtype-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.jtype-item { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+
+/* signals expanded */
+.sig-grid { grid-template-columns: 1fr 1fr; }
+
+/* cycle position tool */
+.cycle-tool { background: var(--card2); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; margin-bottom: 12px; }
+.ct-title { font-size: 16px; font-weight: 700; color: var(--text2); margin-bottom: 4px; }
+.ct-sub { font-size: 13px; color: var(--dim); margin-bottom: 16px; line-height: 1.55; }
+.ct-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ct-label { font-family: var(--mono); font-size: 13px; color: var(--dim); width: 90px; flex-shrink: 0; }
+.ct-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.ct-chip {
+  padding: 6px 12px; border-radius: 20px; border: 1px solid var(--line);
+  font-family: var(--mono); font-size: 12px; color: var(--dim);
+  cursor: pointer; background: transparent; transition: all .15s;
+  letter-spacing: 1px;
+}
+.ct-chip.active { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.ct-result {
+  padding: 14px 16px; border-radius: var(--r-sm);
+  font-size: 14px; line-height: 1.75; margin-top: 4px;
+  display: none; animation: fadeUp .3s ease;
+}
+.ct-result.show { display: block; }
+.ct-result.spring { background: var(--sage-bg); border: 1px solid rgba(82,201,125,.3); color: var(--sage); }
+.ct-result.summer { background: var(--gold-bg); border: 1px solid rgba(212,168,75,.3); color: var(--gold); }
+.ct-result.autumn { background: rgba(224,130,90,.1); border: 1px solid rgba(224,130,90,.3); color: #e08250; }
+.ct-result.winter { background: var(--red-bg); border: 1px solid rgba(224,90,90,.3); color: var(--red); }
+
+/* breathing in cool overlay */
+.co-breath-guide {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  margin: -4px 0 4px;
+}
+.co-breath-label {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+.co-breath-circle {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 2px solid var(--gold-bg);
+  background: rgba(212,168,75,.04);
+  transition: transform 4s ease-in-out, opacity 4s ease-in-out;
+}
+.co-breath-circle.inhale { transform: scale(1.5); opacity: .9; }
+.co-breath-circle.exhale { transform: scale(1); opacity: .4; }
+.co-breath-phase {
+  font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+
+<div class="light l1"></div>
+<div class="light l2"></div>
+
+<!-- ═══ TOPBAR ═══ -->
+<div class="topbar">
+  <div class="tb-logo">BMCS · 冷却</div>
+  <div class="tb-streak" id="tbStreak" style="display:none">🔥 <span id="streakDays">0</span>天</div>
+  <div class="tb-heat">
+    <div class="tb-bar"><div class="tb-fill" id="tbFill"></div></div>
+    <div class="tb-val" id="tbVal">--</div>
+  </div>
+  <button class="tb-menu-btn" onclick="toggleDrawer()" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- ═══ SIDE DRAWER ═══ -->
+<div id="drawer" onclick="closeDrawerOnBg(event)">
+  <div class="drawer-bg"></div>
+  <div class="drawer-panel">
+    <div class="drawer-brand">牛市冷却系统<br>二十条心法</div>
+    <div class="drawer-section-label">主要功能</div>
+    <div class="drawer-item active" onclick="goTab(0);closeDrawer()">
+      <div class="di-num">●</div><div class="di-label">二十条心法</div><div class="di-tag">核心</div>
+    </div>
+    <div class="drawer-item" onclick="goTab(1);closeDrawer()">
+      <div class="di-num">●</div><div class="di-label">决策工具</div><div class="di-tag">工具</div>
+    </div>
+    <div class="drawer-item" onclick="goTab(2);closeDrawer()">
+      <div class="di-num">●</div><div class="di-label">历史数据</div><div class="di-tag">数据</div>
+    </div>
+    <div class="drawer-item" onclick="goTab(3);closeDrawer()">
+      <div class="di-num">●</div><div class="di-label">交易日志</div><div class="di-tag">记录</div>
+    </div>
+    <div class="drawer-section-label" style="margin-top:8px;">心法分类</div>
+    <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">20</div><div class="di-label">全部心法</div></div>
+    <div class="drawer-item" onclick="filterCat('mind');goTab(0);closeDrawer()"><div class="di-num">6</div><div class="di-label">认知与心理</div></div>
+    <div class="drawer-item" onclick="filterCat('risk');goTab(0);closeDrawer()"><div class="di-num">6</div><div class="di-label">风险管理</div></div>
+    <div class="drawer-item" onclick="filterCat('macro');goTab(0);closeDrawer()"><div class="di-num">4</div><div class="di-label">宏观视角</div></div>
+    <div class="drawer-item" onclick="filterCat('system');goTab(0);closeDrawer()"><div class="di-num">4</div><div class="di-label">系统与执行</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 0 · 二十条心法（核心）
+══════════════════════════════════════ -->
+<div class="page active" id="pg0">
+  <div class="home-hero">
+    <div class="hh-eyebrow">BULL MARKET COOLING SYSTEM · 二十条心法</div>
+    <div class="hh-title">在狂热中<br><em>保持理性</em></div>
+    <div class="hh-sub">这二十条心法是本系统的基石。每一条都来自真实的市场教训，在你冲动操作之前，请先读完它们。</div>
+    <div class="hh-deco">20</div>
+  </div>
+
+  <div class="today-btn" onclick="openTodayWisdom()" style="margin-top:14px">
+    <div class="today-icon">✨</div>
+    <div class="today-body">
+      <div class="today-label">今日精读 · DAILY WISDOM</div>
+      <div class="today-title" id="todayTitle">随机开启一条未读心法</div>
+    </div>
+    <div class="today-arrow">›</div>
+  </div>
+
+  <div class="wisdom-progress-bar">
+    <span class="wpb-label">已读进度</span>
+    <div class="wpb-track"><div class="wpb-fill" id="wpbFill" style="width:0%"></div></div>
+    <span class="wpb-count" id="wpbCount">0 / 20</span>
+  </div>
+
+  <div class="cat-tabs" id="catTabs">
+    <div class="cat-tab active" onclick="filterCat('all',this)">全部 20</div>
+    <div class="cat-tab" onclick="filterCat('mind',this)">🧠 认知心理 6</div>
+    <div class="cat-tab" onclick="filterCat('risk',this)">🛡 风险管理 6</div>
+    <div class="cat-tab" onclick="filterCat('macro',this)">🌐 宏观视角 4</div>
+    <div class="cat-tab" onclick="filterCat('system',this)">⚙️ 系统执行 4</div>
+  </div>
+
+  <div class="wisdom-list" id="wisdomList"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 1 · 决策工具
+══════════════════════════════════════ -->
+<div class="page" id="pg1">
+  <div class="page-header">
+    <div class="ph-eyebrow">DECISION TOOLS · 决策工具</div>
+    <div class="ph-title">交易前的理性过滤器</div>
+    <div class="ph-sub">每次操作之前，用这些工具强制自己思考。每一个工具，都对应着某一条心法。</div>
+  </div>
+
+  <!-- 信息降噪清单 -->
+  <div class="sec">
+    <div class="ts-label">STEP 01 · 心法⑥「克制」对应</div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon">🧊</div>
+        <div><div class="card-title">信息降噪清单</div><div class="card-sub">开盘前必须完成的5项强制行动</div></div>
+      </div>
+      <div id="checklist">
+        <div class="check-row" onclick="doCheck(this)">
+          <div class="chkbox">✓</div>
+          <div style="flex:1"><div class="chk-title">关闭社交媒体通知</div><div class="chk-desc">群聊满屏晒收益图 = 市场见顶信号。情绪传染比病毒更快。</div></div>
+          <div class="chk-tag">HIGH RISK</div>
+        </div>
+        <div class="check-row" onclick="doCheck(this)">
+          <div class="chkbox">✓</div>
+          <div style="flex:1"><div class="chk-title">建立专属观察列表</div><div class="chk-desc">只追踪预设标的（BTC/DVOL/Greeks），不被涨幅榜被动驱动。</div></div>
+          <div class="chk-tag">REQUIRED</div>
+        </div>
+        <div class="check-row" onclick="doCheck(this)">
+          <div class="chkbox">✓</div>
+          <div style="flex:1"><div class="chk-title">每日强制无屏时间 ≥ 2h</div><div class="chk-desc">固定时段断开所有设备，让大脑从多巴胺循环强制复位。</div></div>
+          <div class="chk-tag">DAILY</div>
+        </div>
+        <div class="check-row" onclick="doCheck(this)">
+          <div class="chkbox">✓</div>
+          <div style="flex:1"><div class="chk-title">设置行情检查时间窗口</div><div class="chk-desc">每天固定 1-2 个时间点看盘，其余时间不主动盯盘。</div></div>
+          <div class="chk-tag">SCHEDULE</div>
+        </div>
+        <div class="check-row" onclick="doCheck(this)">
+          <div class="chkbox">✓</div>
+          <div style="flex:1"><div class="chk-title">将部分利润转为实体资产</div><div class="chk-desc">浮盈变成家庭改善，才能真实感受金钱价值。（心法③）</div></div>
+          <div class="chk-tag">ANCHOR</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 芒格反转测试 -->
+  <div class="sec">
+    <div class="ts-label">STEP 02 · 心法④⑤对应</div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon">🔁</div>
+        <div><div class="card-title">芒格反转测试</div><div class="card-sub">交易前必须诚实回答的5个问题</div></div>
+      </div>
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q1 · 极端情景</div>
+        <div class="inv-q">如果现在价格腰斩，我是否有具体应对方案？</div>
+        <div class="inv-hint">杠杆能撑住吗？有无 Put 对冲？清算线在哪里？不仅是心理准备，更是财务控制。</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','有完整预案，已设置止损和对冲保护。')">✓ 有方案</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 未做压力测试即入场 = 赌博，不是交易。')">✗ 没想过</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q2 · 买入逻辑</div>
+        <div class="inv-q">我买入的理由是"它在涨"，还是"基本面质变"？</div>
+        <div class="inv-hint">能否用一句话说清楚：此资产为何在此价格值得持有？能否量化？</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','基于基本面，逻辑清晰可量化。')">✓ 基本面</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 动量追涨是散户最常见亏损原因。')">✗ 就是在涨</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q3 · 对手盘</div>
+        <div class="inv-q">谁在接我的盘？我相对对手有什么优势？</div>
+        <div class="inv-hint">每笔买入都有人在卖。你是否有相对信息/结构优势？</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','已分析对手盘，存在相对优势。')">✓ 有优势</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 不清楚对手是谁，你很可能就是那个人。')">✗ 不清楚</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q4 · 仓位匹配</div>
+        <div class="inv-q">我的仓位规模，和我的把握程度匹配吗？</div>
+        <div class="inv-hint">Kelly准则：高确信度才配高仓位。不确定时小仓位试错。（心法⑧）</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','仓位与置信度匹配，符合资金管理。')">✓ 成比例</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 仓位过重 = 情绪押注，不是理性交易。')">✗ 仓位过重</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q5 · 后悔测试</div>
+        <div class="inv-q">如果明天跌30%，我会后悔今天的决定吗？</div>
+        <div class="inv-hint">后悔最小化原则：在最坏情景下，你是否仍能接受？不能就减仓。</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','最坏情景在接受范围，不影响生活质量。')">✓ 能接受</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 不能接受最坏结果 = 仓位超出风险上限。')">✗ 无法接受</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 定量风控 -->
+  <div class="sec">
+    <div class="ts-label">STEP 03 · 心法⑧⑨⑫对应</div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon">📐</div>
+        <div><div class="card-title">分段止盈参数</div><div class="card-sub">数学优先于直觉</div></div>
+      </div>
+      <div class="sl-row">
+        <div class="sl-top"><span class="sl-name">每档止盈触发涨幅</span><span class="sl-val" id="tpv" style="color:var(--sage)">+15%</span></div>
+        <div class="sl-desc">每上涨此幅度，触发一次分批止盈操作</div>
+        <input type="range" min="5" max="50" value="15" oninput="updateTP(this.value)" style="accent-color:var(--sage)">
+      </div>
+      <div class="sl-row">
+        <div class="sl-top"><span class="sl-name">每次卖出仓位比例</span><span class="sl-val" id="spv" style="color:var(--gold)">20%</span></div>
+        <div class="sl-desc">每次触发时，卖出总仓位的百分比</div>
+        <input type="range" min="5" max="50" value="20" oninput="document.getElementById('spv').textContent=this.value+'%';updateLadder()" style="accent-color:var(--gold)">
+      </div>
+      <div class="sl-row" style="margin-bottom:0">
+        <div class="sl-top"><span class="sl-name">移动止损回撤容忍</span><span class="sl-val" id="tsv" style="color:var(--red)">-8%</span></div>
+        <div class="sl-desc">从最高点回撤此幅度，无条件执行减仓/清仓</div>
+        <input type="range" min="3" max="25" value="8" oninput="document.getElementById('tsv').textContent='-'+this.value+'%'" style="accent-color:var(--red)">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon">🪜</div>
+        <div><div class="card-title">止盈阶梯预览</div><div class="card-sub">分批减仓路径可视化</div></div>
+      </div>
+      <div id="ladderViz"></div>
+      <div class="warn-box" style="margin-top:14px;">⚠ 移动止损触发后无条件执行 · 不等反弹确认 · 不听任何利好解释</div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-hd">
+        <div class="card-icon">🧮</div>
+        <div><div class="card-title">Kelly 仓位计算器</div><div class="card-sub">心法⑤「期望值思维」的量化工具</div></div>
+      </div>
+      <div class="calc-2col">
+        <div class="cf"><label>总资金 (USDT)</label><input type="number" id="c_cap" value="100000" oninput="calcKelly()"></div>
+        <div class="cf"><label>预估胜率 (%)</label><input type="number" id="c_wr" value="55" min="1" max="99" oninput="calcKelly()"></div>
+        <div class="cf"><label>平均盈亏比</label><input type="number" id="c_rr" value="2" step="0.1" oninput="calcKelly()"></div>
+        <div class="cf"><label>单笔最大风险 (%)</label><input type="number" id="c_mr" value="2" step="0.1" oninput="calcKelly()"></div>
+      </div>
+      <div class="kelly-out">
+        <div class="ko-cell"><div class="ko-lbl">KELLY仓位</div><div class="ko-val" id="kPct" style="color:var(--sage)">--</div></div>
+        <div class="ko-cell"><div class="ko-lbl">建议仓位</div><div class="ko-val" id="kAmt" style="font-size:15px;color:var(--gold)">--</div></div>
+        <div class="ko-cell"><div class="ko-lbl">最大止损</div><div class="ko-val" id="kStop" style="font-size:15px;color:var(--red)">--</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 情绪测试 -->
+  <div class="sec">
+    <div class="ts-label">STEP 04 · 心法①②⑥对应</div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon">🎭</div>
+        <div><div class="card-title">情绪偏差测试</div><div class="card-sub">选出最接近你当前状态的选项</div></div>
+      </div>
+      <div class="quiz-card" id="qq1">
+        <div class="qz-num">SCENARIO 01 · 市场连涨5天</div>
+        <div class="qz-q">BTC 连续5天上涨，你的第一反应是？</div>
+        <div class="qz-opts">
+          <div class="qz-opt" onclick="doQuiz('qq1',this,'bad','FOMO驱动。价格连涨后风险在增加，应检视止盈计划是否执行。（心法⑥）')"><div class="qz-dot"></div>兴奋，想加仓，担心踏空</div>
+          <div class="qz-opt" onclick="doQuiz('qq1',this,'good','理性反应。逢涨减仓是分段止盈的核心，抵抗FOMO是基本功。（心法⑥）')"><div class="qz-dot"></div>警觉，检查止盈计划是否执行</div>
+          <div class="qz-opt" onclick="doQuiz('qq1',this,'bad','「感觉还会涨」是典型近因偏差，不能作为持仓理由。（心法①）')"><div class="qz-dot"></div>平静观察，感觉还会继续涨</div>
+        </div>
+        <div class="qz-explain"></div>
+      </div>
+      <div class="quiz-card" id="qq2">
+        <div class="qz-num">SCENARIO 02 · 浮盈50%</div>
+        <div class="qz-q">你的仓位浮盈已达50%，此时你会？</div>
+        <div class="qz-opts">
+          <div class="qz-opt" onclick="doQuiz('qq2',this,'good','正确。分批锁定利润，同时保留仓位享受后续涨幅。（心法③⑧）')"><div class="qz-dot"></div>按计划分批止盈，锁定部分利润</div>
+          <div class="qz-opt" onclick="doQuiz('qq2',this,'bad','锚定效应。「目标价」应动态调整，不能固守原始目标。（心法①）')"><div class="qz-dot"></div>继续持有，等目标价再卖</div>
+          <div class="qz-opt" onclick="doQuiz('qq2',this,'bad','高风险。浮盈≠已实现利润。加仓会在回撤时放大损失。（心法⑨）')"><div class="qz-dot"></div>加仓，趋势明显还能涨</div>
+        </div>
+        <div class="qz-explain"></div>
+      </div>
+      <div class="quiz-card" id="qq3" style="margin-bottom:0">
+        <div class="qz-num">SCENARIO 03 · 错过上涨</div>
+        <div class="qz-q">你因没有重仓错过了一波30%上涨，你感到？</div>
+        <div class="qz-opts">
+          <div class="qz-opt" onclick="doQuiz('qq3',this,'good','健康心态。轻仓保护了下行时的资产安全。（心法⑥⑧⑨）')"><div class="qz-dot"></div>略有遗憾，这是风控的代价</div>
+          <div class="qz-opt" onclick="doQuiz('qq3',this,'bad','FOMO最危险的形式。愤怒会驱使你高位追入成为接盘者。（心法⑥）')"><div class="qz-dot"></div>非常愤怒，下次一定要重仓</div>
+          <div class="qz-opt" onclick="doQuiz('qq3',this,'bad','焦虑驱动的入场往往在最糟糕的时机。先冷静再评估。（心法②）')"><div class="qz-dot"></div>焦虑，现在还想不想追进去</div>
+        </div>
+        <div class="qz-explain"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顶部信号 -->
+  <div class="sec" style="margin-bottom:20px">
+    <div class="ts-label">STEP 05 · 心法⑦⑭对应</div>
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-icon">📡</div>
+        <div><div class="card-title">市场顶部信号检测</div><div class="card-sub">点击激活你观察到的信号</div></div>
+      </div>
+      <div class="sig-grid" id="sigGrid">
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">💬</div>
+          <div class="sig-title">亲友开始问币</div>
+          <div class="sig-body">久未联系的朋友问"买什么能翻倍"</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">🚪</div>
+          <div class="sig-title">想辞职全职炒</div>
+          <div class="sig-body">觉得工作太慢，认为找到了更好方式</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">😤</div>
+          <div class="sig-title">FOMO 愤怒</div>
+          <div class="sig-body">因"少赚"而愤怒，追悔没有重仓</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">📱</div>
+          <div class="sig-title">满屏收益截图</div>
+          <div class="sig-body">群里大量转发盈利截图，气氛极度乐观</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">📰</div>
+          <div class="sig-title">主流媒体头版</div>
+          <div class="sig-body">BTC登上CNN/BBC头版，圈外人开始关注</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">📈</div>
+          <div class="sig-title">合约OI创新高</div>
+          <div class="sig-body">未平仓合约量历史性爆增，杠杆风险极高</div>
+        </div>
+        <div class="sig-alert" id="sigAlert">⚡ 防守模式已激活（心法⑦⑭）<br>立即暂停新建仓位 · 审查止盈计划 · 执行减仓 · 激活3日冷静期</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 2 · 历史数据
+══════════════════════════════════════ -->
+<div class="page" id="pg2">
+  <div class="page-header">
+    <div class="ph-eyebrow">HISTORICAL DATA · 历史镜鉴</div>
+    <div class="ph-title">BTC 四次牛熊周期</div>
+    <div class="ph-sub">心法⑦「均值回归」· 心法⑭「市场周期」的历史证明</div>
+  </div>
+  <div class="sec">
+    <div class="ts-label">周期对照</div>
+    <div class="cycle-card">
+      <div class="cy-head"><div class="cy-name">2013 牛市</div><div class="cy-badge">CYCLE 1</div></div>
+      <div class="cy-stats">
+        <div><div class="cy-stat-lbl">顶部价格</div><div class="cy-stat-val" style="color:var(--gold)">$1,163</div></div>
+        <div><div class="cy-stat-lbl">随后跌幅</div><div class="cy-stat-val" style="color:var(--red)">-87%</div></div>
+        <div><div class="cy-stat-lbl">历时</div><div class="cy-stat-val" style="color:var(--dim);font-size:14px">~2周</div></div>
+      </div>
+      <div class="cy-sig">📡 散户大量涌入 · 媒体狂欢 · Mt.Gox 黄金时代</div>
+    </div>
+    <div class="cycle-card">
+      <div class="cy-head"><div class="cy-name">2017 牛市</div><div class="cy-badge">CYCLE 2</div></div>
+      <div class="cy-stats">
+        <div><div class="cy-stat-lbl">顶部价格</div><div class="cy-stat-val" style="color:var(--gold)">$19,783</div></div>
+        <div><div class="cy-stat-lbl">随后跌幅</div><div class="cy-stat-val" style="color:var(--red)">-84%</div></div>
+        <div><div class="cy-stat-lbl">历时</div><div class="cy-stat-val" style="color:var(--dim);font-size:14px">~3周</div></div>
+      </div>
+      <div class="cy-sig">📡 ICO 热潮 · 出租司机谈币 · 期货上市</div>
+    </div>
+    <div class="cycle-card">
+      <div class="cy-head"><div class="cy-name">2021 牛市</div><div class="cy-badge">CYCLE 3</div></div>
+      <div class="cy-stats">
+        <div><div class="cy-stat-lbl">顶部价格</div><div class="cy-stat-val" style="color:var(--gold)">$69,000</div></div>
+        <div><div class="cy-stat-lbl">随后跌幅</div><div class="cy-stat-val" style="color:var(--red)">-77%</div></div>
+        <div><div class="cy-stat-lbl">历时</div><div class="cy-stat-val" style="color:var(--dim);font-size:14px">~4周</div></div>
+      </div>
+      <div class="cy-sig">📡 NFT / 元宇宙 · 上市公司囤币 · LUNA 崩盘</div>
+    </div>
+    <div class="cycle-card current">
+      <div class="cy-head"><div class="cy-name">2024-25 牛市</div><div class="cy-badge">CURRENT</div></div>
+      <div class="cy-stats">
+        <div><div class="cy-stat-lbl">ATH 价格</div><div class="cy-stat-val" style="color:var(--ice)">$126,000</div></div>
+        <div><div class="cy-stat-lbl">当前回调</div><div class="cy-stat-val" style="color:var(--red)">-47%↓</div></div>
+        <div><div class="cy-stat-lbl">ATH 日期</div><div class="cy-stat-val" style="color:var(--dim);font-size:13px">25.10.14</div></div>
+      </div>
+      <div class="cy-sig">📡 ETF 获批 · 特朗普当选 · 机构囤币 · 进行中</div>
+    </div>
+
+    <div class="ts-label" style="margin-top:14px">跌幅可视化</div>
+    <div class="card">
+      <div class="bar-chart">
+        <div class="bc-col"><div class="bc-bar" style="height:87%;background:linear-gradient(to top,var(--red),rgba(224,90,90,.3))"></div><div class="bc-yr">2013</div><div class="bc-pct" style="color:var(--red)">-87%</div></div>
+        <div class="bc-col"><div class="bc-bar" style="height:84%;background:linear-gradient(to top,var(--red),rgba(224,90,90,.3))"></div><div class="bc-yr">2017</div><div class="bc-pct" style="color:var(--red)">-84%</div></div>
+        <div class="bc-col"><div class="bc-bar" style="height:77%;background:linear-gradient(to top,var(--gold),rgba(201,168,76,.3))"></div><div class="bc-yr">2021</div><div class="bc-pct" style="color:var(--gold)">-77%</div></div>
+        <div class="bc-col"><div class="bc-bar" style="height:47%;background:linear-gradient(to top,var(--ice),rgba(91,196,232,.2));border:1px dashed var(--ice)"></div><div class="bc-yr">2025</div><div class="bc-pct" style="color:var(--ice)">-47%</div></div>
+      </div>
+    </div>
+
+    <div class="ts-label">链上指标参考 · 心法⑭⑱对应</div>
+    <div class="metric-row"><div><div class="metric-name">MVRV Ratio</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--gold)">顶部 &gt; 3.5</div><div class="metric-sub">底部 &lt; 1.0</div></div></div>
+    <div class="metric-row"><div><div class="metric-name">NUPL</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--red)">顶部 &gt; 0.75</div><div class="metric-sub">底部 &lt; 0</div></div></div>
+    <div class="metric-row"><div><div class="metric-name">Funding Rate</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--gold)">危险 &gt; 0.1%/8h</div><div class="metric-sub">持续为正 = 过热</div></div></div>
+    <div class="metric-row" style="border-color:var(--sage);margin-bottom:20px"><div><div class="metric-name">BTC DVOL（期权波动率）</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--sage)">卖权 &gt; 60</div><div class="metric-sub">你的卖权时机</div></div></div>
+
+    <div class="ts-label">周期自测 · 你现在在哪个季节？</div>
+    <div class="cycle-tool">
+      <div class="ct-title">🧭 周期定位工具</div>
+      <div class="ct-sub">选择当前市场状态，系统推断你所处的市场季节（参考心法⑭）</div>
+      <div class="ct-row">
+        <div class="ct-label">MVRV</div>
+        <div class="ct-chips">
+          <button class="ct-chip" onclick="setCycleChip(this,'mvrv','low')" data-key="mvrv" data-val="low">&lt;1.0 低估</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'mvrv','mid')" data-key="mvrv" data-val="mid">1–2.5 合理</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'mvrv','high')" data-key="mvrv" data-val="high">2.5–3.5 高估</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'mvrv','ext')" data-key="mvrv" data-val="ext">&gt;3.5 极高</button>
+        </div>
+      </div>
+      <div class="ct-row">
+        <div class="ct-label">恐贪指数</div>
+        <div class="ct-chips">
+          <button class="ct-chip" onclick="setCycleChip(this,'fg','fear')" data-key="fg" data-val="fear">&lt;25 恐惧</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'fg','neutral')" data-key="fg" data-val="neutral">25–60 中性</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'fg','greed')" data-key="fg" data-val="greed">60–80 贪婪</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'fg','ext')" data-key="fg" data-val="ext">&gt;80 极贪婪</button>
+        </div>
+      </div>
+      <div class="ct-row">
+        <div class="ct-label">媒体热度</div>
+        <div class="ct-chips">
+          <button class="ct-chip" onclick="setCycleChip(this,'media','cold')" data-key="media" data-val="cold">无人关注</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'media','warm')" data-key="media" data-val="warm">行业关注</button>
+          <button class="ct-chip" onclick="setCycleChip(this,'media','hot')" data-key="media" data-val="hot">主流媒体</button>
+        </div>
+      </div>
+      <div id="cycleResult" class="ct-result"></div>
+    </div>
+
+    <div class="ts-label">恐贪指数参考 · 心法①对应</div>
+    <div class="fg-scale" style="margin-bottom:20px">
+      <div class="fgs-cell"><div class="fgs-val" style="color:var(--sage)">0-20</div><div class="fgs-lbl">极恐惧<br>买入</div></div>
+      <div class="fgs-cell"><div class="fgs-val" style="color:var(--ice)">20-40</div><div class="fgs-lbl">恐惧<br>关注</div></div>
+      <div class="fgs-cell"><div class="fgs-val" style="color:var(--text2)">40-60</div><div class="fgs-lbl">中性<br>均衡</div></div>
+      <div class="fgs-cell"><div class="fgs-val" style="color:var(--gold)">60-80</div><div class="fgs-lbl">贪婪<br>警戒</div></div>
+      <div class="fgs-cell" style="border-color:rgba(224,90,90,.4)"><div class="fgs-val" style="color:var(--red)">80+</div><div class="fgs-lbl">极贪婪<br>减仓</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 3 · 交易日志
+══════════════════════════════════════ -->
+<div class="page" id="pg3">
+  <div class="page-header">
+    <div class="ph-eyebrow">TRADE JOURNAL · 交易日志</div>
+    <div class="ph-title">书面决策，对抗记忆重塑</div>
+    <div class="ph-sub">心法⑲「交易日志」的实践工具。没有记录的交易，是没有收据的学费。</div>
+  </div>
+  <!-- Daily Ritual -->
+  <div class="sec">
+    <div class="ts-label">每日仪式 · DAILY RITUAL</div>
+    <!-- Morning -->
+    <div class="ritual-block" id="ritualMorning">
+      <div class="ritual-head" onclick="toggleRitual('ritualMorning')">
+        <div class="ritual-head-left">
+          <span class="ritual-time-badge morning">早盘准备</span>
+          <span class="ritual-head-title">开盘前5项强制检查</span>
+        </div>
+        <span class="ritual-progress" id="morningProgress">0/5</span>
+      </div>
+      <div class="ritual-body">
+        <div class="ritual-item" onclick="doRitual(this,'morningProgress',5)">
+          <div class="ritual-chk">✓</div>
+          <div><div class="ritual-item-title">确认宏观背景</div><div class="ritual-item-sub">美股期货、美元指数、美债10Y收益率——顺风还是逆风？</div></div>
+        </div>
+        <div class="ritual-item" onclick="doRitual(this,'morningProgress',5)">
+          <div class="ritual-chk">✓</div>
+          <div><div class="ritual-item-title">检查止盈止损位置</div><div class="ritual-item-sub">当前持仓的止盈/止损价是否仍然有效？是否需要调整？</div></div>
+        </div>
+        <div class="ritual-item" onclick="doRitual(this,'morningProgress',5)">
+          <div class="ritual-chk">✓</div>
+          <div><div class="ritual-item-title">评估市场情绪指标</div><div class="ritual-item-sub">恐贪指数 + Funding Rate + DVOL，打分今日市场温度。</div></div>
+        </div>
+        <div class="ritual-item" onclick="doRitual(this,'morningProgress',5)">
+          <div class="ritual-chk">✓</div>
+          <div><div class="ritual-item-title">设定今日最大亏损上限</div><div class="ritual-item-sub">今天最多能亏多少？触达即停止操作，不论任何理由。</div></div>
+        </div>
+        <div class="ritual-item" onclick="doRitual(this,'morningProgress',5)">
+          <div class="ritual-chk">✓</div>
+          <div><div class="ritual-item-title">明确今日"不做"清单</div><div class="ritual-item-sub">今天不追哪个币？不做哪类操作？主动的克制比被动的克制更可靠。</div></div>
+        </div>
+      </div>
+    </div>
+    <!-- Evening -->
+    <div class="ritual-block" id="ritualEvening">
+      <div class="ritual-head" onclick="toggleRitual('ritualEvening')">
+        <div class="ritual-head-left">
+          <span class="ritual-time-badge evening">晚间复盘</span>
+          <span class="ritual-head-title">今日执行回顾</span>
+        </div>
+        <span class="ritual-progress" id="eveningDone" style="color:var(--dim)">未完成</span>
+      </div>
+      <div class="ritual-body">
+        <div class="eve-row">
+          <span class="eve-label">今日是否严格执行了交易计划？</span>
+          <div class="eve-btns">
+            <button class="eve-btn yes" onclick="setEvePlan(this,'yes')">✓ 完全执行</button>
+            <button class="eve-btn no"  onclick="setEvePlan(this,'no')">✗ 有偏差</button>
+          </div>
+        </div>
+        <div class="eve-row">
+          <span class="eve-label">今日情绪状态</span>
+          <div class="emotion-grid">
+            <button class="emo-btn" onclick="setEmotion(this,1)"><div class="emo-emoji">😨</div><div class="emo-label">极恐</div></button>
+            <button class="emo-btn" onclick="setEmotion(this,3)"><div class="emo-emoji">😟</div><div class="emo-label">担忧</div></button>
+            <button class="emo-btn" onclick="setEmotion(this,5)"><div class="emo-emoji">😐</div><div class="emo-label">平静</div></button>
+            <button class="emo-btn" onclick="setEmotion(this,7)"><div class="emo-emoji">😊</div><div class="emo-label">乐观</div></button>
+            <button class="emo-btn" onclick="setEmotion(this,9)"><div class="emo-emoji">🤩</div><div class="emo-label">亢奋</div></button>
+          </div>
+        </div>
+        <div class="eve-row">
+          <span class="eve-label">今日最重要的一个教训</span>
+          <div class="field"><textarea id="eveLesson" placeholder="例：在FOMO情绪下差点追入，最终忍住了，这证明情绪控制比感觉更可靠..." style="min-height:60px"></textarea></div>
+        </div>
+        <div class="eve-row">
+          <span class="eve-label">明日需要关注的关键价位</span>
+          <div class="field"><input id="eveLevel" placeholder="例：BTC 83,000 支撑 / 88,000 压力，ETH 1,900 止损线"></div>
+        </div>
+        <button class="eve-submit" onclick="submitEvening()">▸ 保存今日复盘</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="sec">
+    <div class="ts-label">交易统计 · STATS</div>
+    <div class="jstats-row" id="jstatsRow">
+      <div class="jstat"><div class="jstat-val" id="jTotal">0</div><div class="jstat-lbl">总记录</div></div>
+      <div class="jstat"><div class="jstat-val" id="jBuy" style="color:var(--sage)">0</div><div class="jstat-lbl">买入</div></div>
+      <div class="jstat"><div class="jstat-val" id="jSell" style="color:var(--red)">0</div><div class="jstat-lbl">卖出</div></div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="jtype-bar" id="jtypeBar">
+        <div class="jtype-seg" style="width:33%;background:var(--sage)"></div>
+        <div class="jtype-seg" style="width:33%;background:var(--red)"></div>
+        <div class="jtype-seg" style="width:34%;background:var(--ice)"></div>
+      </div>
+      <div class="jtype-legend">
+        <span class="jtype-item"><span class="jtype-dot" style="background:var(--sage)"></span>买入</span>
+        <span class="jtype-item"><span class="jtype-dot" style="background:var(--red)"></span>卖出</span>
+        <span class="jtype-item"><span class="jtype-dot" style="background:var(--ice)"></span>期权</span>
+        <span class="jtype-item" style="margin-left:auto;color:var(--gold)" id="avgEmoLabel">平均情绪: --</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="ts-label">新建记录</div>
+    <div class="card">
+      <div class="type-pills">
+        <button class="pill" id="pbuy"  onclick="setT('buy')">▲ 买入</button>
+        <button class="pill" id="psell" onclick="setT('sell')">▼ 卖出</button>
+        <button class="pill" id="popt"  onclick="setT('opt')">◈ 期权</button>
+      </div>
+      <div class="form-2col">
+        <div class="field"><label>标的资产</label><input id="lAsset" placeholder="BTC · ETH"></div>
+        <div class="field"><label>当前价格</label><input id="lPrice" type="number" placeholder="84000"></div>
+        <div class="field"><label>止损触发价</label><input id="lStop" type="number" placeholder="76000"></div>
+        <div class="field"><label>止盈目标价</label><input id="lTarget" type="number" placeholder="95000"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>买入/卖出的核心理由（必须是基本面，不能是"在涨"）</label>
+        <textarea id="lReason" placeholder="例：BTC减半后供应减少，ETF净流入连续3周正值，DVOL处于历史低位，期权偏度适合建立对角价差..."></textarea>
+      </div>
+      <div class="field">
+        <label>触发止损后的具体行动（不能是"再看看"）</label>
+        <textarea id="lAction" placeholder="例：跌破74000立即平仓50%，跌破70000全部清仓，不论当时有任何利好消息..." style="min-height:64px"></textarea>
+      </div>
+      <button class="submit-btn" onclick="addLog()">▸ 锁定决策记录 · 开始执行</button>
+    </div>
+    <div class="ts-label">决策档案</div>
+    <div id="logEntries" style="margin-bottom:20px">
+      <div style="text-align:center;padding:28px 0;font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:2px;">尚无记录 · 写下你的第一笔交易逻辑</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WISDOM DETAIL SHEET ═══ -->
+<div id="wSheet" onclick="closeSheetBg(event)">
+  <div class="ws-bg"></div>
+  <div class="ws-panel">
+    <div class="ws-handle-bar"><div class="ws-handle"></div></div>
+    <div class="ws-scroll">
+      <div class="ws-num" id="wsNum"></div>
+      <div class="ws-category" id="wsCat"></div>
+      <div class="ws-icon" id="wsIcon"></div>
+      <div class="ws-title" id="wsTitle"></div>
+      <div class="ws-divider"></div>
+      <div class="ws-body" id="wsBody"></div>
+      <div class="ws-insight">
+        <div class="ws-insight-label">TRADING IMPLICATION · 交易启示</div>
+        <div class="ws-insight-text" id="wsInsight"></div>
+      </div>
+      <div class="ws-quote" id="wsQuoteBox" style="display:none">
+        <div class="ws-quote-text" id="wsQuoteText"></div>
+        <div class="ws-quote-by" id="wsQuoteBy"></div>
+      </div>
+      <div class="ws-case" id="wsCaseBox" style="display:none">
+        <div class="ws-case-label">经典案例 · CASE STUDY</div>
+        <div class="ws-case-text" id="wsCaseText"></div>
+      </div>
+    </div>
+    <div class="ws-nav">
+      <button class="ws-nav-btn" id="wsPrev" onclick="navSheet(-1)">← 上一条</button>
+      <button class="ws-mark-btn" id="wsMark" onclick="markRead()">标记已读</button>
+      <button class="ws-nav-btn" id="wsNext" onclick="navSheet(1)">下一条 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANIC FAB ═══ -->
+<button class="panic-fab" onclick="openCool()" title="立即冷静">🧊</button>
+
+<!-- ═══ COOL OVERLAY ═══ -->
+<div id="coolOverlay">
+  <div class="co-title">冷静下来</div>
+  <div class="co-ring">
+    <svg viewBox="0 0 90 90" width="90" height="90">
+      <circle class="bg" cx="45" cy="45" r="40"/>
+      <circle class="fill" id="coRing" cx="45" cy="45" r="40"/>
+    </svg>
+    <div class="co-num" id="coNum">60</div>
+  </div>
+  <div class="co-breath-guide" id="coBreath">
+    <div class="co-breath-label">4-4-4-4 箱式呼吸</div>
+    <div class="co-breath-circle" id="coBreathCircle"></div>
+    <div class="co-breath-phase" id="coBreathPhase">吸气...</div>
+  </div>
+  <div class="co-q" id="coQ">...</div>
+  <div class="co-hint" id="coHint">...</div>
+  <button class="co-close" id="coClose" disabled onclick="closeCool()">请认真思考后再关闭...</button>
+</div>
+
+<!-- ═══ BOTTOM TAB BAR ═══ -->
+<div class="tab-bar">
+  <button class="tab active" onclick="goTab(0,this)"><div class="tab-icon">📖</div><div class="tab-label">心法</div></button>
+  <button class="tab" onclick="goTab(1,this)"><div class="tab-icon">🔧</div><div class="tab-label">工具</div></button>
+  <button class="tab" onclick="goTab(2,this)"><div class="tab-icon">📊</div><div class="tab-label">历史</div></button>
+  <button class="tab" onclick="goTab(3,this)"><div class="tab-icon">📋</div><div class="tab-label">日志</div></button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// WISDOM DATA (20 entries · v5 enhanced)
+// ══════════════════════════════════════
+const wisdomData = [
+  { icon:'🎲', src:'SURVIVORSHIP BIAS · 幸存者偏差', cat:'mind',
+    title:'牛市赚钱是常态，不代表你进化成了大师',
+    body:['在单边上涨的牛市中，绝大多数参与者都会盈利——无论策略是否正确、分析是否准确。这种普遍性盈利制造了危险的幻觉：人们倾向于将大势带来的财富，归因于自己的判断力和交易才华。',
+          '真正的考验不在牛市，而在牛转熊的拐点。那时，幸存者偏差会被无情地剥开：坚持了正确系统的人，和凭运气赚钱的人，结局将完全不同。'],
+    insight:'审视每一笔盈利：它来自正确的分析，还是单纯方向正确？如果去掉大盘涨幅，你的超额收益（Alpha）是正还是负？',
+    quote:'"在牛市里赚钱和聪明毫无关系。"',
+    quoteBy:'— 沃伦·巴菲特',
+    case:'2021年几乎所有持币者都盈利，许多人自认找到了"秘诀"。2022年LUNA崩盘、FTX爆雷后，这批"大师"亏损70-100%。牛市掩盖了一切，熊市才是真正的考试。' },
+  { icon:'⚙️', src:'PROCESS OVER OUTCOME · 过程先于结果', cat:'system',
+    title:'系统胜于情绪——执行力才是核心护城河',
+    body:['专业交易者与普通散户最本质的差距，不是信息优势，不是分析能力，而是在极端情绪环境下仍能机械执行既定计划的能力。',
+          '牛市高峰时止盈单触发，你却因"感觉还会涨"手动取消；熊市底部加仓计划触发，你却因恐惧一动不动。两种场景，都是情绪战胜了系统。建立系统容易，遵守系统才是真正的壁垒。'],
+    insight:'将所有交易规则写成"如果……则……"条件语句，并在交易前签字确认。当情绪试图说服你打破规则时，先看一遍这份合约。',
+    quote:'"纪律是职业交易者和业余者之间唯一真正的区别。"',
+    quoteBy:'— 马克·道格拉斯《专业投机原理》',
+    case:'2022年LUNA崩盘时，有预设止损系统的交易者在损失30%时自动出局；没有系统的持有者，最终经历-99.9%归零。一个"如果跌破X则卖出"的规则，就是生死线。' },
+  { icon:'⚓', src:'PROFIT REALIZATION · 利润实体化', cat:'mind',
+    title:'将浮盈锚定现实——账面数字不是真实财富',
+    body:['交易账户里的数字，在你提现之前，只是一串会波动的像素。人类大脑对"账面盈利"的感受，远弱于对"已实现利润"的感受——这导致我们对浮盈的守护远不如对现金的守护。',
+          '定期将一部分利润转化为实体：改善家庭居住条件、购置耐用资产、提前还贷。这个动作会让你对金钱产生真实的锚点，也能在市场回调时降低心理压力，让你更从容地执行止损。'],
+    insight:'每当账面浮盈达到里程碑时，强制提现10-20%，用于一件具体的家庭改善。让收益变得可见可触。',
+    quote:'"提款是止盈的最终形态——没有进入银行账户的利润，只是一个数字。"',
+    quoteBy:'— 保罗·都铎·琼斯（改编）',
+    case:'2021年11月BTC高点69K，将20%浮盈兑换为房屋首付的投资者，在2022年-77%大跌中保住了生活质量。"账面数字"和"真实财富"之间，隔着一次提现。' },
+  { icon:'🔬', src:'RISK-ADJUSTED RETURNS · 风险调整收益', cat:'risk',
+    title:'Alpha vs Beta——分清是能力还是运气',
+    body:['Beta收益：你的投资组合随市场整体上涨获得的被动收益。如果BTC涨了50%，你的BTC仓位也涨了50%，这是纯粹的Beta。',
+          'Alpha收益：你通过择时、选择、对冲等主动决策，超越市场基准获得的额外收益。这才是真正衡量能力的指标。牛市中大多数人的收益是Beta伪装成Alpha，真正的检验来自夏普比率、最大回撤，以及风险调整后收益是否优于被动持仓。'],
+    insight:'用一个简单问题检验自己：如果当初直接买入并持有BTC，收益是否比主动操作的结果更好？如果是，你目前赚的是Beta，不是Alpha。',
+    quote:'"大多数投资者会因为市场上涨而高兴，但正确的问题是：相对基准，你是否跑赢了？"',
+    quoteBy:'— 霍华德·马克斯',
+    case:'2021年牛市中，大量"活跃交易者"频繁操作山寨币，最终收益跑输直接持有BTC+ETH的被动策略。Alpha难以获取，Beta被错误地归功于技术。' },
+  { icon:'📐', src:'EXPECTED VALUE · 期望值思维', cat:'system',
+    title:'赔率思维——每笔交易都是概率游戏',
+    body:['大多数交易者问的是错误的问题："这个会涨吗？"正确的问题应该是："在这个价格入场，期望值是正的吗？"',
+          '期望值 = 胜率 × 平均盈利 - 败率 × 平均亏损。一笔胜率只有40%的交易，如果盈亏比是3:1，期望值仍然为正（0.4×3 - 0.6×1 = 0.6）。长期只做正期望的交易，即使单次亏损，最终结果也是盈利的。'],
+    insight:'在每笔交易前，写下预估的胜率和目标盈亏比，计算期望值。只执行期望值为正的交易，并在事后持续追踪实际数据，校准判断。',
+    quote:'"赌博是在负期望值游戏中下注；投资是在正期望值游戏中下注——关键是你得知道哪个是哪个。"',
+    quoteBy:'— 纳西姆·塔勒布（改编）',
+    case:'2020年"312"暴跌后，BTC在4000-6000美元区间是历史极端低估。以正期望值逻辑入场的人，在接下来18个月获得了10-20倍回报。恐惧让大多数人放弃了正期望的机会。' },
+  { icon:'🧊', src:'INACTION AS STRATEGY · 不动即策略', cat:'mind',
+    title:'克制是核心策略——FOMO是最贵的学费',
+    body:['在牛市狂热的环境中，"不做任何事"是最难执行的策略，但往往也是最有价值的。每一次因为FOMO而在高位追入，每一次因"感觉会涨"而打破止盈计划，都是在为情绪付费。',
+          '真正的专业交易者，大部分时间都在等待——等待确定性更高的机会，等待赔率更优的入场点。他们把"不操作"视为一种主动决策，而不是消极的等待。'],
+    insight:'设立"冲动操作缓冲期"：每当感到FOMO冲动时，强制等待24小时再执行。记录每次因此"错过"了什么，以及如果真执行会发生什么。',
+    quote:'"在不确定的时候，什么都不做是最好的策略。"',
+    quoteBy:'— 杰西·利弗莫尔',
+    case:'2021年3月至7月，BTC从$65K跌至$28K。期间每次反弹都像"底部"，FOMO追入的投资者在7月底部后短暂盈利，随后在11月高点诱惑下再度重仓，最终深套。最理智的选择是：什么都不做，等待明确信号。' },
+  { icon:'🔄', src:'MEAN REVERSION · 均值回归', cat:'macro',
+    title:'树不会长到天上——高估必有回归',
+    body:['在金融市场中，几乎所有超常收益最终都会向长期均值靠拢。价格可以在短期内偏离基本价值很远，但重力始终存在。',
+          '每一轮牛市都会出现"这次不同"的叙事：2017年是区块链革命，2021年是机构入场，2024-25年是ETF+国家储备。叙事是真实的，但估值的物理定律从未改变。当市场对某个叙事的定价已经超出最乐观预期时，风险就在此刻积累。'],
+    insight:'对持仓资产做简单的估值测试：如果未来3年增长完全兑现，当前价格是否已经"定价完毕"？如果是，上行空间有限，下行风险巨大。',
+    quote:'"树不会长到天上。"',
+    quoteBy:'— 本杰明·格雷厄姆',
+    case:'BTC历史上每次牛市顶部都有"这次不同"的叙事：2017年是区块链革命，2021年是机构时代，2024-25年是ETF+国家储备。叙事真实，但物理定律不变：2017顶-84%，2021顶-77%。均值回归从未缺席。' },
+  { icon:'🪞', src:'POSITION SIZING · 仓位管理', cat:'risk',
+    title:'仓位是你真正的观点——不是嘴上说的那个',
+    body:['一个人可以口头上说"只是小赌一把"，但如果这笔仓位的亏损会让他睡不着觉，那他的真实仓位与他的风险承受能力严重不匹配。',
+          '仓位大小是你对一个判断最真实的表态。高确信度的机会配重仓，不确定的机会配轻仓，这才是理性的仓位语言。如果你对一个标的没有足够信心，却重仓持有，你持有的不是投资，而是赌注。'],
+    insight:'在建仓前问自己：如果这个仓位亏损50%，我还能正常生活和正常思考吗？如果不能，立刻减仓到能让你冷静睡觉的规模。',
+    quote:'"仓位大小决定了你是在做投资，还是在做赌注。"',
+    quoteBy:'— 乔治·索罗斯（改编）',
+    case:'2022年LUNA崩盘前，许多散户将50-80%资产质押于Anchor协议的20%年化。仓位与其风险承受能力严重不匹配，最终归零。如果他们只用"睡得着觉的钱"参与，结局会完全不同。' },
+  { icon:'📉', src:'DRAWDOWN PSYCHOLOGY · 回撤心理学', cat:'risk',
+    title:'下跌50%需要上涨100%——不对称性的代价',
+    body:['这是一个被严重低估的数学事实：如果你的账户亏损了50%，你需要从当前位置上涨100%才能回到原点。亏损越深，回本所需的涨幅就越夸张。',
+          '这就是为什么止损不是认输，而是数学上最理性的选择。控制最大回撤，保住本金，才能保留参与下一轮机会的资格。在市场中生存下来，本身就是一种竞争优势。'],
+    insight:'设定"最大可接受回撤线"：比如总资产的20%。一旦触及，强制全面审视持仓，而不是等待反弹。保本是一切策略的前提。',
+    quote:'"第一条规则：不要亏钱。第二条规则：不要忘记第一条规则。"',
+    quoteBy:'— 沃伦·巴菲特',
+    case:'2018年持有ETH从$1,400跌至$80，回撤-94%。从$80回到$1,400需要上涨1650%。许多人在中途"撑不住"以极低价格割肉。如果在$800设置止损，损失-43%，但保留了东山再起的资本。' },
+  { icon:'🗓️', src:'TIME HORIZON · 时间视角', cat:'system',
+    title:'不同的时间框架，看到的是不同的市场',
+    body:['同一个价格，短线交易者看到的是超买信号，长期持有者看到的是正常回调，而套利者看到的是价差机会。没有谁是错的，但如果你在用短线框架做长线决策，就会出现认知错位。',
+          '牛市中最常见的错误是：以"长期看好"为理由，拒绝执行短期止损；又以"短期震荡"为理由，拒绝锁定长期浮盈。两头都输，是因为没有明确自己的时间框架。'],
+    insight:'在每笔交易开始时，明确写下：这是一笔几天/几周/几个月/几年的交易？止盈止损的逻辑必须与时间框架完全一致，不能混用。',
+    quote:'"不同的时间框架会让你看到不同的市场。确保你在用正确的镜头。"',
+    quoteBy:'— 斯坦利·德鲁肯米勒（改编）',
+    case:'2021年底，许多人将BTC目标定为$100K+，自称"长期投资者"，却在$40K因短线恐惧割肉出局。他们用长期理由买入，用短线框架做出决策——两个框架的错位造成了最糟糕的结果。' },
+  { icon:'🎯', src:'CONCENTRATION RISK · 集中度风险', cat:'risk',
+    title:'押注单一标的的勇气，不等于分析正确的能力',
+    body:['重仓单一资产会带来两种结果：对了，你是英雄；错了，你倾家荡产。问题在于，大多数人在"对了"的时候，会把结果归因于能力，忘记了运气在其中的比例。',
+          '分散不是懦弱，而是对不确定性的尊重。即使你有90%的把握，剩余10%的可能性仍然值得管理。专业的风险管理，是在正确的时候赚钱，在错误的时候不崩溃。'],
+    insight:'单一资产的最大仓位上限，应等于你在最坏情景下（该资产归零）能够承受的心理冲击。大多数人的这个上限，远低于他们实际持有的比例。',
+    quote:'"集中持仓让你变得富有，分散持仓让你保持富有。"',
+    quoteBy:'— 经典华尔街格言',
+    case:'2022年FTX崩溃前，大量用户将数十万美元锁定在FTX交易所（单一平台风险）。许多加密KOL将80%+资产押注于单一交易所账户，最终颗粒无收。分散存储虽然"麻烦"，但是必要的风险管理。' },
+  { icon:'📊', src:'VOLATILITY AWARENESS · 波动率认知', cat:'risk',
+    title:'高波动不等于高风险——但高波动放大了一切',
+    body:['BTC的年化波动率长期在60%-100%之间，这意味着在正常市场环境下，30%-50%的价格波动是统计意义上的"正常"。许多人在这种"正常波动"中被止损出局，然后眼睁睁看着价格重新上涨。',
+          '理解波动率的结构，才能设置合理的止损距离。止损太近，会被正常噪音震出局；止损太远，单次亏损会超出承受范围。波动率是你设置止损的量尺，不能忽视。'],
+    insight:'在设置止损价格前，先查看该资产的历史波动率（ATR或DVOL）。止损距离应至少覆盖2-3倍的日均波动，否则被"振荡出局"的概率极高。',
+    quote:'"波动率不是风险本身——无法驾驭波动率，才是风险。"',
+    quoteBy:'— 纳西姆·塔勒布（改编）',
+    case:'2021年5月，BTC单日暴跌30%。许多设置了5%止损的短线交易者被震出局，随后价格在1个月内反弹至原点。止损太近 = 正常市场噪音就能触发。波动率是设置止损的量尺，不能忽视。' },
+  { icon:'🧮', src:'COMPOUNDING LOGIC · 复利逻辑', cat:'risk',
+    title:'复利的敌人不是低收益，而是大亏损',
+    body:['复利增长的最大威胁不是收益率偏低，而是一次毁灭性的大亏损将复利曲线强制重置。100万亏50%变50万，需要再翻倍才能回来，复利时钟被拨回了好几年。',
+          '这就是为什么顶级交易者对亏损有近乎偏执的厌恶：他们不是惧怕输，而是理解复利数学。保护本金，让复利持续工作，比追求单笔高收益更能创造长期财富。'],
+    insight:'计算一下：如果你的账户以每年20%的速度稳定增长，10年后是多少？再计算一次：如果中间有一次50%的亏损，10年后又是多少？两个数字的差距会让你重新理解风控。',
+    quote:'"复利是世界第八大奇迹。理解它的人赚它的钱，不理解的人付它的钱。"',
+    quoteBy:'— 爱因斯坦（据说）',
+    case:'$100,000 以年化20%稳定增长10年 = $619,174。若第5年遭遇-50%（变$77,232），之后继续20%增长5年 = $192,357。一次大亏让最终财富缩水69%。复利的敌人是大亏损，不是低收益。' },
+  { icon:'🌊', src:'MARKET CYCLE · 市场周期', cat:'macro',
+    title:'市场有四季——不要在夏天穿羽绒服',
+    body:['金融市场有可识别的周期：积累期（春）→快速上涨期（夏）→分配期（秋）→下跌期（冬）。每个阶段都有最适合的操作策略，用错了季节的策略，无论多么正确，结果都会很糟糕。',
+          '在积累期轻仓试探，在上涨期加仓持有，在分配期分批止盈，在下跌期保存现金——这是周期投资的基本逻辑。识别当前所处的周期位置，比预测价格更重要。'],
+    insight:'用简单的两个指标粗判周期：链上MVRV（>3.5为分配期，<1为积累期）+市场情绪（恐贪指数>80为分配期，<20为积累期）。两者共振时，信号更强。',
+    quote:'"规则一：识别市场周期。规则二：不要在夏天买羽绒服。"',
+    quoteBy:'— 霍华德·马克斯《周期》',
+    case:'2021年11月，MVRV达到3.8，恐贪指数持续在80+，媒体头版铺天盖地。识别周期的人在$60-69K区间分批减仓。不识别周期的人高位重仓，随后经历-77%回撤，用接下来3年来"等待回本"。' },
+  { icon:'🤐', src:'INFORMATION ASYMMETRY · 信息不对称', cat:'mind',
+    title:'你看到的"内幕消息"，可能是别人出货的烟雾弹',
+    body:['在加密市场中，"小道消息"和"内部信息"极度泛滥。但你需要思考一个问题：如果某人真的掌握了价值连城的内幕信息，他为什么要免费告诉你？',
+          '绝大多数在群里流传的"消息"，要么是已经定价的公开信息，要么是主动做多者为了推高价格而散布的噪音。真正的信息优势极其稀缺，而绝大多数散户并不具备。'],
+    insight:'建立一个简单的"消息过滤器"：这条消息的发布者，是否有动机让你买入？如果他们已经重仓持有，他们的利益和你的利益并不完全一致。',
+    quote:'"当有人给你一条免费的内幕消息时，先问自己：他为什么要给你？"',
+    quoteBy:'— 经典华尔街格言',
+    case:'2022年，FTX资助了大量KOL和媒体人，这些人不断输出"Sam是行业救世主"的叙事。这些"消息"和"共识"背后是机构的营销机器。FTX崩盘后，这些KOL的粉丝承担了大部分损失。' },
+  { icon:'🏗️', src:'PORTFOLIO STRUCTURE · 组合结构', cat:'system',
+    title:'核心仓+卫星仓——让你既不错过，也不崩溃',
+    body:['一个抗压的投资组合，通常由两部分构成：核心仓（70-80%），持有高确信度的长期标的，不轻易动；卫星仓（20-30%），用于追踪短期机会，严格止损。',
+          '这种结构的好处是：核心仓让你不会因为短期波动而错失长期上涨；卫星仓让你保持对市场的参与感，同时把风险控制在可接受范围内。不要把所有资金都放在高风险操作上，也不要为了"安全"而完全错过机会。'],
+    insight:'定期审视你的仓位是否符合"核心+卫星"结构。如果你发现所有资金都在做短线，或者所有资金都在无止损地持仓，都需要重新调整。',
+    quote:'"不要把所有鸡蛋放在同一个篮子里——但也不要分散在太多篮子里以至于无法看管。"',
+    quoteBy:'— 马克·吐温（改编）',
+    case:'2022年熊市对比：仅持有BTC+ETH核心仓（50-70%损失）vs. 全仓各类山寨（90%+损失）vs. 核心+卫星分层管理（核心-50%，卫星止损后-20%，整体损失可控在-40%以内）。结构决定命运。' },
+  { icon:'🧠', src:'SECOND ORDER THINKING · 二阶思维', cat:'mind',
+    title:'当所有人都在做同一件事时，这件事就快结束了',
+    body:['一阶思维：BTC在涨，买入。二阶思维：所有人都知道BTC在涨并都在买入，这意味着什么？谁来接最后一棒？',
+          '当某个交易策略或叙事变得"显而易见"，被大众广泛讨论和执行时，它往往已经接近失效。市场的本质是消化信息和预期，当所有人的预期都一致时，市场已经为这个预期完成了定价。'],
+    insight:'当你看到一个"显而易见"的机会时，先问：有多少人和我的判断一样？如果答案是"所有人"，这个机会的风险溢价已经被充分压缩，获利空间远小于想象。',
+    quote:'"一阶思维人人皆会；二阶思维才是真正的优势所在。"',
+    quoteBy:'— 霍华德·马克斯',
+    case:'2021年11月，美国首支BTC期货ETF获批当天，所有人认为"利好已来，必涨"。结果当天冲高后迅速回落，随后开启长达一年的熊市。"显而易见"的利好，往往是最危险的买入时机——因为市场早已提前定价。' },
+  { icon:'💧', src:'LIQUIDITY AWARENESS · 流动性认知', cat:'macro',
+    title:'流动性是牛市的血液——也是熊市的第一个逃跑者',
+    body:['牛市的本质，往往是流动性过剩在风险资产中的体现：央行宽松、信贷扩张、市场情绪乐观，大量资金涌入。而当流动性收缩时，最先受伤的往往是风险最高、流动性最差的资产。',
+          '关注宏观流动性指标（全球M2增速、美联储资产负债表、信贷利差），比单纯分析技术形态更能预测大级别的趋势转折。BTC的大周期，和全球流动性周期高度相关。'],
+    insight:'简单的流动性代理指标：美债10年收益率（上升=流动性收紧）+ 美元指数（上升=全球流动性收紧）。当这两者同时上升时，加密市场的上行动能通常受压。',
+    quote:'"流动性消失时，你以为的资产，变成了枷锁。"',
+    quoteBy:'— 格雷格·詹森，桥水基金（改编）',
+    case:'2022年3月，美联储开始激进加息，全球M2增速骤然收缩。BTC随即从$48K开始长达9个月的下跌，最低至$15.5K。先于市场感知到宏观流动性收紧信号（2021年11月）并提前减仓的人，成功保住了大部分利润。' },
+  { icon:'📝', src:'TRADE JOURNAL · 交易日志', cat:'system',
+    title:'没有记录的交易，是没有学费收据的学费',
+    body:['每一笔亏损的交易，都是市场收取的学费。但如果你不记录交易过程、决策逻辑和情绪状态，你就只是在付学费，没有拿到学费应得的知识。',
+          '详细的交易日志能揭示你的真实决策模式：你是否在特定市场状态下总是犯同样的错误？你的直觉判断是否真的有价值？哪些类型的交易是你的优势，哪些是持续亏损的根源？数据会告诉你答案。'],
+    insight:'每笔交易记录五要素：入场理由、预设止盈止损、实际执行、结果复盘、情绪状态评分（1-10）。三个月后回看，你会发现你的情绪评分和你的交易结果之间，存在某种规律。',
+    quote:'"没有记录的经验，不是经验——只是时间的消耗。"',
+    quoteBy:'— 查理·芒格（改编）',
+    case:'行为金融研究显示：长期保持交易日志的交易者，亏损频率比不记录者低40%以上。原因是：日志强迫你在事前写下逻辑，在事后诚实复盘，而不是用记忆重塑（一种天然的自我保护偏差）来美化决策过程。' },
+  { icon:'🌐', src:'MACRO AWARENESS · 宏观视角', cat:'macro',
+    title:'加密市场不是孤岛——宏观决定大势，技术决定细节',
+    body:['BTC和宏观经济的相关性，在2020年以后显著增强，尤其是与美联储政策、全球流动性、美元强弱的联动。忽视宏观背景，纯粹做技术分析，等于在不看天气预报的情况下规划航行路线。',
+          '这不是说宏观能精确预测价格，而是说宏观决定了市场的"风向"：顺风还是逆风。在顺风期（宽松流动性、风险偏好上升）轻松赚钱，在逆风期（紧缩、避险情绪）即使策略正确也会亏损。先判断风向，再谈具体操作。'],
+    insight:'每月花30分钟梳理宏观背景：美联储会议纪要、CPI数据、全球M2趋势。不需要精确预测，只需要判断当前宏观是"顺风"还是"逆风"，然后据此调整仓位上限。',
+    quote:'"在宏观面前，忽视它的代价，最终总会以某种方式呈现。"',
+    quoteBy:'— 斯坦利·德鲁肯米勒',
+    case:'2020年3月疫情爆发后，美联储无限QE，全球M2暴增。理解这一宏观背景的交易者在BTC $4,000-8,000区间大量建仓。2021年11月美联储公布Taper（缩减购债）计划后，宏观"顺风"转为"逆风"，BTC随后开始漫长下跌。宏观不能预测价格，但能告诉你方向。' }
+];
+
+const catLabels = { all:'全部', mind:'认知心理', risk:'风险管理', macro:'宏观视角', system:'系统执行' };
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let heat = Math.floor(Math.random()*30)+60;
+let currentCat = 'all';
+let currentSheetIdx = 0;
+let readSet = new Set();
+let decisions = 0;
+let tradeType = null;
+let coolTimer = null;
+
+// ══════════════════════════════════════
+// HEAT
+// ══════════════════════════════════════
+function setHeat(v) {
+  heat = Math.max(0, Math.min(100, v));
+  document.getElementById('tbFill').style.width = heat + '%';
+  var hv = document.getElementById('tbVal');
+  hv.textContent = Math.round(heat) + '°';
+  hv.style.color = heat > 75 ? 'var(--red)' : heat > 50 ? 'var(--gold)' : 'var(--ice)';
+}
+setHeat(heat);
+setInterval(function(){ setHeat(heat + (Math.random()-.47)*1.5); }, 3000);
+
+// ══════════════════════════════════════
+// TABS & DRAWER
+// ══════════════════════════════════════
+var tabs = document.querySelectorAll('.tab');
+function goTab(n, btn) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('pg'+n).classList.add('active');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  (btn || tabs[n]).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toggleDrawer() { document.getElementById('drawer').classList.toggle('open'); }
+function closeDrawer()   { document.getElementById('drawer').classList.remove('open'); }
+function closeDrawerOnBg(e) { if(e.target===document.getElementById('drawer')||e.target===document.querySelector('.drawer-bg')) closeDrawer(); }
+
+// ══════════════════════════════════════
+// WISDOM LIST RENDER
+// ══════════════════════════════════════
+function renderList() {
+  var list = document.getElementById('wisdomList');
+  var filtered = wisdomData.map(function(d,i){ return {d:d,i:i}; }).filter(function(x){
+    return currentCat === 'all' || x.d.cat === currentCat;
+  });
+  list.innerHTML = filtered.map(function(x){
+    var num = String(x.i+1).padStart(2,'0');
+    var isRead = readSet.has(x.i);
+    return '<div class="wisdom-row'+(isRead?' read':'')+'" onclick="openSheet('+x.i+')">' +
+      '<div class="wr-num">'+num+'</div>' +
+      '<div class="wr-icon">'+x.d.icon+'</div>' +
+      '<div class="wr-body"><div class="wr-title">'+x.d.title+'</div><div class="wr-src">'+x.d.src.split(' · ')[0]+'</div></div>' +
+      (isRead ? '<div class="wr-badge done">已读</div>' : '') +
+      '<div class="wr-arrow">›</div>' +
+      '</div>';
+  }).join('');
+}
+
+function updateProgress() {
+  var pct = (readSet.size / wisdomData.length * 100).toFixed(0);
+  document.getElementById('wpbFill').style.width = pct + '%';
+  document.getElementById('wpbCount').textContent = readSet.size + ' / ' + wisdomData.length;
+}
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderList();
+}
+
+renderList();
+updateProgress();
+
+// ══════════════════════════════════════
+// WISDOM SHEET
+// ══════════════════════════════════════
+function openSheet(idx) {
+  currentSheetIdx = idx;
+  var d = wisdomData[idx];
+  document.getElementById('wsNum').textContent = '心法 ' + String(idx+1).padStart(2,'0') + ' / 20';
+  document.getElementById('wsCat').textContent = catLabels[d.cat] || d.cat;
+  document.getElementById('wsIcon').textContent = d.icon;
+  document.getElementById('wsTitle').textContent = d.title;
+  document.getElementById('wsBody').innerHTML = d.body.map(function(p){ return '<p>'+p+'</p>'; }).join('');
+  document.getElementById('wsInsight').textContent = d.insight;
+  var markBtn = document.getElementById('wsMark');
+  markBtn.textContent = readSet.has(idx) ? '✓ 已标记' : '标记已读';
+  markBtn.className = 'ws-mark-btn' + (readSet.has(idx) ? ' done' : '');
+  document.getElementById('wsPrev').disabled = idx === 0;
+  document.getElementById('wsNext').disabled = idx === wisdomData.length - 1;
+  document.getElementById('wSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheetBg(e) {
+  if(e.target===document.getElementById('wSheet')||e.target===document.querySelector('.ws-bg')) closeSheet();
+}
+function closeSheet() {
+  document.getElementById('wSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function navSheet(dir) {
+  var next = currentSheetIdx + dir;
+  if(next >= 0 && next < wisdomData.length) openSheet(next);
+}
+
+function markRead() {
+  if(readSet.has(currentSheetIdx)) {
+    readSet.delete(currentSheetIdx);
+  } else {
+    readSet.add(currentSheetIdx);
+    setHeat(heat - 2);
+  }
+  updateProgress();
+  renderList();
+  var markBtn = document.getElementById('wsMark');
+  markBtn.textContent = readSet.has(currentSheetIdx) ? '✓ 已标记' : '标记已读';
+  markBtn.className = 'ws-mark-btn' + (readSet.has(currentSheetIdx) ? ' done' : '');
+}
+
+// ══════════════════════════════════════
+// CHECKLIST
+// ══════════════════════════════════════
+function doCheck(el) {
+  el.classList.toggle('done');
+  setHeat(heat - (el.classList.contains('done') ? 3 : -3));
+}
+
+// ══════════════════════════════════════
+// INVERSION CARDS
+// ══════════════════════════════════════
+function openInv(el) {
+  if(el.classList.contains('ok')||el.classList.contains('bad')) return;
+  var wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.inv-card.open').forEach(function(c){ c.classList.remove('open'); });
+  if(!wasOpen) el.classList.add('open');
+}
+function ansInv(e, btn, type, msg) {
+  e.stopPropagation();
+  var card = btn.closest('.inv-card');
+  card.classList.remove('open');
+  card.classList.add(type==='yes'?'ok':'bad');
+  card.querySelector('.inv-fb').textContent = (type==='yes'?'✓ ':'⚠ ') + msg;
+  setHeat(heat-(type==='yes'?3:1));
+}
+
+// ══════════════════════════════════════
+// SLIDERS / LADDER / KELLY
+// ══════════════════════════════════════
+function updateTP(v) { document.getElementById('tpv').textContent='+'+v+'%'; updateLadder(); }
+function updateLadder() {
+  var tp=parseInt(document.getElementById('tpv').textContent)||15;
+  var sp=parseInt(document.getElementById('spv').textContent)||20;
+  var rem=100; var colors=['var(--sage)','#4aa866','#7aaa55','var(--gold)','var(--red)'];
+  var html='';
+  for(var i=0;i<5;i++){
+    var sell=Math.min(sp,rem);
+    html+='<div class="ladder-row"><div class="lad-lbl">+'+(i+1)*tp+'%</div><div class="lad-track"><div class="lad-bar" style="width:'+sell+'%;background:'+colors[i]+'"></div></div><div class="lad-pct" style="color:'+colors[i]+'">-'+sell+'%</div></div>';
+    rem=Math.max(0,rem-sell); if(rem<=0) break;
+  }
+  if(rem>0) html+='<div class="ladder-row"><div class="lad-lbl" style="color:var(--dim)">剩余</div><div class="lad-track"><div class="lad-bar" style="width:'+rem+'%;background:var(--ice)"></div></div><div class="lad-pct" style="color:var(--ice)">'+rem+'%</div></div>';
+  document.getElementById('ladderViz').innerHTML=html;
+}
+updateLadder();
+
+function calcKelly() {
+  var cap=parseFloat(document.getElementById('c_cap').value)||100000;
+  var wr=parseFloat(document.getElementById('c_wr').value)/100||.55;
+  var rr=parseFloat(document.getElementById('c_rr').value)||2;
+  var mr=parseFloat(document.getElementById('c_mr').value)/100||.02;
+  var q=1-wr, k=((wr*rr)-q)/rr;
+  var kp=Math.max(0,k*100), hk=cap*Math.min(k/2,.5), ml=cap*mr;
+  document.getElementById('kPct').textContent=kp.toFixed(1)+'%';
+  document.getElementById('kAmt').textContent='$'+fmt(hk);
+  document.getElementById('kStop').textContent='$'+fmt(ml);
+  document.getElementById('kPct').style.color=kp>50?'var(--red)':kp>25?'var(--gold)':'var(--sage)';
+}
+function fmt(n){ return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+calcKelly();
+
+// ══════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════
+function doQuiz(id,opt,type,expl) {
+  var card=document.getElementById(id);
+  if(card.classList.contains('good')||card.classList.contains('bad')) return;
+  card.querySelectorAll('.qz-opt').forEach(function(o){ o.style.pointerEvents='none'; });
+  opt.classList.add(type==='good'?'sg':'sb');
+  card.classList.add(type==='good'?'good':'bad');
+  card.querySelector('.qz-explain').textContent=(type==='good'?'✓ ':'⚠ ')+expl;
+  setHeat(heat-(type==='good'?4:1));
+}
+
+// ══════════════════════════════════════
+// SIGNALS
+// ══════════════════════════════════════
+function toggleSig(el) {
+  el.classList.toggle('on');
+  var cnt=document.querySelectorAll('.sig-card.on').length;
+  var alert=document.getElementById('sigAlert');
+  cnt>=2?(alert.classList.add('on'),setHeat(heat+6)):alert.classList.remove('on');
+}
+
+// ══════════════════════════════════════
+// TRADE LOG
+// ══════════════════════════════════════
+function setT(t) {
+  tradeType=t;
+  ['buy','sell','opt'].forEach(function(x){ document.getElementById('p'+x).className='pill'; });
+  document.getElementById('p'+t).classList.add(t);
+}
+function addLog() {
+  var r=document.getElementById('lReason').value.trim();
+  if(!r){ document.getElementById('lReason').focus(); return; }
+  var a=document.getElementById('lAsset').value.trim();
+  var p=document.getElementById('lPrice').value.trim();
+  var s=document.getElementById('lStop').value.trim();
+  var tg=document.getElementById('lTarget').value.trim();
+  var ac=document.getElementById('lAction').value.trim();
+  decisions++;
+  var now=new Date().toLocaleString('zh-CN',{hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  var t=tradeType||'buy';
+  var tl={buy:'▲ 买入',sell:'▼ 卖出',opt:'◈ 期权'}[t]||'交易';
+  var el=document.createElement('div');
+  el.className='log-entry';
+  el.style.borderLeftColor=t==='sell'?'var(--red)':t==='opt'?'var(--ice)':'var(--sage)';
+  el.innerHTML='<div class="le-head"><span class="le-type '+t+'">'+tl+(a?' · '+a:'')+'</span><span class="le-time">'+now+'</span></div>'+
+    '<div class="le-reason">'+r+'</div>'+
+    '<div class="le-pills">'+
+    (p?'<span class="le-pill">入场 <span>'+p+'</span></span>':'')+
+    (s?'<span class="le-pill">止损 <span style="color:var(--red)">'+s+'</span></span>':'')+
+    (tg?'<span class="le-pill">目标 <span style="color:var(--sage)">'+tg+'</span></span>':'')+
+    '</div>'+
+    (ac?'<div style="margin-top:8px;font-family:var(--mono);font-size:13px;color:var(--dim);line-height:1.65">行动预案：'+ac+'</div>':'');
+  var cont=document.getElementById('logEntries');
+  var ph=cont.querySelector('div[style*="尚无记录"]');
+  if(ph) ph.remove();
+  cont.prepend(el);
+  ['lReason','lAction'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['lAsset','lPrice','lStop','lTarget'].forEach(function(id){ document.getElementById(id).value=''; });
+  setHeat(heat-6);
+}
+
+// ══════════════════════════════════════
+// COOL OVERLAY
+// ══════════════════════════════════════
+var coolQs=[
+  {q:'如果现在价格腰斩，我的杠杆还能撑住吗？具体数字是多少？',h:'计算清算线和最大亏损，而非感受。'},
+  {q:'我买入的理由是「它在涨」还是「我能用数据解释的基本面」？',h:'无法用一句话解释逻辑的仓位，是情绪仓位。'},
+  {q:'此刻卖出的对手是谁？做市商、矿工、机构——谁在和我交易？',h:'市场上总有人在卖，你是否有信息优势？'},
+  {q:'如果这笔交易亏损50%，会影响我的日常生活质量吗？',h:'只用闲钱入市是可量化的风险边界，不是口号。'},
+  {q:'历史上每一个「这次不同」，有多少次真的不同了？',h:'2013、2017、2021，每个顶部都有「新叙事」支撑。'},
+  {q:'我现在的操作，是在执行计划，还是在应对情绪？',h:'区分「执行」和「反应」是专业交易者的核心能力。'}
+];
+function openCool() {
+  var q=coolQs[Math.floor(Math.random()*coolQs.length)];
+  document.getElementById('coQ').textContent=q.q;
+  document.getElementById('coHint').textContent=q.h;
+  document.getElementById('coolOverlay').classList.add('on');
+  setHeat(heat-10);
+  var btn=document.getElementById('coClose');
+  btn.disabled=true; btn.textContent='请认真思考后再关闭...';
+  var secs=60;
+  clearInterval(coolTimer);
+  coolTimer=setInterval(function(){
+    secs--;
+    document.getElementById('coNum').textContent=secs;
+    document.getElementById('coRing').style.strokeDashoffset=(251*(1-secs/60)).toFixed(2);
+    if(secs<=0){ clearInterval(coolTimer); btn.disabled=false; btn.textContent='✓ 我已冷静 · 关闭'; }
+  },1000);
+}
+function closeCool() {
+  document.getElementById('coolOverlay').classList.remove('on');
+  clearInterval(coolTimer);
+  clearInterval(breathTimer);
+}
+
+// ══════════════════════════════════════
+// BREATHING GUIDE (4-4-4-4 box)
+// ══════════════════════════════════════
+var breathTimer = null;
+var breathPhases = ['吸气...','屏息...','呼气...','屏息...'];
+var breathPhaseIdx = 0;
+function startBreathing() {
+  var circle = document.getElementById('coBreathCircle');
+  var phase  = document.getElementById('coBreathPhase');
+  breathPhaseIdx = 0;
+  clearInterval(breathTimer);
+  function tick() {
+    breathPhaseIdx = (breathPhaseIdx + 1) % 4;
+    phase.textContent = breathPhases[breathPhaseIdx];
+    if(breathPhaseIdx===0||breathPhaseIdx===2) {
+      circle.className = 'co-breath-circle ' + (breathPhaseIdx===0?'inhale':'exhale');
+    }
+  }
+  circle.classList.add('inhale');
+  phase.textContent = breathPhases[0];
+  breathTimer = setInterval(tick, 4000);
+}
+
+// ══════════════════════════════════════
+// WISDOM SHEET — show quote + case
+// ══════════════════════════════════════
+var _origOpenSheet = openSheet;
+openSheet = function(idx) {
+  _origOpenSheet(idx);
+  var d = wisdomData[idx];
+  var qBox = document.getElementById('wsQuoteBox');
+  var cBox = document.getElementById('wsCaseBox');
+  if(d.quote) {
+    document.getElementById('wsQuoteText').textContent = d.quote;
+    document.getElementById('wsQuoteBy').textContent = d.quoteBy || '';
+    qBox.style.display = '';
+  } else { qBox.style.display = 'none'; }
+  if(d.case) {
+    document.getElementById('wsCaseText').textContent = d.case;
+    cBox.style.display = '';
+  } else { cBox.style.display = 'none'; }
+};
+
+// patch openCool to start breathing
+var _origOpenCool = openCool;
+openCool = function() {
+  _origOpenCool();
+  startBreathing();
+};
+
+// ══════════════════════════════════════
+// TODAY'S WISDOM
+// ══════════════════════════════════════
+function openTodayWisdom() {
+  var unread = wisdomData.map(function(_,i){ return i; }).filter(function(i){ return !readSet.has(i); });
+  var pool = unread.length > 0 ? unread : wisdomData.map(function(_,i){ return i; });
+  var idx = pool[Math.floor(Math.random()*pool.length)];
+  openSheet(idx);
+}
+// set today button hint
+(function(){
+  var unread = wisdomData.filter(function(_,i){ return !readSet.has(i); });
+  var el = document.getElementById('todayTitle');
+  if(el) el.textContent = unread.length > 0 ? '随机开启一条未读心法（剩余 '+unread.length+' 条）' : '全部已读！重温任意一条';
+})();
+
+// ══════════════════════════════════════
+// STREAK
+// ══════════════════════════════════════
+function updateStreak() {
+  var today = new Date().toDateString();
+  var lastDay = localStorage.getItem('bmcs_lastDay') || '';
+  var streak  = parseInt(localStorage.getItem('bmcs_streak') || '0');
+  var yesterday = new Date(Date.now()-86400000).toDateString();
+  if(lastDay === today) { /* same day, no change */ }
+  else if(lastDay === yesterday) { streak++; localStorage.setItem('bmcs_streak', streak); localStorage.setItem('bmcs_lastDay', today); }
+  else if(lastDay !== today) { streak = 1; localStorage.setItem('bmcs_streak', streak); localStorage.setItem('bmcs_lastDay', today); }
+  if(streak >= 2) {
+    document.getElementById('tbStreak').style.display = '';
+    document.getElementById('streakDays').textContent = streak;
+  }
+}
+updateStreak();
+
+// ══════════════════════════════════════
+// LOCALSTORAGE — persist readSet & logs
+// ══════════════════════════════════════
+var savedLogs = [];
+function saveState() {
+  try {
+    localStorage.setItem('bmcs_read', JSON.stringify([...readSet]));
+    localStorage.setItem('bmcs_logs', JSON.stringify(savedLogs));
+  } catch(e){}
+}
+function loadState() {
+  try {
+    var r = localStorage.getItem('bmcs_read');
+    if(r) { readSet = new Set(JSON.parse(r)); updateProgress(); renderList(); }
+    var l = localStorage.getItem('bmcs_logs');
+    if(l) {
+      savedLogs = JSON.parse(l);
+      if(savedLogs.length) {
+        var cont = document.getElementById('logEntries');
+        var ph = cont.querySelector('div[style*="尚无记录"]');
+        if(ph) ph.remove();
+        savedLogs.forEach(function(entry) {
+          var el = document.createElement('div');
+          el.className = 'log-entry';
+          el.style.borderLeftColor = entry.borderColor;
+          el.innerHTML = entry.html;
+          cont.appendChild(el);
+        });
+        updateJStats();
+      }
+    }
+  } catch(e){}
+}
+loadState();
+
+// patch markRead to save
+var _origMarkRead = markRead;
+markRead = function() { _origMarkRead(); saveState(); };
+
+// patch addLog to save
+var _origAddLog = addLog;
+addLog = function() {
+  var prevCount = savedLogs.length;
+  _origAddLog();
+  // capture new entry if added
+  var cont = document.getElementById('logEntries');
+  var entries = cont.querySelectorAll('.log-entry');
+  if(entries.length > prevCount) {
+    var newest = entries[0];
+    savedLogs.unshift({ html: newest.innerHTML, borderColor: newest.style.borderLeftColor, type: tradeType||'buy', emoScore: currentEmoScore });
+    saveState();
+    updateJStats();
+  }
+};
+
+// ══════════════════════════════════════
+// JOURNAL STATS
+// ══════════════════════════════════════
+var currentEmoScore = 5;
+function updateJStats() {
+  var total = savedLogs.length;
+  var buy   = savedLogs.filter(function(l){ return l.type==='buy'; }).length;
+  var sell  = savedLogs.filter(function(l){ return l.type==='sell'; }).length;
+  var opt   = savedLogs.filter(function(l){ return l.type==='opt'; }).length;
+  var emos  = savedLogs.filter(function(l){ return l.emoScore; }).map(function(l){ return l.emoScore; });
+  var avgEmo = emos.length ? (emos.reduce(function(a,b){ return a+b; },0)/emos.length).toFixed(1) : '--';
+  document.getElementById('jTotal').textContent = total;
+  document.getElementById('jBuy').textContent   = buy;
+  document.getElementById('jSell').textContent  = sell;
+  var bar = document.getElementById('jtypeBar');
+  if(total > 0) {
+    bar.children[0].style.width = (buy/total*100)+'%';
+    bar.children[1].style.width = (sell/total*100)+'%';
+    bar.children[2].style.width = (opt/total*100)+'%';
+  }
+  var avgLabel = document.getElementById('avgEmoLabel');
+  if(avgLabel) avgLabel.textContent = '平均情绪: ' + avgEmo;
+}
+
+// ══════════════════════════════════════
+// DAILY RITUAL
+// ══════════════════════════════════════
+function toggleRitual(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+function doRitual(el, progressId, total) {
+  el.classList.toggle('done');
+  var block = el.closest('.ritual-block');
+  var done  = block.querySelectorAll('.ritual-item.done').length;
+  document.getElementById(progressId).textContent = done + '/' + total;
+  if(done === total) document.getElementById(progressId).style.color = 'var(--sage)';
+  else document.getElementById(progressId).style.color = '';
+}
+
+var evePlanVal = null;
+function setEvePlan(btn, val) {
+  evePlanVal = val;
+  btn.parentNode.querySelectorAll('.eve-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+function setEmotion(btn, score) {
+  currentEmoScore = score;
+  btn.closest('.emotion-grid').querySelectorAll('.emo-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+}
+function submitEvening() {
+  var lesson = document.getElementById('eveLesson').value.trim();
+  var level  = document.getElementById('eveLevel').value.trim();
+  if(!lesson) { document.getElementById('eveLesson').focus(); return; }
+  var done = document.getElementById('eveningDone');
+  done.textContent = '✓ 已完成';
+  done.style.color = 'var(--sage)';
+  try { localStorage.setItem('bmcs_eve_'+new Date().toDateString(), JSON.stringify({plan:evePlanVal,emo:currentEmoScore,lesson:lesson,level:level})); } catch(e){}
+  document.getElementById('eveLesson').value = '';
+  document.getElementById('eveLevel').value  = '';
+  document.getElementById('ritualEvening').classList.remove('open');
+  setHeat(heat - 8);
+}
+
+// ══════════════════════════════════════
+// CYCLE POSITION TOOL
+// ══════════════════════════════════════
+var cycleState = { mvrv:null, fg:null, media:null };
+function setCycleChip(btn, key, val) {
+  btn.closest('.ct-chips').querySelectorAll('.ct-chip').forEach(function(c){ c.classList.remove('active'); });
+  btn.classList.add('active');
+  cycleState[key] = val;
+  evalCycle();
+}
+function evalCycle() {
+  if(!cycleState.mvrv || !cycleState.fg) return;
+  var result = document.getElementById('cycleResult');
+  var score = 0;
+  if(cycleState.mvrv==='ext') score+=3; else if(cycleState.mvrv==='high') score+=2; else if(cycleState.mvrv==='mid') score+=1;
+  if(cycleState.fg==='ext') score+=3; else if(cycleState.fg==='greed') score+=2; else if(cycleState.fg==='neutral') score+=1;
+  if(cycleState.media==='hot') score+=2; else if(cycleState.media==='warm') score+=1;
+  result.className = 'ct-result show';
+  if(score >= 7) {
+    result.classList.add('winter');
+    result.innerHTML = '🌨 <strong>分配期（秋末/冬初）</strong><br>高度警惕。历史数据显示此区域是市场顶部前夕。建议：停止新建仓位，分批减仓至少50%，保留现金等待下一轮积累期。心法⑦⑭';
+  } else if(score >= 4) {
+    result.classList.add('autumn');
+    result.innerHTML = '🍂 <strong>快速上涨期（夏季）</strong><br>机会与风险并存。动量仍在，但估值在拉伸。建议：执行止盈阶梯，每上涨15-20%减仓，收紧移动止损，保持高警觉。心法③⑧⑫';
+  } else if(score >= 2) {
+    result.classList.add('summer');
+    result.innerHTML = '🌱 <strong>初升期（春末/夏初）</strong><br>风险收益比相对合理。市场开始升温，但情绪未过热。建议：可适度持仓，同时建立止盈计划，密切监控情绪指标变化。心法②⑤⑩';
+  } else {
+    result.classList.add('spring');
+    result.innerHTML = '❄️ <strong>积累期（冬/春）</strong><br>历史最佳买入区域。低估值+高恐惧 = 极端风险溢价。建议：分批建仓，长期持有，设定最大亏损线，耐心等待。心法①⑦⑬';
+  }
+}
+</script>
+</body>
+</html>
