@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>牛市冷却系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #20262f;
+  --card:     #272e38;
+  --card2:    #2e3744;
+  --border:   #3d4f62;
+  --cold:     #00c8f0;
+  --cold-bg:  rgba(0,200,240,0.10);
+  --hot:      #ff5555;
+  --hot-bg:   rgba(255,85,85,0.12);
+  --warn:     #f0a500;
+  --warn-bg:  rgba(240,165,0,0.12);
+  --green:    #00e87a;
+  --green-bg: rgba(0,232,122,0.10);
+  --purple:   #c084fc;
+  --text:     #e8f0f8;
+  --text2:    #ffffff;
+  --dim:      #8aa0b8;
+  --muted:    #5a7088;
+  --mono:     'JetBrains Mono', monospace;
+  --serif:    'Noto Serif SC', serif;
+  --display:  'Bebas Neue', sans-serif;
+  --r:        14px;   /* card border-radius */
+  --r-sm:     10px;
+  --tap:      52px;   /* minimum tap target height */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  min-height: 100vh;
+  padding-bottom: 80px; /* space for bottom tab */
+  overflow-x: hidden;
+}
+
+/* ── AMBIENT ── */
+.amb { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; }
+.a1 { width:500px;height:500px;background:var(--cold);opacity:.05;top:-150px;right:-100px; }
+.a2 { width:400px;height:400px;background:var(--hot);opacity:.05;bottom:100px;left:-80px; }
+
+/* ══════════════════════════════
+   TOP BAR
+══════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 600;
+  background: rgba(32,38,47,0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: 52px;
+}
+.tb-brand { font-family: var(--display); font-size: 16px; letter-spacing: 3px; color: var(--cold); }
+.tb-heat {
+  display: flex; align-items: center; gap: 8px;
+}
+.tb-bar { width: 60px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.tb-fill { height: 100%; background: linear-gradient(90deg,var(--cold),var(--warn),var(--hot)); transition: width .5s; }
+.tb-val { font-family: var(--display); font-size: 18px; color: var(--hot); transition: color .4s; min-width: 38px; text-align: right; }
+
+/* ══════════════════════════════
+   PAGE CONTENT
+══════════════════════════════ */
+.page { display: none; animation: fadeIn .25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ══════════════════════════════
+   HERO / DASHBOARD
+══════════════════════════════ */
+.hero {
+  padding: 24px 16px 8px;
+  position: relative; z-index: 10;
+}
+.hero-label { font-family: var(--mono); font-size: 10px; letter-spacing: 4px; color: var(--cold); margin-bottom: 6px; }
+.hero-title { font-size: 32px; font-weight: 700; color: var(--text2); letter-spacing: 2px; line-height: 1.1; margin-bottom: 8px; }
+.hero-sub { font-size: 13px; color: var(--dim); line-height: 1.7; margin-bottom: 4px; }
+.hero-ath { font-family: var(--mono); font-size: 11px; color: var(--warn); margin-top: 6px; }
+
+/* Dial + stats row */
+.dash-row {
+  display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 18px 16px; margin: 16px 16px 0;
+}
+.dial-wrap { position: relative; width: 120px; height: 66px; overflow: hidden; flex-shrink: 0; }
+.dial-svg { width: 120px; height: 120px; }
+.fg-val { font-family: var(--display); font-size: 36px; color: var(--text2); text-align: center; line-height: 1; margin-top: 2px; }
+.fg-lbl { font-size: 11px; font-weight: 600; text-align: center; letter-spacing: 1px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-cell {
+  background: var(--card2); border-radius: var(--r-sm); padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.sc-name { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; }
+.sc-val { font-family: var(--display); font-size: 22px; line-height: 1; }
+
+/* ══════════════════════════════
+   SECTION / CARD PRIMITIVES
+══════════════════════════════ */
+.sec { padding: 20px 16px 0; position: relative; z-index: 10; }
+.sec-hd {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.sec-num { font-family: var(--display); font-size: 11px; letter-spacing: 3px; color: var(--cold); }
+.sec-title { font-size: 16px; font-weight: 600; color: var(--text2); }
+.sec-sub { font-family: var(--mono); font-size: 9px; color: var(--dim); margin-left: auto; letter-spacing: 1px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 18px 16px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.card-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--cold);
+  display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
+}
+.card-label::before { content:''; width:12px; height:1px; background:var(--cold); flex-shrink:0; }
+.card-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 14px; line-height: 1.4; }
+
+/* ══════════════════════════════
+   STEP 1 · CHECKLIST
+══════════════════════════════ */
+.check-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; min-height: var(--tap);
+  transition: opacity .2s;
+}
+.check-item:last-child { border-bottom: none; padding-bottom: 0; }
+.chk-box {
+  width: 22px; height: 22px; border: 2px solid var(--dim); border-radius: 5px;
+  flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center;
+  transition: all .2s; font-size: 12px; color: transparent;
+}
+.check-item.done .chk-box { background: var(--cold); border-color: var(--cold); color: var(--bg); }
+.chk-body { flex: 1; }
+.chk-title { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 4px; transition: all .2s; }
+.check-item.done .chk-title { color: var(--dim); text-decoration: line-through; }
+.chk-desc { font-size: 12px; color: var(--dim); line-height: 1.65; font-weight: 300; }
+.chk-tag {
+  font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 4px;
+  background: var(--cold-bg); color: var(--cold); letter-spacing: 1px;
+  flex-shrink: 0; align-self: flex-start; margin-top: 3px;
+}
+
+/* Noise grid */
+.noise-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.noise-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 12px 8px; text-align: center; cursor: pointer;
+  transition: all .25s; position: relative; min-height: 80px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+}
+.noise-card.muted { opacity: .35; }
+.noise-card.muted::after {
+  content: '已屏蔽'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 9px; color: var(--cold); letter-spacing: 2px;
+  background: rgba(0,200,240,0.08); border-radius: var(--r-sm);
+}
+.noise-icon { font-size: 24px; }
+.noise-name { font-size: 11px; color: var(--dim); }
+.noise-risk { font-family: var(--display); font-size: 14px; color: var(--hot); }
+
+/* ══════════════════════════════
+   STEP 2 · INVERSION QUESTIONS
+══════════════════════════════ */
+.inv-card {
+  background: var(--card2); border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: var(--r-sm); padding: 16px;
+  margin-bottom: 10px; cursor: pointer; transition: all .25s;
+}
+.inv-card.open { border-left-color: var(--cold); background: rgba(0,200,240,0.05); }
+.inv-card.ok  { border-left-color: var(--green); }
+.inv-card.bad { border-left-color: var(--hot); }
+.inv-num { font-family: var(--mono); font-size: 9px; color: var(--cold); letter-spacing: 2px; margin-bottom: 6px; }
+.inv-q { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.inv-hint { font-size: 12px; color: var(--dim); line-height: 1.55; margin-top: 8px; display: none; }
+.inv-card.open .inv-hint { display: block; }
+.inv-btns { display: none; gap: 10px; margin-top: 12px; }
+.inv-card.open .inv-btns { display: flex; }
+.inv-btn {
+  flex: 1; padding: 12px 0; border-radius: var(--r-sm); border: 1.5px solid;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 1px; cursor: pointer;
+  background: transparent; transition: all .2s; min-height: var(--tap);
+}
+.inv-btn.yes { border-color: var(--green); color: var(--green); }
+.inv-btn.yes:active { background: var(--green-bg); }
+.inv-btn.no  { border-color: var(--hot);   color: var(--hot); }
+.inv-btn.no:active  { background: var(--hot-bg); }
+.inv-fb {
+  margin-top: 10px; padding: 10px 12px; border-radius: var(--r-sm);
+  font-size: 12px; line-height: 1.6; display: none;
+}
+.inv-card.ok  .inv-fb { display: block; background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,232,122,.2); }
+.inv-card.bad .inv-fb { display: block; background: var(--hot-bg);   color: var(--hot);   border: 1px solid rgba(255,85,85,.2); }
+
+/* Bias list */
+.bias-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); margin-bottom: 8px;
+}
+.bias-icon { font-size: 22px; flex-shrink: 0; }
+.bias-info { flex: 1; }
+.bias-name { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 3px; }
+.bias-desc { font-size: 11px; color: var(--dim); line-height: 1.55; }
+.bias-bar { width: 44px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+.bias-fill { height: 100%; border-radius: 2px; }
+
+/* ══════════════════════════════
+   STEP 3 · RISK CONTROLS
+══════════════════════════════ */
+.slider-block { margin-bottom: 22px; }
+.sl-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px; }
+.sl-name { font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+.sl-val { font-family: var(--display); font-size: 26px; }
+.sl-desc { font-size: 12px; color: var(--dim); margin-bottom: 10px; line-height: 1.55; }
+input[type=range] {
+  width: 100%; -webkit-appearance: none; height: 5px; background: var(--border); border-radius: 3px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--bg); transition: transform .15s;
+}
+input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
+
+.warn-box {
+  padding: 12px 14px; background: var(--hot-bg); border: 1px solid rgba(255,85,85,.3);
+  border-radius: var(--r-sm); font-family: var(--mono); font-size: 11px;
+  color: var(--hot); line-height: 1.65; letter-spacing: .3px;
+}
+
+/* Ladder */
+.ladder-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.ladder-lbl { font-family: var(--mono); font-size: 11px; color: var(--dim); width: 56px; flex-shrink: 0; }
+.ladder-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.ladder-bar { height: 100%; border-radius: 4px; transition: width .4s; }
+.ladder-pct { font-family: var(--display); font-size: 16px; width: 36px; text-align: right; }
+
+/* Kelly calc */
+.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.cf label { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 2px; display: block; margin-bottom: 5px; }
+.cf input {
+  width: 100%; background: var(--card2); border: 1px solid var(--border); color: var(--text2);
+  font-family: var(--mono); font-size: 15px; padding: 11px 13px; border-radius: var(--r-sm); outline: none;
+  transition: border-color .2s;
+}
+.cf input:focus { border-color: var(--cold); }
+.kelly-result { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.kr-cell {
+  background: var(--card2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 12px; text-align: center;
+}
+.kr-lbl { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; margin-bottom: 4px; }
+.kr-val { font-family: var(--display); font-size: 22px; color: var(--green); }
+.kr-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ══════════════════════════════
+   STEP 4 · HISTORY
+══════════════════════════════ */
+/* Cycle cards (mobile replaces table) */
+.cycle-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 16px; margin-bottom: 10px;
+}
+.cycle-card.current { border-color: var(--cold); background: rgba(0,200,240,.05); }
+.cy-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.cy-name { font-size: 14px; font-weight: 600; color: var(--text2); }
+.cy-badge {
+  font-family: var(--mono); font-size: 9px; padding: 3px 8px; border-radius: 4px;
+  background: var(--cold-bg); color: var(--cold); letter-spacing: 1px;
+}
+.cycle-card.current .cy-badge { background: var(--cold); color: var(--bg); }
+.cy-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.cy-stat {}
+.cy-stat-label { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; margin-bottom: 3px; }
+.cy-stat-val { font-family: var(--display); font-size: 20px; }
+.cy-signal { font-size: 11px; color: var(--dim); line-height: 1.55; padding-top: 10px; border-top: 1px solid var(--border); }
+
+/* Bar chart */
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 110px; margin-bottom: 8px; }
+.bc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bc-bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 3px; }
+.bc-year { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+.bc-pct  { font-family: var(--display); font-size: 14px; }
+
+/* On-chain metrics */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px; background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); margin-bottom: 8px;
+}
+.metric-name { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.metric-val { font-family: var(--display); font-size: 18px; }
+.metric-sub { font-size: 10px; color: var(--muted); margin-top: 1px; text-align: right; }
+
+/* ══════════════════════════════
+   STEP 5 · EMOTION TEST
+══════════════════════════════ */
+.quiz-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: var(--r-sm);
+  padding: 16px; margin-bottom: 12px; transition: border-color .25s;
+}
+.quiz-card.good { border-color: var(--green); }
+.quiz-card.bad  { border-color: var(--hot); }
+.qz-num { font-family: var(--mono); font-size: 9px; color: var(--cold); letter-spacing: 2px; margin-bottom: 8px; }
+.qz-q { font-size: 14px; color: var(--text2); line-height: 1.65; margin-bottom: 14px; }
+.qz-opts { display: flex; flex-direction: column; gap: 8px; }
+.qz-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm);
+  cursor: pointer; font-size: 13px; color: var(--text); transition: all .2s; min-height: var(--tap);
+}
+.qz-opt:active { background: var(--card2); }
+.qz-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--dim); flex-shrink: 0; transition: all .2s; }
+.qz-opt.sel-good { border-color: var(--green); color: var(--green); }
+.qz-opt.sel-good .qz-dot { background: var(--green); border-color: var(--green); }
+.qz-opt.sel-bad  { border-color: var(--hot); color: var(--hot); }
+.qz-opt.sel-bad  .qz-dot { background: var(--hot); border-color: var(--hot); }
+.qz-explain {
+  margin-top: 10px; padding: 11px 13px; border-radius: var(--r-sm);
+  font-size: 12px; line-height: 1.6; display: none;
+}
+.quiz-card.good .qz-explain { display: block; background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,232,122,.2); }
+.quiz-card.bad  .qz-explain { display: block; background: var(--hot-bg);   color: var(--hot);   border: 1px solid rgba(255,85,85,.2); }
+
+/* Signal cards */
+.sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sig-card {
+  background: var(--card2); border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  padding: 16px 14px; cursor: pointer; transition: all .25s; user-select: none;
+  min-height: 110px; display: flex; flex-direction: column; gap: 6px;
+}
+.sig-card.on { border-color: var(--hot); background: var(--hot-bg); }
+.sig-icon { font-size: 26px; filter: grayscale(1); transition: filter .25s; }
+.sig-card.on .sig-icon { filter: none; }
+.sig-title { font-size: 13px; font-weight: 600; color: var(--text2); transition: color .25s; }
+.sig-card.on .sig-title { color: var(--hot); }
+.sig-body { font-size: 11px; color: var(--dim); line-height: 1.55; }
+
+.sig-alert {
+  grid-column: 1/-1; padding: 14px 16px;
+  background: var(--hot-bg); border: 1px solid rgba(255,85,85,.4); border-radius: var(--r-sm);
+  font-family: var(--mono); font-size: 11px; color: var(--hot); line-height: 1.7; letter-spacing: .5px;
+  display: none;
+}
+.sig-alert.on { display: block; animation: fadeIn .3s ease; }
+
+/* F&G scale */
+.fg-scale { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; margin-top: 4px; }
+.fgs-cell {
+  background: var(--card2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 4px; text-align: center;
+}
+.fgs-val { font-family: var(--display); font-size: 18px; }
+.fgs-lbl { font-size: 9px; color: var(--dim); margin-top: 2px; line-height: 1.4; }
+
+/* ══════════════════════════════
+   STEP 6 · TRADE LOG
+══════════════════════════════ */
+.type-pills { display: flex; gap: 8px; margin-bottom: 14px; }
+.pill {
+  flex: 1; padding: 12px 0; border-radius: var(--r-sm); border: 1.5px solid var(--border);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+  text-align: center; cursor: pointer; background: transparent; color: var(--dim);
+  transition: all .2s; min-height: var(--tap);
+}
+.pill.buy  { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.pill.sell { border-color: var(--hot);   color: var(--hot);   background: var(--hot-bg); }
+.pill.opt  { border-color: var(--cold);  color: var(--cold);  background: var(--cold-bg); }
+
+.form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.field label { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 2px; display: block; margin-bottom: 5px; }
+.field input, .field textarea {
+  width: 100%; background: var(--card2); border: 1px solid var(--border);
+  color: var(--text2); font-family: var(--serif); font-size: 14px;
+  padding: 12px 13px; border-radius: var(--r-sm); outline: none; transition: border-color .2s;
+  line-height: 1.65; -webkit-appearance: none;
+}
+.field input { font-family: var(--mono); font-size: 13px; }
+.field input:focus, .field textarea:focus { border-color: var(--cold); }
+.field textarea { resize: vertical; min-height: 80px; }
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+
+.submit-btn {
+  width: 100%; background: transparent; border: 1.5px solid var(--cold);
+  color: var(--cold); font-family: var(--mono); font-size: 12px; letter-spacing: 2px;
+  padding: 15px; border-radius: var(--r-sm); cursor: pointer; transition: all .2s;
+  min-height: var(--tap); margin-top: 12px;
+}
+.submit-btn:active { background: var(--cold-bg); }
+
+.log-entry {
+  background: var(--card2); border: 1px solid var(--border); border-left: 3px solid var(--green);
+  border-radius: var(--r-sm); padding: 14px; margin-bottom: 10px;
+  animation: fadeIn .3s ease;
+}
+.le-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+.le-type {
+  font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 4px; letter-spacing: 1px;
+}
+.le-type.buy  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(0,232,122,.2); }
+.le-type.sell { background: var(--hot-bg);   color: var(--hot);   border: 1px solid rgba(255,85,85,.2); }
+.le-type.opt  { background: var(--cold-bg);  color: var(--cold);  border: 1px solid rgba(0,200,240,.2); }
+.le-time { font-family: var(--mono); font-size: 10px; color: var(--dim); }
+.le-reason { font-size: 13px; color: var(--text); line-height: 1.65; margin-bottom: 8px; }
+.le-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.le-pill { font-family: var(--mono); font-size: 10px; color: var(--dim); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 9px; }
+.le-pill span { color: var(--text2); }
+
+/* ══════════════════════════════
+   STEP 7 · WISDOM
+══════════════════════════════ */
+.wisdom-card {
+  background: var(--card2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 18px 16px; margin-bottom: 12px; transition: all .25s;
+}
+.wisdom-card:active { border-color: var(--cold); background: rgba(0,200,240,.05); }
+.wc-icon { font-size: 30px; margin-bottom: 10px; }
+.wc-title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 7px; }
+.wc-body { font-size: 13px; color: var(--dim); line-height: 1.7; font-weight: 300; }
+.wc-src { font-family: var(--mono); font-size: 9px; color: var(--cold); letter-spacing: 1px; margin-top: 10px; }
+
+.quote-card {
+  background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--cold);
+  border-radius: var(--r-sm); padding: 18px 16px; margin-bottom: 12px;
+}
+.qt-text { font-size: 16px; color: var(--text2); line-height: 1.75; font-weight: 300; font-style: italic; }
+.qt-src { font-family: var(--mono); font-size: 10px; color: var(--dim); margin-top: 10px; letter-spacing: 1px; }
+
+/* ══════════════════════════════
+   PRINCIPLE BANNER
+══════════════════════════════ */
+.principle-banner {
+  margin: 20px 16px 0; padding: 24px 20px; text-align: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--r);
+}
+.pb-main { font-size: 18px; font-weight: 700; color: var(--text2); line-height: 1.65; margin-bottom: 8px; }
+.pb-en { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 3px; }
+
+/* ══════════════════════════════
+   BOTTOM TAB BAR
+══════════════════════════════ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 700;
+  background: rgba(32,38,47,0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 10px 4px 8px; cursor: pointer; transition: all .2s;
+  min-height: 56px; border: none; background: none; color: var(--muted);
+  -webkit-tap-highlight-color: transparent;
+}
+.tab.active { color: var(--cold); }
+.tab-icon { font-size: 20px; margin-bottom: 2px; }
+.tab-label { font-family: var(--mono); font-size: 8px; letter-spacing: 1px; line-height: 1; }
+
+/* ══════════════════════════════
+   PANIC BUTTON + OVERLAY
+══════════════════════════════ */
+.panic-fab {
+  position: fixed; bottom: 76px; right: 16px; z-index: 650;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--hot); border: none; cursor: pointer;
+  font-size: 24px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 24px rgba(255,85,85,.4);
+  transition: transform .2s;
+}
+.panic-fab:active { transform: scale(.92); }
+
+#coolOverlay {
+  position: fixed; inset: 0; background: rgba(28,34,42,0.98);
+  z-index: 900; display: none; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  gap: 20px; padding: 24px;
+}
+#coolOverlay.on { display: flex; }
+.co-title { font-family: var(--display); font-size: 44px; letter-spacing: 8px; color: var(--cold); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{text-shadow:0 0 30px var(--cold)} 50%{text-shadow:0 0 80px var(--cold);opacity:.7} }
+.co-ring { position: relative; width: 90px; height: 90px; }
+.co-ring svg { transform: rotate(-90deg); }
+.co-ring circle { fill: none; stroke-width: 4; }
+.co-ring .bg { stroke: var(--border); }
+.co-ring .fill { stroke: var(--cold); stroke-dasharray: 251; stroke-dashoffset: 0; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+.co-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: 32px; color: var(--text2); }
+.co-q {
+  max-width: 480px; font-size: 18px; color: var(--text2); line-height: 1.8; font-weight: 300;
+  padding: 20px 24px; border: 1px solid var(--cold-bg); border-radius: var(--r);
+  background: rgba(0,200,240,.04); width: 100%;
+}
+.co-hint { font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 1.5px; max-width: 360px; line-height: 1.8; }
+.co-close {
+  background: transparent; border: 1.5px solid var(--dim); color: var(--dim);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+  padding: 14px 32px; border-radius: var(--r-sm); cursor: pointer; transition: all .2s;
+  min-height: var(--tap); width: 100%; max-width: 320px;
+}
+.co-close:disabled { opacity: .3; cursor: not-allowed; }
+.co-close:not(:disabled):active { border-color: var(--text2); color: var(--text2); }
+
+/* ══════════════════════════════
+   DESKTOP ENHANCEMENTS
+══════════════════════════════ */
+@media (min-width: 640px) {
+  .sec { padding: 28px 24px 0; }
+  .hero { padding: 32px 24px 10px; }
+  .dash-row { margin: 20px 24px 0; }
+  .noise-grid { grid-template-columns: repeat(3,1fr); }
+  .sig-grid { grid-template-columns: 1fr 1fr; }
+  .wisdom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .wisdom-grid .wisdom-card { margin-bottom: 0; }
+  .tab-label { font-size: 9px; }
+}
+@media (min-width: 900px) {
+  body { max-width: 780px; margin: 0 auto; }
+  .tab-bar { max-width: 780px; left: 50%; transform: translateX(-50%); }
+  .panic-fab { right: calc(50% - 390px + 16px); }
+  .topbar { max-width: 780px; left: 50%; transform: translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<div class="amb a1"></div>
+<div class="amb a2"></div>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="tb-brand">BMCS · 冷却</div>
+  <div class="tb-heat">
+    <div class="tb-bar"><div class="tb-fill" id="tbFill"></div></div>
+    <div class="tb-val" id="tbVal">--°</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 0 · DASHBOARD
+══════════════════════════════════════ -->
+<div class="page active" id="pg0">
+  <div class="hero">
+    <div class="hero-label">BULL MARKET COOLING SYSTEM · v3.0</div>
+    <div class="hero-title">牛市冷却系统</div>
+    <div class="hero-sub">在狂热中保持理性，是一场与本能的博弈。当噪音诱导你追高或梭哈时，让这套系统把你拽回地面。</div>
+    <div class="hero-ath">2025.10 ATH $126K → 当前约 $74K · 已回调 -47%</div>
+  </div>
+
+  <div class="dash-row">
+    <div>
+      <div class="dial-wrap">
+        <svg class="dial-svg" viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00c8f0"/>
+              <stop offset="50%" stop-color="#f0a500"/>
+              <stop offset="100%" stop-color="#ff5555"/>
+            </linearGradient>
+          </defs>
+          <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="#3d4f62" stroke-width="10" stroke-linecap="round"/>
+          <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="url(#dg)" stroke-width="10" stroke-linecap="round" opacity=".8"/>
+          <line id="needle" x1="60" y1="60" x2="60" y2="22" stroke="white" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90,60,60)"/>
+          <circle cx="60" cy="60" r="5" fill="white"/>
+        </svg>
+      </div>
+      <div class="fg-val" id="fgVal">--</div>
+      <div class="fg-lbl" id="fgLbl" style="color:var(--hot)">GREED</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="sc-name">决策记录</div>
+        <div class="sc-val" id="sdec" style="color:var(--green)">0</div>
+      </div>
+      <div class="stat-cell">
+        <div class="sc-name">预警信号</div>
+        <div class="sc-val" id="ssig" style="color:var(--warn)">0/4</div>
+      </div>
+      <div class="stat-cell">
+        <div class="sc-name">冷却指数</div>
+        <div class="sc-val" id="scool" style="color:var(--cold)">--%</div>
+      </div>
+      <div class="stat-cell">
+        <div class="sc-name">清单完成</div>
+        <div class="sc-val" id="schk" style="color:var(--purple)">0/5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick steps -->
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">OVERVIEW</span>
+      <span class="sec-title">7步冷却流程</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div id="stepMenu"></div>
+    </div>
+  </div>
+
+  <div class="principle-banner" style="margin-bottom:20px;">
+    <div class="pb-main">理性不是一种状态<br>而是一系列重复且枯燥的行为准则</div>
+    <div class="pb-en">RATIONALITY IS A SYSTEM, NOT A FEELING</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 1 · 物理隔离 + 逻辑自检
+══════════════════════════════════════ -->
+<div class="page" id="pg1">
+  <!-- S1 -->
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">01</span>
+      <span class="sec-title">物理隔离</span>
+      <span class="sec-sub">INFO DETOX</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">执行清单</div>
+      <div class="card-title">5项强制行动 · 每日开盘前检查</div>
+      <div id="checklist">
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="chk-box">✓</div>
+          <div class="chk-body">
+            <div class="chk-title">关闭社交媒体通知</div>
+            <div class="chk-desc">群聊满屏晒收益图 = 市场见顶信号。情绪传染比病毒更快。</div>
+          </div>
+          <div class="chk-tag">HIGH RISK</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="chk-box">✓</div>
+          <div class="chk-body">
+            <div class="chk-title">建立专属观察列表</div>
+            <div class="chk-desc">只追踪预设标的（BTC/DVOL/Greeks），不被涨幅榜被动驱动。</div>
+          </div>
+          <div class="chk-tag">REQUIRED</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="chk-box">✓</div>
+          <div class="chk-body">
+            <div class="chk-title">每日强制无屏时间 ≥ 2h</div>
+            <div class="chk-desc">固定时段断开所有设备，让大脑从多巴胺循环中强制复位。</div>
+          </div>
+          <div class="chk-tag">DAILY</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="chk-box">✓</div>
+          <div class="chk-body">
+            <div class="chk-title">设置行情检查时间窗口</div>
+            <div class="chk-desc">每天固定 1-2 个时间点看盘（如 9:00 / 21:00），其余不主动盯。</div>
+          </div>
+          <div class="chk-tag">SCHEDULE</div>
+        </div>
+        <div class="check-item" onclick="toggleCheck(this)">
+          <div class="chk-box">✓</div>
+          <div class="chk-body">
+            <div class="chk-title">将部分利润转为实体资产</div>
+            <div class="chk-desc">浮盈变成家庭生活改善，才能真实感受金钱价值。</div>
+          </div>
+          <div class="chk-tag">ANCHOR</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">噪音源评级</div>
+      <div class="card-title">点击屏蔽高风险信息源</div>
+      <div class="noise-grid">
+        <div class="noise-card" onclick="muteIt(this)">
+          <div class="noise-icon">📱</div>
+          <div class="noise-name">微信群聊</div>
+          <div class="noise-risk">极危险</div>
+        </div>
+        <div class="noise-card" onclick="muteIt(this)">
+          <div class="noise-icon">🐦</div>
+          <div class="noise-name">Twitter/X</div>
+          <div class="noise-risk">危险</div>
+        </div>
+        <div class="noise-card" onclick="muteIt(this)">
+          <div class="noise-icon">📺</div>
+          <div class="noise-name">财经直播</div>
+          <div class="noise-risk">高风险</div>
+        </div>
+        <div class="noise-card" onclick="muteIt(this)">
+          <div class="noise-icon">📰</div>
+          <div class="noise-name">新闻推送</div>
+          <div class="noise-risk">中风险</div>
+        </div>
+        <div class="noise-card" onclick="muteIt(this)">
+          <div class="noise-icon">📊</div>
+          <div class="noise-name">涨幅榜</div>
+          <div class="noise-risk">极危险</div>
+        </div>
+        <div class="noise-card" onclick="muteIt(this)">
+          <div class="noise-icon">💬</div>
+          <div class="noise-name">KOL喊单</div>
+          <div class="noise-risk">极危险</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--dim);">已屏蔽 <span id="mutedCnt" style="color:var(--cold)">0</span> / 6 个信息源</div>
+    </div>
+  </div>
+
+  <!-- S2 -->
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">02</span>
+      <span class="sec-title">逻辑自检</span>
+      <span class="sec-sub">INVERSION TEST</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">芒格反转测试</div>
+      <div class="card-title">交易前必须诚实回答的 5 个问题</div>
+
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q1 · 极端情景</div>
+        <div class="inv-q">如果现在价格腰斩，我是否有具体应对方案？</div>
+        <div class="inv-hint">杠杆能撑住吗？有无 Put 对冲？清算线在哪里？不仅是心理准备，更是财务控制。</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','有完整预案，已设置止损和对冲保护。')">✓ 有方案</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 未做压力测试即入场 = 赌博，不是交易。')">✗ 没想过</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q2 · 买入逻辑</div>
+        <div class="inv-q">我买入的理由是"它在涨"，还是"基本面质变"？</div>
+        <div class="inv-hint">能否用一句话说清楚：此资产为何在此价格值得持有？能否量化？</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','基于基本面，逻辑清晰可量化。')">✓ 基本面</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 动量追涨是散户最常见的亏损原因。')">✗ 就是在涨</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q3 · 对手盘</div>
+        <div class="inv-q">谁在接我的盘？对手方是做市商还是散户？</div>
+        <div class="inv-hint">每笔买入都有人在卖。你是否有相对信息/结构优势？</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','已分析对手盘，存在相对优势。')">✓ 有优势</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 不清楚对手是谁，你很可能就是那个人。')">✗ 不清楚</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q4 · 仓位匹配</div>
+        <div class="inv-q">我的仓位规模，和我对这笔交易的把握程度匹配吗？</div>
+        <div class="inv-hint">Kelly准则：高确信度才配高仓位。不确定时小仓位试错。</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','仓位与置信度匹配，符合资金管理。')">✓ 成比例</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 仓位过重 = 情绪押注，不是理性交易。')">✗ 仓位过重</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+
+      <div class="inv-card" onclick="openInv(this)">
+        <div class="inv-num">Q5 · 后悔测试</div>
+        <div class="inv-q">如果明天跌 30%，我会后悔今天的决定吗？</div>
+        <div class="inv-hint">后悔最小化原则：在最坏情景下，你是否仍能接受？不能就减仓直到可以。</div>
+        <div class="inv-btns">
+          <button class="inv-btn yes" onclick="ansInv(event,this,'yes','最坏情景在接受范围，不影响生活质量。')">✓ 能接受</button>
+          <button class="inv-btn no"  onclick="ansInv(event,this,'no', '⚠ 不能接受最坏结果 = 仓位超出风险上限。')">✗ 无法接受</button>
+        </div>
+        <div class="inv-fb"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">认知偏差图谱</div>
+      <div class="card-title">牛市中最危险的 6 种心理陷阱</div>
+      <div class="bias-item"><div class="bias-icon">📈</div><div class="bias-info"><div class="bias-name">近因效应</div><div class="bias-desc">过度外推最近涨势，忽视历史均值回归，认为"这次不同"</div></div><div class="bias-bar"><div class="bias-fill" style="width:90%;background:var(--hot)"></div></div></div>
+      <div class="bias-item"><div class="bias-icon">🎯</div><div class="bias-info"><div class="bias-name">锚定效应</div><div class="bias-desc">以买入价或近期高点为参照，拒绝止损或过早止盈</div></div><div class="bias-bar"><div class="bias-fill" style="width:85%;background:var(--hot)"></div></div></div>
+      <div class="bias-item"><div class="bias-icon">🏆</div><div class="bias-info"><div class="bias-name">自我归因偏差</div><div class="bias-desc">牛市盈利归功于能力，亏损归咎于外部，阻碍真实评估</div></div><div class="bias-bar"><div class="bias-fill" style="width:88%;background:var(--hot)"></div></div></div>
+      <div class="bias-item"><div class="bias-icon">😰</div><div class="bias-info"><div class="bias-name">损失厌恶</div><div class="bias-desc">亏损的痛苦是盈利快感的 2.5 倍，导致持亏杀盈</div></div><div class="bias-bar"><div class="bias-fill" style="width:80%;background:var(--warn)"></div></div></div>
+      <div class="bias-item"><div class="bias-icon">🐑</div><div class="bias-info"><div class="bias-name">从众效应</div><div class="bias-desc">将大多数人的行为视为信号，顶部追涨，底部抛售</div></div><div class="bias-bar"><div class="bias-fill" style="width:75%;background:var(--warn)"></div></div></div>
+      <div class="bias-item"><div class="bias-icon">🔮</div><div class="bias-info"><div class="bias-name">过度自信</div><div class="bias-desc">交易越多越觉得自己掌握规律，实则幸存者偏差在加强错误认知</div></div><div class="bias-bar"><div class="bias-fill" style="width:82%;background:var(--warn)"></div></div></div>
+
+      <div class="quote-card" style="margin-top:14px;">
+        <div class="qt-text">"反过来想，永远要反过来想。" 在牛市问自己如何赚更多之前，先问：什么行为最容易让人倾家荡产？</div>
+        <div class="qt-src">— CHARLIE MUNGER · Poor Charlie's Almanack</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 2 · 定量风控 + 历史
+══════════════════════════════════════ -->
+<div class="page" id="pg2">
+  <!-- S3 -->
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">03</span>
+      <span class="sec-title">定量风控</span>
+      <span class="sec-sub">POSITION SIZING</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">风控参数</div>
+      <div class="card-title">分段组数法 · 数学优先于直觉</div>
+
+      <div class="slider-block">
+        <div class="sl-header"><span class="sl-name">每档止盈触发涨幅</span><span class="sl-val" id="tpv" style="color:var(--green)">+15%</span></div>
+        <div class="sl-desc">每上涨此幅度，触发一次分批止盈</div>
+        <input type="range" min="5" max="50" value="15" oninput="updateTP(this.value)" style="accent-color:var(--green)">
+      </div>
+      <div class="slider-block">
+        <div class="sl-header"><span class="sl-name">每次卖出仓位比例</span><span class="sl-val" id="spv" style="color:var(--warn)">20%</span></div>
+        <div class="sl-desc">每次触发时，卖出总仓位的百分比</div>
+        <input type="range" min="5" max="50" value="20" oninput="document.getElementById('spv').textContent=this.value+'%';updateLadder()" style="accent-color:var(--warn)">
+      </div>
+      <div class="slider-block">
+        <div class="sl-header"><span class="sl-name">移动止损回撤容忍</span><span class="sl-val" id="tsv" style="color:var(--hot)">-8%</span></div>
+        <div class="sl-desc">从最高点回撤此幅度，无条件执行减仓/清仓</div>
+        <input type="range" min="3" max="25" value="8" oninput="document.getElementById('tsv').textContent='-'+this.value+'%'" style="accent-color:var(--hot)">
+      </div>
+      <div class="slider-block" style="margin-bottom:0">
+        <div class="sl-header"><span class="sl-name">单标的最大仓位占比</span><span class="sl-val" id="mpv" style="color:var(--purple)">30%</span></div>
+        <div class="sl-desc">单一资产占总资金上限</div>
+        <input type="range" min="5" max="80" value="30" oninput="document.getElementById('mpv').textContent=this.value+'%'" style="accent-color:var(--purple)">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">止盈阶梯</div>
+      <div class="card-title">分批减仓路径可视化</div>
+      <div id="ladderViz"></div>
+      <div class="warn-box" style="margin-top:14px;">⚠ 移动止损触发后无条件执行 · 不等反弹确认 · 不听任何利好解释</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Kelly 仓位计算器</div>
+      <div class="card-title">最优仓位 = 数学，不是感觉</div>
+      <div class="calc-grid">
+        <div class="cf"><label>总资金 (USDT)</label><input type="number" id="c_cap" value="100000" oninput="calcKelly()"></div>
+        <div class="cf"><label>预估胜率 (%)</label><input type="number" id="c_wr" value="55" min="1" max="99" oninput="calcKelly()"></div>
+        <div class="cf"><label>平均盈亏比</label><input type="number" id="c_rr" value="2" step="0.1" oninput="calcKelly()"></div>
+        <div class="cf"><label>单笔最大风险 (%)</label><input type="number" id="c_mr" value="2" step="0.1" oninput="calcKelly()"></div>
+      </div>
+      <div class="kelly-result">
+        <div class="kr-cell"><div class="kr-lbl">KELLY仓位</div><div class="kr-val" id="kPct">--</div><div class="kr-sub">理论最优</div></div>
+        <div class="kr-cell"><div class="kr-lbl">建议仓位</div><div class="kr-val" id="kAmt" style="font-size:16px">--</div><div class="kr-sub">Half-Kelly</div></div>
+        <div class="kr-cell"><div class="kr-lbl">最大止损</div><div class="kr-val" id="kStop" style="color:var(--hot);font-size:16px">--</div><div class="kr-sub">风险敞口</div></div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--dim);line-height:1.65;">
+        <strong style="color:var(--text)">Kelly 公式：</strong> f* = (p·b − q) / b &nbsp;·&nbsp; <span style="color:var(--warn)">实际建议取 Half-Kelly（÷2）</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4 -->
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">04</span>
+      <span class="sec-title">历史镜鉴</span>
+      <span class="sec-sub">BTC CYCLES</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">历次牛市数据</div>
+      <div class="card-title">BTC 四次牛熊周期对照</div>
+
+      <div class="cycle-card">
+        <div class="cy-header"><div class="cy-name">2013 牛市</div><div class="cy-badge">CYCLE 1</div></div>
+        <div class="cy-stats">
+          <div class="cy-stat"><div class="cy-stat-label">顶部价格</div><div class="cy-stat-val" style="color:var(--warn)">$1,163</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">随后跌幅</div><div class="cy-stat-val" style="color:var(--hot)">-87%</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">历时</div><div class="cy-stat-val" style="font-size:15px;color:var(--dim)">~2周</div></div>
+        </div>
+        <div class="cy-signal">📡 散户大量涌入 · 媒体狂欢 · Mt.Gox 黄金时代</div>
+      </div>
+
+      <div class="cycle-card">
+        <div class="cy-header"><div class="cy-name">2017 牛市</div><div class="cy-badge">CYCLE 2</div></div>
+        <div class="cy-stats">
+          <div class="cy-stat"><div class="cy-stat-label">顶部价格</div><div class="cy-stat-val" style="color:var(--warn)">$19,783</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">随后跌幅</div><div class="cy-stat-val" style="color:var(--hot)">-84%</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">历时</div><div class="cy-stat-val" style="font-size:15px;color:var(--dim)">~3周</div></div>
+        </div>
+        <div class="cy-signal">📡 ICO 热潮 · 出租司机谈币 · 期货上市</div>
+      </div>
+
+      <div class="cycle-card">
+        <div class="cy-header"><div class="cy-name">2021 牛市</div><div class="cy-badge">CYCLE 3</div></div>
+        <div class="cy-stats">
+          <div class="cy-stat"><div class="cy-stat-label">顶部价格</div><div class="cy-stat-val" style="color:var(--warn)">$69,000</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">随后跌幅</div><div class="cy-stat-val" style="color:var(--hot)">-77%</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">历时</div><div class="cy-stat-val" style="font-size:15px;color:var(--dim)">~4周</div></div>
+        </div>
+        <div class="cy-signal">📡 NFT / 元宇宙 · 上市公司囤币 · LUNA 崩盘</div>
+      </div>
+
+      <div class="cycle-card current">
+        <div class="cy-header"><div class="cy-name">2024-25 牛市</div><div class="cy-badge">CURRENT</div></div>
+        <div class="cy-stats">
+          <div class="cy-stat"><div class="cy-stat-label">ATH 价格</div><div class="cy-stat-val" style="color:var(--cold)">$126,000</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">当前回调</div><div class="cy-stat-val" style="color:var(--hot)">-47%↓</div></div>
+          <div class="cy-stat"><div class="cy-stat-label">ATH日期</div><div class="cy-stat-val" style="font-size:13px;color:var(--dim)">25.10.14</div></div>
+        </div>
+        <div class="cy-signal">📡 ETF 获批 · 特朗普当选 · 机构囤币 · 进行中</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">跌幅可视化</div>
+      <div class="card-title">历次熊市最大回撤</div>
+      <div class="bar-chart">
+        <div class="bc-col">
+          <div class="bc-bar" style="height:87%;background:linear-gradient(to top,var(--hot),rgba(255,85,85,.3))"></div>
+          <div class="bc-year">2013</div><div class="bc-pct" style="color:var(--hot)">-87%</div>
+        </div>
+        <div class="bc-col">
+          <div class="bc-bar" style="height:84%;background:linear-gradient(to top,var(--hot),rgba(255,85,85,.3))"></div>
+          <div class="bc-year">2017</div><div class="bc-pct" style="color:var(--hot)">-84%</div>
+        </div>
+        <div class="bc-col">
+          <div class="bc-bar" style="height:77%;background:linear-gradient(to top,var(--warn),rgba(240,165,0,.3))"></div>
+          <div class="bc-year">2021</div><div class="bc-pct" style="color:var(--warn)">-77%</div>
+        </div>
+        <div class="bc-col">
+          <div class="bc-bar" style="height:47%;background:linear-gradient(to top,var(--cold),rgba(0,200,240,.2));border:1px dashed var(--cold)"></div>
+          <div class="bc-year">2025</div><div class="bc-pct" style="color:var(--cold)">-47%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">链上指标参考</div>
+      <div class="card-title">关键数据阈值</div>
+      <div class="metric-row"><div><div class="metric-name">MVRV Ratio</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--warn)">顶部 &gt; 3.5</div><div class="metric-sub">底部 &lt; 1.0</div></div></div>
+      <div class="metric-row"><div><div class="metric-name">NUPL</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--hot)">顶部 &gt; 0.75</div><div class="metric-sub">底部 &lt; 0</div></div></div>
+      <div class="metric-row"><div><div class="metric-name">Funding Rate</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--warn)">危险 &gt; 0.1%/8h</div><div class="metric-sub">持续为正 = 过热</div></div></div>
+      <div class="metric-row" style="border-color:var(--green)"><div><div class="metric-name">BTC DVOL 期权波动率</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--green)">卖权 &gt; 60</div><div class="metric-sub">你的卖权时机</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 3 · 情绪测试 + 预警
+══════════════════════════════════════ -->
+<div class="page" id="pg3">
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">05</span>
+      <span class="sec-title">情绪测试</span>
+      <span class="sec-sub">BIAS CHECK</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">情绪自测</div>
+      <div class="card-title">3 个情景题 · 选出最接近你的选项</div>
+
+      <div class="quiz-card" id="qq1">
+        <div class="qz-num">SCENARIO 01 · 市场连涨5天</div>
+        <div class="qz-q">BTC 连续 5 天上涨，你的第一反应是？</div>
+        <div class="qz-opts">
+          <div class="qz-opt" onclick="doQuiz('qq1',this,'bad','FOMO驱动。价格连涨后风险在增加，不在减少。应检视止盈计划是否已执行。')"><div class="qz-dot"></div>兴奋，想加仓，担心踏空</div>
+          <div class="qz-opt" onclick="doQuiz('qq1',this,'good','理性反应。逢涨减仓是分段止盈策略的核心，抵抗FOMO是专业交易者基本功。')"><div class="qz-dot"></div>警觉，检查止盈计划是否执行</div>
+          <div class="qz-opt" onclick="doQuiz('qq1',this,'bad','「感觉还会涨」是典型近因偏差，不能作为持仓理由。')"><div class="qz-dot"></div>平静观察，感觉还会继续涨</div>
+        </div>
+        <div class="qz-explain"></div>
+      </div>
+
+      <div class="quiz-card" id="qq2">
+        <div class="qz-num">SCENARIO 02 · 浮盈50%</div>
+        <div class="qz-q">你的 BTC 仓位浮盈已达 50%，此时你会？</div>
+        <div class="qz-opts">
+          <div class="qz-opt" onclick="doQuiz('qq2',this,'good','正确。50%浮盈是止盈良机，分批锁定利润同时保留仓位享受后续涨幅。')"><div class="qz-dot"></div>按计划分批止盈，锁定部分利润</div>
+          <div class="qz-opt" onclick="doQuiz('qq2',this,'bad','锚定效应。你已赚到了，「目标价」应动态调整，而不是固守原始目标。')"><div class="qz-dot"></div>继续持有，等目标价再卖</div>
+          <div class="qz-opt" onclick="doQuiz('qq2',this,'bad','高风险。浮盈≠已实现利润。加仓会在回撤时放大损失。')"><div class="qz-dot"></div>加仓，趋势明显还能涨</div>
+        </div>
+        <div class="qz-explain"></div>
+      </div>
+
+      <div class="quiz-card" id="qq3">
+        <div class="qz-num">SCENARIO 03 · 错过上涨</div>
+        <div class="qz-q">你因没有重仓错过了一波 30% 的上涨，你感到？</div>
+        <div class="qz-opts">
+          <div class="qz-opt" onclick="doQuiz('qq3',this,'good','健康心态。无法预测每一波是正常的，轻仓保护了下行时的资产安全。')"><div class="qz-dot"></div>略有遗憾，这是风控的代价</div>
+          <div class="qz-opt" onclick="doQuiz('qq3',this,'bad','FOMO最危险的形式。愤怒会驱使你高位追入成为接盘者。少赚≠亏损。')"><div class="qz-dot"></div>非常愤怒，下次一定要重仓</div>
+          <div class="qz-opt" onclick="doQuiz('qq3',this,'bad','焦虑驱动的入场往往在最糟糕的时机。先冷静，再评估是否有新逻辑。')"><div class="qz-dot"></div>焦虑，现在想不想追进去</div>
+        </div>
+        <div class="qz-explain"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">市场顶部信号</div>
+      <div class="card-title">点击激活你观察到的信号</div>
+      <div class="sig-grid" id="sigGrid">
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">💬</div>
+          <div class="sig-title">亲友开始问币</div>
+          <div class="sig-body">久未联系的朋友问"买什么能翻倍"</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">🚪</div>
+          <div class="sig-title">想辞职全职炒</div>
+          <div class="sig-body">觉得工作太慢，认为找到了更好方式</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">😤</div>
+          <div class="sig-title">FOMO 愤怒</div>
+          <div class="sig-body">因"少赚"而愤怒，追悔没有重仓</div>
+        </div>
+        <div class="sig-card" onclick="toggleSig(this)">
+          <div class="sig-icon">📱</div>
+          <div class="sig-title">满屏收益图</div>
+          <div class="sig-body">群里大量转发盈利截图，气氛极度乐观</div>
+        </div>
+        <div class="sig-alert" id="sigAlert">
+          ⚡ 防守模式已激活<br>
+          立即暂停新建仓位 · 审查止盈计划 · 执行减仓
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">恐贪指数参考</div>
+      <div class="card-title">韦氏情绪模型 · 操作区间</div>
+      <div class="fg-scale">
+        <div class="fgs-cell"><div class="fgs-val" style="color:var(--green)">0-20</div><div class="fgs-lbl">极度恐惧<br>买入</div></div>
+        <div class="fgs-cell"><div class="fgs-val" style="color:var(--cold)">20-40</div><div class="fgs-lbl">恐惧<br>关注</div></div>
+        <div class="fgs-cell"><div class="fgs-val" style="color:var(--text2)">40-60</div><div class="fgs-lbl">中性<br>均衡</div></div>
+        <div class="fgs-cell"><div class="fgs-val" style="color:var(--warn)">60-80</div><div class="fgs-lbl">贪婪<br>警戒</div></div>
+        <div class="fgs-cell" style="border-color:rgba(255,85,85,.4)"><div class="fgs-val" style="color:var(--hot)">80+</div><div class="fgs-lbl">极贪婪<br>减仓</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 4 · 决策日志
+══════════════════════════════════════ -->
+<div class="page" id="pg4">
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">06</span>
+      <span class="sec-title">决策日志</span>
+      <span class="sec-sub">TRADE LOG</span>
+    </div>
+
+    <div class="card">
+      <div class="card-label">新建记录</div>
+      <div class="card-title">交易前强制写下 · 白纸黑字对抗记忆重塑</div>
+
+      <div class="type-pills">
+        <button class="pill" id="pbuy"  onclick="setT('buy')">▲ 买入</button>
+        <button class="pill" id="psell" onclick="setT('sell')">▼ 卖出</button>
+        <button class="pill" id="popt"  onclick="setT('opt')">◈ 期权</button>
+      </div>
+
+      <div class="form-2col">
+        <div class="field"><label>标的资产</label><input id="lAsset" placeholder="BTC · ETH"></div>
+        <div class="field"><label>当前价格</label><input id="lPrice" type="number" placeholder="84000"></div>
+        <div class="field"><label>止损触发价</label><input id="lStop"   type="number" placeholder="76000"></div>
+        <div class="field"><label>止盈目标价</label><input id="lTarget" type="number" placeholder="95000"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>买入/卖出的核心理由（必须是基本面，不能是"在涨"）</label>
+        <textarea id="lReason" placeholder="例：BTC减半后供应减少，ETF净流入连续3周正值，DVOL处于历史低位..."></textarea>
+      </div>
+      <div class="field">
+        <label>触发止损后的具体行动（不能是"再看看"）</label>
+        <textarea id="lAction" placeholder="例：跌破74000立即平仓50%，跌破70000全部清仓，不论当时有任何利好..." style="min-height:64px"></textarea>
+      </div>
+      <button class="submit-btn" onclick="addLog()">▸ 锁定决策记录 · 开始执行</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">决策档案</div>
+      <div class="card-title">历史记录 · 追责与复盘</div>
+      <div id="logEntries">
+        <div style="text-align:center;padding:28px 0;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1.5px;">尚无记录 · 写下你的第一笔交易逻辑</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PAGE 5 · 心法
+══════════════════════════════════════ -->
+<div class="page" id="pg5">
+  <div class="sec">
+    <div class="sec-hd">
+      <span class="sec-num">07</span>
+      <span class="sec-title">核心心法</span>
+      <span class="sec-sub">MENTAL EDGE</span>
+    </div>
+
+    <div class="wisdom-grid">
+      <div class="wisdom-card"><div class="wc-icon">🎲</div><div class="wc-title">牛市赚钱是常态</div><div class="wc-body">单边上涨中，绝大多数参与者都会盈利。这不证明能力，只证明你在对的时间站在了对的方向。</div><div class="wc-src">SURVIVORSHIP BIAS</div></div>
+      <div class="wisdom-card"><div class="wc-icon">⚙️</div><div class="wc-title">系统胜于情绪</div><div class="wc-body">专业交易者与散户的核心区别不是"眼光"，而是在极端情绪下仍能执行既定计划的能力。</div><div class="wc-src">PROCESS OVER OUTCOME</div></div>
+      <div class="wisdom-card"><div class="wc-icon">⚓</div><div class="wc-title">将利润锚定现实</div><div class="wc-body">定期将浮盈转化为实体资产或家庭改善，账面数字永远不是真正的财富。</div><div class="wc-src">PROFIT REALIZATION</div></div>
+      <div class="wisdom-card"><div class="wc-icon">🔬</div><div class="wc-title">Alpha vs Beta</div><div class="wc-body">Beta：市场上涨带来的被动收益。Alpha：超越基准的超额收益。牛市大多数盈利是Beta，不是Alpha。</div><div class="wc-src">RISK-ADJUSTED RETURNS</div></div>
+      <div class="wisdom-card"><div class="wc-icon">📐</div><div class="wc-title">赔率思维</div><div class="wc-body">不要问"会涨吗"，要问"这个价格的赔率是多少"。期望值 = 胜率×盈利 − 败率×亏损。正期望才值得入场。</div><div class="wc-src">EXPECTED VALUE</div></div>
+      <div class="wisdom-card"><div class="wc-icon">🧊</div><div class="wc-title">克制是核心策略</div><div class="wc-body">牛市中"不做"往往比"做"更难，也更有价值。FOMO 是散户最贵的学费。克制本身就是技术含量极高的能力。</div><div class="wc-src">INACTION AS STRATEGY</div></div>
+    </div>
+
+    <div class="quote-card" style="margin:12px 0">
+      <div class="qt-text">"反过来想，永远要反过来想。如果你问自己如何在牛市赚更多，你应该先问：牛市中哪些行为最容易让人倾家荡产？"</div>
+      <div class="qt-src">— CHARLIE MUNGER · Poor Charlie's Almanack</div>
+    </div>
+
+    <div class="principle-banner" style="margin-bottom:20px;">
+      <div class="pb-main">理性不是一种状态<br>而是一系列重复且枯燥的行为准则</div>
+      <div class="pb-en">RATIONALITY IS A SYSTEM · DISCIPLINE IS THE ONLY EDGE</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOTTOM TAB BAR
+══════════════════════════════════════ -->
+<div class="tab-bar">
+  <button class="tab active" onclick="goTab(0,this)"><div class="tab-icon">🏠</div><div class="tab-label">总览</div></button>
+  <button class="tab" onclick="goTab(1,this)"><div class="tab-icon">🧠</div><div class="tab-label">自检</div></button>
+  <button class="tab" onclick="goTab(2,this)"><div class="tab-icon">📐</div><div class="tab-label">风控</div></button>
+  <button class="tab" onclick="goTab(3,this)"><div class="tab-icon">🎭</div><div class="tab-label">情绪</div></button>
+  <button class="tab" onclick="goTab(4,this)"><div class="tab-icon">📋</div><div class="tab-label">日志</div></button>
+  <button class="tab" onclick="goTab(5,this)"><div class="tab-icon">💡</div><div class="tab-label">心法</div></button>
+</div>
+
+<!-- PANIC FAB -->
+<button class="panic-fab" onclick="openCool()" title="立即冷静">🧊</button>
+
+<!-- COOL OVERLAY -->
+<div id="coolOverlay">
+  <div class="co-title">COOLING</div>
+  <div class="co-ring">
+    <svg viewBox="0 0 90 90" width="90" height="90">
+      <circle class="bg" cx="45" cy="45" r="40"/>
+      <circle class="fill" id="coRing" cx="45" cy="45" r="40"/>
+    </svg>
+    <div class="co-num" id="coNum">60</div>
+  </div>
+  <div class="co-q" id="coQ">...</div>
+  <div class="co-hint" id="coHint">...</div>
+  <button class="co-close" id="coClose" disabled onclick="closeCool()">请认真思考后再关闭...</button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// HEAT ENGINE
+// ══════════════════════════════════════
+let heat = Math.floor(Math.random()*30)+60;
+let decisions=0, activeSignals=0, checkedItems=0, tradeType=null;
+let coolTimer=null;
+
+const labels = ['EXTREME FEAR','FEAR','NEUTRAL','GREED','EXTREME GREED'];
+const lColors = ['var(--green)','var(--cold)','#ffffff','var(--warn)','var(--hot)'];
+
+function setHeat(v){
+  heat = Math.max(0,Math.min(100,v));
+  document.getElementById('tbFill').style.width = heat+'%';
+  const hv = document.getElementById('tbVal');
+  hv.textContent = Math.round(heat)+'°';
+  hv.style.color = heat>75?'var(--hot)':heat>50?'var(--warn)':'var(--cold)';
+  // dial
+  const a = -90+(heat/100)*180;
+  document.getElementById('needle').setAttribute('transform',`rotate(${a},60,60)`);
+  document.getElementById('fgVal').textContent = Math.round(heat);
+  const li = Math.floor(heat/25); const idx=Math.min(li,4);
+  document.getElementById('fgLbl').textContent = labels[idx];
+  document.getElementById('fgLbl').style.color  = lColors[idx];
+  // stats
+  document.getElementById('scool').textContent = Math.round(100-heat)+'%';
+}
+setHeat(heat);
+setInterval(()=> setHeat(heat+(Math.random()-.47)*1.5), 3000);
+
+// ══════════════════════════════════════
+// STEP MENU (dashboard)
+// ══════════════════════════════════════
+const steps = [
+  {num:'01',title:'物理隔离',sub:'关闭噪音 · 重建信息环境',tab:1},
+  {num:'02',title:'逻辑自检',sub:'芒格反转测试 · 5个核心问题',tab:1},
+  {num:'03',title:'定量风控',sub:'Kelly仓位 · 分段止盈阶梯',tab:2},
+  {num:'04',title:'历史镜鉴',sub:'BTC四次牛熊周期数据',tab:2},
+  {num:'05',title:'情绪测试',sub:'偏差识别 · 顶部信号检测',tab:3},
+  {num:'06',title:'决策日志',sub:'交易前强制书面记录',tab:4},
+  {num:'07',title:'核心心法',sub:'区分运气与能力',tab:5},
+];
+document.getElementById('stepMenu').innerHTML = steps.map((s,i)=>`
+  <div onclick="goTabN(${s.tab})" style="display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:${i<steps.length-1?'1px solid var(--border)':'none'};cursor:pointer;transition:background .2s;" onmousedown="this.style.background='var(--card2)'" onmouseup="this.style.background=''">
+    <div style="font-family:var(--display);font-size:22px;color:var(--cold);width:28px;flex-shrink:0;">${s.num}</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:2px;">${s.title}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.5px;">${s.sub}</div>
+    </div>
+    <div style="color:var(--dim);font-size:18px;">›</div>
+  </div>
+`).join('');
+
+// ══════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════
+const tabs = document.querySelectorAll('.tab');
+function goTab(n, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg'+n).classList.add('active');
+  tabs.forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  else tabs[n].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function goTabN(n){ goTab(n, tabs[n]); }
+
+// ══════════════════════════════════════
+// CHECKLIST
+// ══════════════════════════════════════
+function toggleCheck(el){
+  el.classList.toggle('done');
+  checkedItems = document.querySelectorAll('.check-item.done').length;
+  document.getElementById('schk').textContent = checkedItems+'/5';
+  setHeat(heat-(el.classList.contains('done')?3:-3));
+}
+
+// ══════════════════════════════════════
+// NOISE MUTE
+// ══════════════════════════════════════
+let muted=0;
+function muteIt(el){
+  el.classList.toggle('muted');
+  muted = document.querySelectorAll('.noise-card.muted').length;
+  document.getElementById('mutedCnt').textContent = muted;
+  setHeat(heat-(el.classList.contains('muted')?2:-2));
+}
+
+// ══════════════════════════════════════
+// INVERSION CARDS
+// ══════════════════════════════════════
+function openInv(el){
+  if(el.classList.contains('ok')||el.classList.contains('bad')) return;
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.inv-card.open').forEach(c=>c.classList.remove('open'));
+  if(!wasOpen) el.classList.add('open');
+}
+function ansInv(e,btn,type,msg){
+  e.stopPropagation();
+  const card = btn.closest('.inv-card');
+  card.classList.remove('open');
+  card.classList.add(type==='yes'?'ok':'bad');
+  card.querySelector('.inv-fb').textContent = (type==='yes'?'✓ ':'⚠ ')+msg;
+  setHeat(heat-(type==='yes'?3:1));
+}
+
+// ══════════════════════════════════════
+// KELLY CALC
+// ══════════════════════════════════════
+function calcKelly(){
+  const cap=parseFloat(document.getElementById('c_cap').value)||100000;
+  const wr=parseFloat(document.getElementById('c_wr').value)/100||.55;
+  const rr=parseFloat(document.getElementById('c_rr').value)||2;
+  const mr=parseFloat(document.getElementById('c_mr').value)/100||.02;
+  const q=1-wr, k=((wr*rr)-q)/rr;
+  const kp=Math.max(0,k*100), hk=cap*Math.min(k/2,.5), ml=cap*mr;
+  document.getElementById('kPct').textContent  = kp.toFixed(1)+'%';
+  document.getElementById('kAmt').textContent  = '$'+fmt(hk);
+  document.getElementById('kStop').textContent = '$'+fmt(ml);
+  document.getElementById('kPct').style.color  = kp>50?'var(--hot)':kp>25?'var(--warn)':'var(--green)';
+}
+function fmt(n){ return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+calcKelly();
+
+// ══════════════════════════════════════
+// LADDER
+// ══════════════════════════════════════
+function updateTP(v){ document.getElementById('tpv').textContent='+'+v+'%'; updateLadder(); }
+function updateLadder(){
+  const tp=parseInt(document.getElementById('tpv').textContent)||15;
+  const sp=parseInt(document.getElementById('spv').textContent)||20;
+  let rem=100; const colors=['var(--green)','#00cc66','#66aa44','var(--warn)','var(--hot)'];
+  let html='';
+  for(let i=0;i<5;i++){
+    const sell=Math.min(sp,rem);
+    html+=`<div class="ladder-row"><div class="ladder-lbl">+${(i+1)*tp}%</div><div class="ladder-track"><div class="ladder-bar" style="width:${sell}%;background:${colors[i]}"></div></div><div class="ladder-pct" style="color:${colors[i]}">-${sell}%</div></div>`;
+    rem=Math.max(0,rem-sell); if(rem<=0) break;
+  }
+  if(rem>0) html+=`<div class="ladder-row"><div class="ladder-lbl" style="color:var(--dim)">剩余</div><div class="ladder-track"><div class="ladder-bar" style="width:${rem}%;background:var(--cold)"></div></div><div class="ladder-pct" style="color:var(--cold)">${rem}%</div></div>`;
+  document.getElementById('ladderViz').innerHTML=html;
+}
+updateLadder();
+
+// ══════════════════════════════════════
+// QUIZ
+// ══════════════════════════════════════
+function doQuiz(id,opt,type,expl){
+  const card=document.getElementById(id);
+  if(card.classList.contains('good')||card.classList.contains('bad')) return;
+  card.querySelectorAll('.qz-opt').forEach(o=>o.style.pointerEvents='none');
+  opt.classList.add(type==='good'?'sel-good':'sel-bad');
+  card.classList.add(type==='good'?'good':'bad');
+  card.querySelector('.qz-explain').textContent=(type==='good'?'✓ ':'⚠ ')+expl;
+  setHeat(heat-(type==='good'?4:1));
+}
+
+// ══════════════════════════════════════
+// SIGNALS
+// ══════════════════════════════════════
+function toggleSig(el){
+  el.classList.toggle('on');
+  activeSignals=document.querySelectorAll('.sig-card.on').length;
+  document.getElementById('ssig').textContent=activeSignals+'/4';
+  const a=document.getElementById('sigAlert');
+  activeSignals>=2?(a.classList.add('on'),setHeat(heat+6)):a.classList.remove('on');
+}
+
+// ══════════════════════════════════════
+// TRADE LOG
+// ══════════════════════════════════════
+function setT(t){
+  tradeType=t;
+  ['buy','sell','opt'].forEach(x=>document.getElementById('p'+x).className='pill');
+  document.getElementById('p'+t).classList.add(t);
+}
+
+function addLog(){
+  const r=document.getElementById('lReason').value.trim();
+  if(!r){ document.getElementById('lReason').focus(); return; }
+  const a=document.getElementById('lAsset').value.trim();
+  const p=document.getElementById('lPrice').value.trim();
+  const s=document.getElementById('lStop').value.trim();
+  const tg=document.getElementById('lTarget').value.trim();
+  const ac=document.getElementById('lAction').value.trim();
+
+  decisions++;
+  document.getElementById('sdec').textContent=decisions;
+
+  const now=new Date().toLocaleString('zh-CN',{hour12:false,month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const t=tradeType||'buy';
+  const tl={buy:'▲ 买入',sell:'▼ 卖出',opt:'◈ 期权'}[t]||'交易';
+
+  const el=document.createElement('div');
+  el.className='log-entry';
+  el.style.borderLeftColor=t==='sell'?'var(--hot)':t==='opt'?'var(--cold)':'var(--green)';
+  el.innerHTML=`
+    <div class="le-header">
+      <span class="le-type ${t}">${tl}${a?' · '+a:''}</span>
+      <span class="le-time">${now}</span>
+    </div>
+    <div class="le-reason">${r}</div>
+    <div class="le-pills">
+      ${p?`<span class="le-pill">入场 <span>${p}</span></span>`:''}
+      ${s?`<span class="le-pill">止损 <span style="color:var(--hot)">${s}</span></span>`:''}
+      ${tg?`<span class="le-pill">目标 <span style="color:var(--green)">${tg}</span></span>`:''}
+    </div>
+    ${ac?`<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--dim);line-height:1.65;">行动预案：${ac}</div>`:''}
+  `;
+  const cont=document.getElementById('logEntries');
+  const ph=cont.querySelector('div[style*="尚无记录"]');
+  if(ph) ph.remove();
+  cont.prepend(el);
+  ['lReason','lAction'].forEach(id=>document.getElementById(id).value='');
+  ['lAsset','lPrice','lStop','lTarget'].forEach(id=>document.getElementById(id).value='');
+  setHeat(heat-6);
+}
+
+// ══════════════════════════════════════
+// COOL OVERLAY
+// ══════════════════════════════════════
+const coolQs=[
+  {q:"如果现在价格腰斩，我的杠杆还能撑住吗？具体数字是多少？",h:"计算清算线和最大亏损，而非感受。"},
+  {q:"我买入的理由是「它在涨」还是「我能用数据解释的基本面」？",h:"无法用一句话解释逻辑的仓位，是情绪仓位。"},
+  {q:"此刻卖出的对手是谁？做市商、矿工、机构——谁在和我交易？",h:"市场上总有人在卖，你是否有信息优势？"},
+  {q:"如果这笔交易亏损50%，会影响我的日常生活质量吗？",h:"只用闲钱入市是可量化的风险边界，不是口号。"},
+  {q:"历史上每一个「这次不同」，有多少次真的不同了？",h:"2013、2017、2021，每个顶部都有「新叙事」支撑。"},
+  {q:"我现在的操作，是在执行计划，还是在应对情绪？",h:"区分「执行」和「反应」是专业交易者的核心能力。"},
+];
+
+function openCool(){
+  const q=coolQs[Math.floor(Math.random()*coolQs.length)];
+  document.getElementById('coQ').textContent=q.q;
+  document.getElementById('coHint').textContent=q.h;
+  document.getElementById('coolOverlay').classList.add('on');
+  setHeat(heat-10);
+
+  const btn=document.getElementById('coClose');
+  btn.disabled=true; btn.textContent='请认真思考后再关闭...';
+  let secs=60;
+  const ring=document.getElementById('coRing');
+  const num=document.getElementById('coNum');
+  clearInterval(coolTimer);
+  coolTimer=setInterval(()=>{
+    secs--;
+    num.textContent=secs;
+    ring.style.strokeDashoffset=(251*(1-secs/60)).toFixed(2);
+    if(secs<=0){ clearInterval(coolTimer); btn.disabled=false; btn.textContent='✓ 我已冷静 · 关闭'; }
+  },1000);
+}
+function closeCool(){
+  document.getElementById('coolOverlay').classList.remove('on');
+  clearInterval(coolTimer);
+}
+</script>
+</body>
+</html>
