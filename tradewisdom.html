@@ -246,6 +246,7 @@ body {
   position: fixed; inset: 0; z-index: 800;
   pointer-events: none; opacity: 0; transition: opacity .25s;
   display: flex; align-items: flex-end; justify-content: center;
+  cursor: pointer; /* iOS fix: outer wrapper also needs pointer */
 }
 #wSheet.open { pointer-events: all; opacity: 1; }
 .ws-bg {
@@ -1388,9 +1389,9 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 </div>
 
 <!-- ═══ WISDOM DETAIL SHEET ═══ -->
-<div id="wSheet" onclick="closeSheetBg(event)">
+<div id="wSheet" onclick="closeSheet()">
   <div class="ws-bg"></div>
-  <div class="ws-panel">
+  <div class="ws-panel" onclick="event.stopPropagation()">
     <div class="ws-handle-bar" onclick="closeSheet()"><div class="ws-handle"></div></div>
     <div class="ws-scroll">
       <div class="ws-num" id="wsNum"></div>
