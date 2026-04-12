@@ -2,8 +2,23 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>牛市冷却系统 · 二十五条心法</title>
+
+<!-- ══ PWA 核心配置 ══ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#d4a84b">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- ══ iOS Safari 专属 ══ -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BMCS · 冷却">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- ══ SEO & 分享 ══ -->
+<meta name="description" content="牛市冷却系统 · 二十五条心法 · 在狂热中保持理性">
+
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════
@@ -54,7 +69,12 @@ body {
   font-size: 15px;
   line-height: 1.8;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   padding-bottom: 72px;
+  /* iOS 底部安全区（Home Indicator）*/
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  /* iOS 顶部安全区（刘海 / Dynamic Island）*/
+  padding-top: env(safe-area-inset-top);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -79,6 +99,9 @@ body {
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; gap: 0;
   height: 52px; padding: 0 16px;
+  /* iOS 顶部安全区 */
+  padding-top: env(safe-area-inset-top);
+  height: calc(52px + env(safe-area-inset-top));
 }
 .tb-logo {
   font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: 2px; color: var(--gold);
@@ -986,7 +1009,7 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     <div class="drawer-brand">牛市冷却系统<br>二十五条心法</div>
     <div class="drawer-section-label">主要功能</div>
     <div class="drawer-item active" onclick="goTab(0);closeDrawer()">
-      <div class="di-num">●</div><div class="di-label">二十条心法</div><div class="di-tag">核心</div>
+      <div class="di-num">●</div><div class="di-label">二十五条心法</div><div class="di-tag">核心</div>
     </div>
     <div class="drawer-item" onclick="goTab(1);closeDrawer()">
       <div class="di-num">●</div><div class="di-label">决策工具</div><div class="di-tag">工具</div>
@@ -1008,7 +1031,7 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 </div>
 
 <!-- ══════════════════════════════════════
-     PAGE 0 · 二十条心法（核心）
+     PAGE 0 · 二十五条心法（核心）
 ══════════════════════════════════════ -->
 <div class="page active" id="pg0">
   <div class="home-hero">
@@ -1028,7 +1051,7 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   </div>
 
   <!-- 卖出的艺术 快捷入口 -->
-  <div onclick="filterCat('sell', document.querySelectorAll('.cat-tab')[5]); document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'})" style="
+  <div onclick="(function(){ var tabs=document.querySelectorAll('.cat-tab'); var sellTab; tabs.forEach(function(t){ if(t.textContent.indexOf('卖出')>-1) sellTab=t; }); filterCat('sell', sellTab); document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'}); })()" style="
     margin: 12px 16px 0;
     background: linear-gradient(135deg, rgba(224,155,58,0.15), rgba(224,155,58,0.05));
     border: 1.5px solid var(--amber);
@@ -1919,7 +1942,15 @@ function updateProgress() {
 function filterCat(cat, btn) {
   currentCat = cat;
   document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
-  if(btn) btn.classList.add('active');
+  if(btn) {
+    btn.classList.add('active');
+  } else {
+    // called from drawer — find matching tab and activate it
+    document.querySelectorAll('.cat-tab').forEach(function(t){
+      var tc = t.getAttribute('onclick') || '';
+      if(tc.indexOf("'"+cat+"'") > -1) t.classList.add('active');
+    });
+  }
   renderList();
 }
 
@@ -2002,8 +2033,14 @@ function closeSheetBg(e) {
   if(e.target===document.getElementById('wSheet')||e.target===document.querySelector('.ws-bg')) closeSheet();
 }
 function closeSheet() {
-  document.getElementById('wSheet').classList.remove('open');
+  var sheet = document.getElementById('wSheet');
+  sheet.classList.remove('open');
   document.body.style.overflow = '';
+  // 确保 panel transform 被重置
+  var panel = document.querySelector('.ws-panel');
+  if(panel) { panel.style.transform = ''; panel.style.transition = ''; }
+  var bg = document.querySelector('.ws-bg');
+  if(bg) bg.style.opacity = '';
 }
 
 function navSheet(dir) {
@@ -2394,6 +2431,7 @@ var _origMarkRead = markRead;
 markRead = function() { _origMarkRead(); saveState(); };
 
 // patch addLog to save
+var currentEmoScore = 5;
 var _origAddLog = addLog;
 addLog = function() {
   var prevCount = savedLogs.length;
@@ -2412,7 +2450,6 @@ addLog = function() {
 // ══════════════════════════════════════
 // JOURNAL STATS
 // ══════════════════════════════════════
-var currentEmoScore = 5;
 function updateJStats() {
   var total = savedLogs.length;
   var buy   = savedLogs.filter(function(l){ return l.type==='buy'; }).length;
@@ -2504,6 +2541,19 @@ function evalCycle() {
     result.classList.add('spring');
     result.innerHTML = '❄️ <strong>积累期（冬/春）</strong><br>历史最佳买入区域。低估值+高恐惧 = 极端风险溢价。建议：分批建仓，长期持有，设定最大亏损线，耐心等待。心法①⑦⑬';
   }
+// ══════════════════════════════════════
+// PWA — Service Worker 注册
+// ══════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(function(reg) {
+        console.log('[BMCS] SW 已注册:', reg.scope);
+      })
+      .catch(function(err) {
+        console.warn('[BMCS] SW 注册失败:', err);
+      });
+  });
 }
 </script>
 </body>
