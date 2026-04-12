@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>牛市冷却系统 · 二十五条心法</title>
 
 <!-- ══ PWA 核心配置 ══ -->
@@ -12,7 +12,7 @@
 
 <!-- ══ iOS Safari 专属 ══ -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BMCS · 冷却">
 <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -70,11 +70,7 @@ body {
   line-height: 1.8;
   min-height: 100vh;
   min-height: -webkit-fill-available;
-  padding-bottom: 72px;
-  /* iOS 底部安全区（Home Indicator）*/
   padding-bottom: calc(72px + env(safe-area-inset-bottom));
-  /* iOS 顶部安全区（刘海 / Dynamic Island）*/
-  padding-top: env(safe-area-inset-top);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -99,9 +95,6 @@ body {
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; gap: 0;
   height: 52px; padding: 0 16px;
-  /* iOS 顶部安全区 */
-  padding-top: env(safe-area-inset-top);
-  height: calc(52px + env(safe-area-inset-top));
 }
 .tb-logo {
   font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: 2px; color: var(--gold);
@@ -795,6 +788,142 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   .panic-fab { right: calc(50% - 390px + 16px); }
   .topbar { max-width: 780px; left: 50%; transform: translateX(-50%); }
   #drawer .drawer-panel { width: 280px; }
+}
+
+/* ════════════════════════════════════════
+   iPhone PWA 独立模式专项优化
+   display-mode: standalone = 从主屏幕启动
+════════════════════════════════════════ */
+@media (display-mode: standalone) {
+
+  /* ── 全局字体：放大一档，更易阅读 ── */
+  body { font-size: 16px; }
+
+  /* ── 禁止系统文字大小调整干扰 ── */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+  /* ── 禁止长按弹出系统菜单 ── */
+  * { -webkit-touch-callout: none; }
+  /* 但允许文字选中（阅读区域除外） */
+  input, textarea { -webkit-touch-callout: default; user-select: text; }
+
+  /* ── 顶栏：适配状态栏高度，防止内容顶到最上方 ── */
+  .topbar {
+    padding-top: 8px;
+    height: 60px;
+  }
+
+  /* ── 底部标签栏：加高，配合 Home Indicator ── */
+  .tab-bar {
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+    height: auto;
+  }
+  .tab {
+    padding: 10px 4px;
+    min-height: 50px;
+  }
+  .tab-icon  { font-size: 22px; margin-bottom: 3px; }
+  .tab-label { font-size: 11px; letter-spacing: 0.5px; }
+
+  /* body 底部留出足够空间避免被 tab bar 遮住 */
+  body {
+    padding-bottom: calc(80px + max(env(safe-area-inset-bottom), 16px));
+  }
+
+  /* ── 冰块浮动按钮：避开 Home Indicator ── */
+  .panic-fab {
+    bottom: calc(90px + max(env(safe-area-inset-bottom), 8px));
+  }
+
+  /* ── 触控热区：所有可点击元素放大 ── */
+  .wisdom-row {
+    min-height: 64px;
+    padding: 16px 16px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+  .wr-title { font-size: 16px; line-height: 1.4; }
+  .wr-icon  { font-size: 28px; }
+
+  /* ── 分类 Tab：更易点击 ── */
+  .cat-tab {
+    padding: 9px 16px;
+    font-size: 13px;
+    min-height: 38px;
+  }
+
+  /* ── 心法阅读面板 ── */
+  .ws-panel { border-radius: 32px 32px 0 0; }
+  .ws-title { font-size: 21px; }
+  .ws-body  { font-size: 16px; line-height: 2.05; }
+  .ws-insight-text { font-size: 15px; line-height: 1.9; }
+  .ws-case-text    { font-size: 15px; line-height: 1.85; }
+  .ws-quote-text   { font-size: 16px; }
+
+  /* 底部导航按钮：更大热区 */
+  .ws-nav {
+    padding-bottom: max(env(safe-area-inset-bottom), 16px);
+    gap: 10px;
+  }
+  .ws-nav-btn, .ws-mark-btn {
+    min-height: 54px;
+    font-size: 14px;
+  }
+
+  /* ── 首页 Hero ── */
+  .hh-title { font-size: 40px; }
+  .home-hero { padding: 28px 20px 22px; }
+
+  /* ── 今日精读按钮 ── */
+  .today-btn {
+    padding: 16px 18px;
+    border-radius: 18px;
+  }
+  .today-title { font-size: 15px; }
+
+  /* ── 工具页：表单输入优化 ── */
+  .field input, .field textarea {
+    font-size: 16px; /* 防止 iOS 自动缩放（<16px 会触发） */
+    padding: 14px 14px;
+    border-radius: 12px;
+  }
+  .field label { font-size: 12px; }
+  .submit-btn  { min-height: 56px; font-size: 15px; border-radius: 14px; }
+
+  /* ── 卡片与按钮 ── */
+  .card { border-radius: 16px; }
+  .inv-btn, .eve-btn, .ct-chip {
+    min-height: 44px;
+  }
+  .check-row { min-height: 60px; }
+
+  /* ── 情绪按钮：大一点更好按 ── */
+  .emo-btn { min-height: 64px; }
+  .emo-emoji { font-size: 26px; }
+  .emo-label { font-size: 12px; }
+
+  /* ── 冷静覆盖层：全屏无状态栏遮挡 ── */
+  #coolOverlay { padding: 32px 24px max(env(safe-area-inset-bottom), 32px); }
+  .co-title  { font-size: 36px; }
+  .co-q      { font-size: 17px; line-height: 1.9; }
+  .co-close  { min-height: 56px; }
+
+  /* ── 进度条 ── */
+  .wisdom-progress-bar { padding: 12px 20px; }
+
+  /* ── 侧边抽屉 ── */
+  .drawer-item { min-height: 58px; padding: 15px 20px; }
+  .di-label { font-size: 15px; }
+
+  /* ── 日志页 ── */
+  .pill { min-height: 54px; font-size: 15px; }
+  .type-pills { gap: 10px; }
+
+  /* ── active 状态：更明显的触控反馈 ── */
+  .wisdom-row:active    { transform: scale(.97); opacity: .9; }
+  .today-btn:active     { transform: scale(.97); }
+  .cat-tab:active       { transform: scale(.94); }
+  .ws-nav-btn:active    { transform: scale(.97); }
 }
 
 /* ════════════════════════════════════════
@@ -2541,6 +2670,7 @@ function evalCycle() {
     result.classList.add('spring');
     result.innerHTML = '❄️ <strong>积累期（冬/春）</strong><br>历史最佳买入区域。低估值+高恐惧 = 极端风险溢价。建议：分批建仓，长期持有，设定最大亏损线，耐心等待。心法①⑦⑬';
   }
+}
 // ══════════════════════════════════════
 // PWA — Service Worker 注册
 // ══════════════════════════════════════
@@ -2555,6 +2685,51 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+
+// ══════════════════════════════════════
+// iPhone PWA — 键盘 & 滚动修复
+// ══════════════════════════════════════
+(function() {
+  // 1. 输入框 focus 时，防止页面被键盘顶出视口
+  document.addEventListener('focusin', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      // 延迟等键盘完全弹出
+      setTimeout(function() {
+        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 350);
+    }
+  });
+
+  // 2. 输入框失焦时，恢复滚动位置（防止 iOS 留白）
+  document.addEventListener('focusout', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      setTimeout(function() {
+        window.scrollTo({ top: window.scrollY, behavior: 'instant' });
+      }, 100);
+    }
+  });
+
+  // 3. 防止双击缩放（PWA 模式下仍可能触发）
+  var lastTap = 0;
+  document.addEventListener('touchend', function(e) {
+    var now = Date.now();
+    if (now - lastTap < 300) {
+      // 只在非输入区域阻止双击缩放
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    }
+    lastTap = now;
+  }, { passive: false });
+
+  // 4. 橡皮筋效果（bounce scroll）控制
+  // 只在 body 层面阻止过度滚动，不影响内部滚动容器
+  document.body.addEventListener('touchmove', function(e) {
+    if (e.target === document.body || e.target === document.documentElement) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();
 </script>
 </body>
 </html>
