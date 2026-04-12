@@ -1,0 +1,27 @@
+{
+  "name": "牛市冷却系统",
+  "short_name": "BMCS · 冷却",
+  "description": "二十五条心法 · 在狂热中保持理性",
+  "start_url": "/option/tradewisdom.html",
+  "scope": "/option/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1c2330",
+  "theme_color": "#d4a84b",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/option/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/option/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"]
+}
