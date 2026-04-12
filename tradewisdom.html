@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>牛市冷却系统 · 二十条心法</title>
+<title>牛市冷却系统 · 二十五条心法</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════
@@ -28,6 +28,8 @@
   --red-bg:    rgba(224,90,90,0.10);
   --sage:      #52c97d;
   --sage-bg:   rgba(82,201,125,0.10);
+  --amber:     #e09b3a;
+  --amber-bg:  rgba(224,155,58,0.12);
 
   /* Text: high-contrast, no guessing */
   --text:      #e8eef4;   /* main body — almost white */
@@ -139,6 +141,13 @@ body {
   padding: 2px 7px; border-radius: 4px; background: var(--card2); color: var(--muted);
   flex-shrink: 0;
 }
+
+/* sell category special highlight */
+.wisdom-row.cat-sell { border-left-color: var(--amber); }
+.wisdom-row.cat-sell .wr-src { color: var(--amber); }
+.ws-category.cat-sell { color: var(--amber); }
+.ws-insight.cat-sell { border-left-color: var(--amber); }
+.ws-insight.cat-sell .ws-insight-label { color: var(--amber); }
 
 /* ════════════════════════════════════════
    PAGES
@@ -836,7 +845,7 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 <div id="drawer" onclick="closeDrawerOnBg(event)">
   <div class="drawer-bg"></div>
   <div class="drawer-panel">
-    <div class="drawer-brand">牛市冷却系统<br>二十条心法</div>
+    <div class="drawer-brand">牛市冷却系统<br>二十五条心法</div>
     <div class="drawer-section-label">主要功能</div>
     <div class="drawer-item active" onclick="goTab(0);closeDrawer()">
       <div class="di-num">●</div><div class="di-label">二十条心法</div><div class="di-tag">核心</div>
@@ -851,11 +860,12 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
       <div class="di-num">●</div><div class="di-label">交易日志</div><div class="di-tag">记录</div>
     </div>
     <div class="drawer-section-label" style="margin-top:8px;">心法分类</div>
-    <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">20</div><div class="di-label">全部心法</div></div>
+    <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">25</div><div class="di-label">全部心法</div></div>
     <div class="drawer-item" onclick="filterCat('mind');goTab(0);closeDrawer()"><div class="di-num">6</div><div class="di-label">认知与心理</div></div>
     <div class="drawer-item" onclick="filterCat('risk');goTab(0);closeDrawer()"><div class="di-num">6</div><div class="di-label">风险管理</div></div>
     <div class="drawer-item" onclick="filterCat('macro');goTab(0);closeDrawer()"><div class="di-num">4</div><div class="di-label">宏观视角</div></div>
     <div class="drawer-item" onclick="filterCat('system');goTab(0);closeDrawer()"><div class="di-num">4</div><div class="di-label">系统与执行</div></div>
+    <div class="drawer-item" onclick="filterCat('sell');goTab(0);closeDrawer()"><div class="di-num" style="color:var(--amber)">5</div><div class="di-label" style="color:var(--amber)">卖出的艺术 ★</div></div>
   </div>
 </div>
 
@@ -864,10 +874,10 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 ══════════════════════════════════════ -->
 <div class="page active" id="pg0">
   <div class="home-hero">
-    <div class="hh-eyebrow">BULL MARKET COOLING SYSTEM · 二十条心法</div>
+    <div class="hh-eyebrow">BULL MARKET COOLING SYSTEM · 二十五条心法</div>
     <div class="hh-title">在狂热中<br><em>保持理性</em></div>
-    <div class="hh-sub">这二十条心法是本系统的基石。每一条都来自真实的市场教训，在你冲动操作之前，请先读完它们。</div>
-    <div class="hh-deco">20</div>
+    <div class="hh-sub">这二十五条心法是本系统的基石。每一条都来自真实的市场教训，在你冲动操作之前，请先读完它们。新增「卖出的艺术」五条核心心法——只有卖出，利润才能落袋。</div>
+    <div class="hh-deco">25</div>
   </div>
 
   <div class="today-btn" onclick="openTodayWisdom()" style="margin-top:14px">
@@ -879,18 +889,38 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     <div class="today-arrow">›</div>
   </div>
 
+  <!-- 卖出的艺术 快捷入口 -->
+  <div onclick="filterCat('sell', document.querySelectorAll('.cat-tab')[5]); document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'})" style="
+    margin: 12px 16px 0;
+    background: linear-gradient(135deg, rgba(224,155,58,0.15), rgba(224,155,58,0.05));
+    border: 1.5px solid var(--amber);
+    border-radius: var(--r);
+    padding: 16px 18px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: all .2s;
+  ">
+    <div style="font-size:32px;flex-shrink:0">💰</div>
+    <div style="flex:1">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:3px;margin-bottom:4px">★ 核心专题 · THE ART OF SELLING</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text2);margin-bottom:2px">卖出的艺术 · 五条核心心法</div>
+      <div style="font-size:12px;color:var(--dim);line-height:1.5">只有卖出，利润才能落袋。只有落袋，才能在低位抄底。</div>
+    </div>
+    <div style="font-size:18px;color:var(--amber)">›</div>
+  </div>
+
   <div class="wisdom-progress-bar">
     <span class="wpb-label">已读进度</span>
     <div class="wpb-track"><div class="wpb-fill" id="wpbFill" style="width:0%"></div></div>
-    <span class="wpb-count" id="wpbCount">0 / 20</span>
+    <span class="wpb-count" id="wpbCount">0 / 25</span>
   </div>
 
   <div class="cat-tabs" id="catTabs">
-    <div class="cat-tab active" onclick="filterCat('all',this)">全部 20</div>
+    <div class="cat-tab active" onclick="filterCat('all',this)">全部 25</div>
     <div class="cat-tab" onclick="filterCat('mind',this)">🧠 认知心理 6</div>
     <div class="cat-tab" onclick="filterCat('risk',this)">🛡 风险管理 6</div>
     <div class="cat-tab" onclick="filterCat('macro',this)">🌐 宏观视角 4</div>
     <div class="cat-tab" onclick="filterCat('system',this)">⚙️ 系统执行 4</div>
+    <div class="cat-tab" onclick="filterCat('sell',this)" style="border-color:var(--amber);color:var(--amber)">💰 卖出的艺术 5</div>
   </div>
 
   <div class="wisdom-list" id="wisdomList"></div>
@@ -1616,10 +1646,56 @@ const wisdomData = [
     insight:'每月花30分钟梳理宏观背景：美联储会议纪要、CPI数据、全球M2趋势。不需要精确预测，只需要判断当前宏观是"顺风"还是"逆风"，然后据此调整仓位上限。',
     quote:'"在宏观面前，忽视它的代价，最终总会以某种方式呈现。"',
     quoteBy:'— 斯坦利·德鲁肯米勒',
-    case:'2020年3月疫情爆发后，美联储无限QE，全球M2暴增。理解这一宏观背景的交易者在BTC $4,000-8,000区间大量建仓。2021年11月美联储公布Taper（缩减购债）计划后，宏观"顺风"转为"逆风"，BTC随后开始漫长下跌。宏观不能预测价格，但能告诉你方向。' }
+    case:'2020年3月疫情爆发后，美联储无限QE，全球M2暴增。理解这一宏观背景的交易者在BTC $4,000-8,000区间大量建仓。2021年11月美联储公布Taper（缩减购债）计划后，宏观"顺风"转为"逆风"，BTC随后开始漫长下跌。宏观不能预测价格，但能告诉你方向。' },
+
+  // ═══ 卖出的艺术 · 五条核心心法 ═══
+  { icon:'💰', src:'THE ART OF SELLING · 卖出的艺术 #1', cat:'sell',
+    title:'卖出才能落袋——浮盈归零的人，全都死在"再等等"',
+    body:['市场上有两种人注定亏损：一种是不懂买入时机的人，另一种是不懂卖出的人。而后者远比前者更多。买入只需要勇气，卖出需要智慧——因为卖出意味着你要主动放弃"继续涨"的可能性，承认"够了"。',
+          '人类大脑天生抗拒卖出。在上涨时，"再涨一点再卖"的心理会让你一次次推迟止盈；在下跌时，"跌回来再卖"的侥幸又让你死扛到底。结果是：牛市来了全程持有，熊市来了还在持有，账户归零后开始后悔。只有真正卖出的钱，才是你的钱。账面数字，是市场借给你看的幻觉。'],
+    insight:'制定"分批止盈阶梯"：在建仓时就预设三个卖出价位（例如+50%卖20%、+100%卖30%、+200%卖30%），剩余20%让利润奔跑。每触发一档，立刻执行，不讨论，不犹豫。',
+    quote:'"公牛赚钱，熊赚钱，猪被宰杀。"',
+    quoteBy:'— 华尔街古训',
+    case:'2021年BTC从$30K涨至$69K，许多人全程持有，账面翻倍。随后-77%跌至$15.5K，原本$100K的账户缩水至$22K。而在$50-60K区间分批止盈50%的人，锁定了真实利润，并在$20-25K区间重新建仓，再次迎接下一轮牛市。只有卖出，才能真正参与下一次机会。' },
+
+  { icon:'📐', src:'THE ART OF SELLING · 卖出的艺术 #2', cat:'sell',
+    title:'卖出不是悲观——是为下一次抄底保留子弹',
+    body:['很多人把"卖出"等同于"看空"，认为卖出就是背叛自己的长期信仰。这是一种认知错误。卖出是资金管理，不是观点表达。你可以卖出现有仓位，同时对BTC长期极度看多。',
+          '事实上，最成功的长线投资者都是周期性减仓的高手：在高位卖出，保留现金，在低位重建更大的仓位。经历过一次完整牛熊周期的人都知道：在$60K卖出50%，在$20K全部买回，最终持有的BTC数量反而更多。卖出，是为了有能力在别人绝望时抄底，是整个投资系统中最重要的一环。'],
+    insight:'每次减仓时，把卖出所得的资金放入一个单独的"抄底准备金"账户，并设定明确的重建仓位触发价（如跌50%时开始分批建仓）。这让卖出从"离场"变成"主动备战"。',
+    quote:'"我卖出是为了在更低价格买回更多。不卖出的人，没有机会加倍。"',
+    quoteBy:'— 杰西·利弗莫尔',
+    case:'2021年11月，一位BTC持有者在$65K卖出60%仓位，持有$390K现金。2022年底BTC跌至$16K时，他用这笔资金买入了约24枚BTC。他原先的持有量是10枚。卖出，让他的持仓数量翻了倍以上——这才是"长期看多"最正确的执行方式。' },
+
+  { icon:'🎯', src:'THE ART OF SELLING · 卖出的艺术 #3', cat:'sell',
+    title:'顶部永远不是靠"感觉"找到的——用规则触发卖出',
+    body:['没有人能精确预测顶部。但几乎所有成功的大规模减仓，都不是靠预感，而是靠提前设定好的触发规则。当价格触发条件时，系统自动告诉你"该卖了"，你只需要执行。',
+          '有效的卖出触发规则可以是：链上指标（MVRV > 3.5、NUPL > 0.75）、情绪指标（恐贪指数持续80+超过两周）、技术指标（周线RSI > 85）、社会信号（出租车司机/理发师开始聊BTC）、个人目标（账户总值达到预设目标的150%）。规则越具体，执行越坚定。用感觉卖出，只会在涨势最猛时卖飞，在下跌中死扛。'],
+    insight:'现在就写下你的"卖出触发清单"：至少包含3个具体的指标或条件，触发其中2个即开始减仓。把这份清单打印出来，贴在显示器旁。规则是在冷静时写的，执行是在狂热中做的——你需要提前备好"那份清单"。',
+    quote:'"我不预测市场，我响应市场给我设定的规则。"',
+    quoteBy:'— 保罗·都铎·琼斯',
+    case:'2021年3月，BTC首次触及$60K时恐贪指数达到95，MVRV达到4.2，多位主流媒体头版报道。预设了"MVRV>3.5且恐贪>85即减仓40%"规则的投资者，在$55-65K区间完成首轮止盈。随后BTC从$69K跌至$28K，他们在$30K区间完成了第二次建仓。规则，是冷静的"未来自己"写给狂热的"当时自己"的信。' },
+
+  { icon:'🔪', src:'THE ART OF SELLING · 卖出的艺术 #4', cat:'sell',
+    title:'学会"卖飞"——卖出之后继续涨，是正确决策的证明',
+    body:['最让人痛苦的交易体验之一：你按计划在$80K止盈了，BTC继续涨到$120K。这种"踏空"的感觉，会驱使人下次不执行止盈计划，"留着等更高"。这是毁掉止盈系统的最常见心理陷阱。',
+          '专业交易者对"卖飞"有完全不同的解读：按计划止盈后资产继续涨，说明你的判断时机不是顶部——但这不代表你的决策是错的。决策的质量，应该用"当时掌握的信息和规则"来评判，而不是用"事后的价格走势"来评判。卖飞，只是没赚到最后一段；死扛，可能亏掉所有本金。两个结果，不可同日而语。'],
+    insight:'建立"卖飞复盘协议"：每次按计划卖出后，无论后续走势如何，只问一个问题：在卖出那一刻，基于当时的信息和规则，这是正确的决策吗？如果是，记录"正确执行"，继续前进。结果不等于决策质量。',
+    quote:'"我从不因为卖出后价格继续涨而感到后悔——我只为没有执行计划而感到后悔。"',
+    quoteBy:'— 霍华德·马克斯（改编）',
+    case:'2024年，BTC从$70K涨至$108K期间，大量按规则在$75-85K止盈的投资者经历了"踏空20-30%"的痛苦。但随后BTC在2025年回调至$74K区间，这些"卖飞"的人有充足资金在底部重建仓位。而死扛到高位、"相信能到$200K"的人，最终高买低卖，亏损出局。卖飞不是失败，死扛才是真正的失败。' },
+
+  { icon:'⏰', src:'THE ART OF SELLING · 卖出的艺术 #5', cat:'sell',
+    title:'卖出的最高境界：在别人疯狂买入时，你已经悄悄卖完了',
+    body:['市场顶部的共同特征是：成交量极度放大，所有人都在抢入，新高不断，媒体狂欢。正是在这个时候，你的卖出订单最容易成交，流动性最充裕，价差最小。但大多数人在这时感受到的是FOMO，而不是卖出冲动。',
+          '真正能在顶部卖出的人，有一个共同的心理状态：他们把市场的狂热，视为自己卖出计划的"执行信号"，而不是继续加仓的理由。当身边所有人都开始谈论"这次能到多少"，当你的朋友群开始分享收益截图，当新入场的人开始用杠杆追入——这不是上涨的证明，这是你卖出的信号。越狂热，越冷静；越热闹，越行动。'],
+    insight:'设立"社交媒体情绪警戒线"：当你的非交易类朋友圈中，开始频繁出现BTC/加密货币话题时，立即启动减仓程序，不需要等待任何价格确认。群众的共识，已经是顶部最可靠的先行指标。',
+    quote:'"当你的鞋匠开始给你推荐股票，那就是离场的时候了。"',
+    quoteBy:'— 约翰·F·肯尼迪之父·约瑟夫·肯尼迪（1929年）',
+    case:'2021年11月，NFT话题占据微博热搜，大量明星发行数字藏品，BTC登上CCTV新闻。那一周，BTC触及$69K历史高点。识别这一信号并在$60-69K完成主力仓位减仓的人，随后经历了-77%的下跌，却只是在场外"看着别人跌"。下次当你看到出租车司机、理发师、你母亲开始问你"现在买BTC还来得及吗"的那一刻——不是"来得及"的问题，是你该卖的时候了。' }
 ];
 
-const catLabels = { all:'全部', mind:'认知心理', risk:'风险管理', macro:'宏观视角', system:'系统执行' };
+const catLabels = { all:'全部', mind:'认知心理', risk:'风险管理', macro:'宏观视角', system:'系统执行', sell:'卖出的艺术' };
 
 // ══════════════════════════════════════
 // STATE
@@ -1671,11 +1747,12 @@ function renderList() {
   list.innerHTML = filtered.map(function(x){
     var num = String(x.i+1).padStart(2,'0');
     var isRead = readSet.has(x.i);
-    return '<div class="wisdom-row'+(isRead?' read':'')+'" onclick="openSheet('+x.i+')">' +
+    var isSell = x.d.cat === 'sell';
+    return '<div class="wisdom-row'+(isRead?' read':'')+(isSell?' cat-sell':'')+'" onclick="openSheet('+x.i+')">' +
       '<div class="wr-num">'+num+'</div>' +
       '<div class="wr-icon">'+x.d.icon+'</div>' +
-      '<div class="wr-body"><div class="wr-title">'+x.d.title+'</div><div class="wr-src">'+x.d.src.split(' · ')[0]+'</div></div>' +
-      (isRead ? '<div class="wr-badge done">已读</div>' : '') +
+      '<div class="wr-body"><div class="wr-title">'+x.d.title+'</div><div class="wr-src"'+(isSell?' style="color:var(--amber)"':'')+'>'+x.d.src.split(' · ')[0]+'</div></div>' +
+      (isRead ? '<div class="wr-badge done">已读</div>' : (isSell ? '<div class="wr-badge new" style="border-color:var(--amber);color:var(--amber);background:var(--amber-bg)">核心</div>' : '')) +
       '<div class="wr-arrow">›</div>' +
       '</div>';
   }).join('');
@@ -1703,8 +1780,11 @@ updateProgress();
 function openSheet(idx) {
   currentSheetIdx = idx;
   var d = wisdomData[idx];
-  document.getElementById('wsNum').textContent = '心法 ' + String(idx+1).padStart(2,'0') + ' / 20';
+  document.getElementById('wsNum').textContent = '心法 ' + String(idx+1).padStart(2,'0') + ' / 25';
   document.getElementById('wsCat').textContent = catLabels[d.cat] || d.cat;
+  document.getElementById('wsCat').className = 'ws-category' + (d.cat === 'sell' ? ' cat-sell' : '');
+  var insightEl = document.querySelector('.ws-insight');
+  if(insightEl) insightEl.className = 'ws-insight' + (d.cat === 'sell' ? ' cat-sell' : '');
   document.getElementById('wsIcon').textContent = d.icon;
   document.getElementById('wsTitle').textContent = d.title;
   document.getElementById('wsBody').innerHTML = d.body.map(function(p){ return '<p>'+p+'</p>'; }).join('');
