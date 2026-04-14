@@ -19,20 +19,25 @@
    TOKENS
 ════════════════════════════════════════ */
 :root {
-  --bg:        #1c2330;
-  --bg2:       #232d3d;
-  --card:      #2a3547;
-  --card2:     #313f55;
-  --line:      #3a4e66;
-  --line2:     #5a7590;
+  /* ── 背景层级（更深，更有层次）── */
+  --bg:        #0d1117;   /* 底层：接近纯黑带蓝紫 */
+  --bg2:       #161b26;   /* 次层 */
+  --card:      #1e2638;   /* 卡片 */
+  --card2:     #242e42;   /* 卡片次层 */
+  --line:      #2d3f55;   /* 分割线 */
+  --line2:     #4a6280;   /* 次分割线 */
 
-  --gold:      #d4a84b;
-  --gold-lt:   #edc97a;
-  --gold-bg:   rgba(212,168,75,0.12);
-  --gold-glow: rgba(212,168,75,0.22);
+  /* ── 金色系（更亮，更轻盈）── */
+  --gold:      #f2c94c;   /* 主金色：更明亮的琥珀金 */
+  --gold-lt:   #fad96a;   /* 浅金 */
+  --gold-bg:   rgba(242,201,76,0.10);
+  --gold-glow: rgba(242,201,76,0.20);
 
-  --ice:       #5bc4e8;
-  --ice-bg:    rgba(91,196,232,0.10);
+  /* ── 功能色 ── */
+  --ice:       #56cfe1;   /* 亮青色：Case Study / 数据 */
+  --ice-bg:    rgba(86,207,225,0.08);
+  --mint:      #43d9ad;   /* 薄荷绿：增长/机会 */
+  --mint-bg:   rgba(67,217,173,0.08);
   --red:       #e05a5a;
   --red-bg:    rgba(224,90,90,0.10);
   --sage:      #52c97d;
@@ -40,11 +45,11 @@
   --amber:     #e09b3a;
   --amber-bg:  rgba(224,155,58,0.12);
 
-  /* Text: high-contrast, no guessing */
-  --text:      #e8eef4;   /* main body — almost white */
-  --text2:     #ffffff;   /* headings */
-  --dim:       #a0b4c8;   /* secondary — clearly readable */
-  --muted:     #6e8fa8;   /* tertiary — labels only */
+  /* ── 文字层级（更亮，更清晰）── */
+  --text:      #e6edf3;   /* 正文：提亮至 #E6EDF3 */
+  --text2:     #ffffff;   /* 标题：纯白 */
+  --dim:       #8b9ab0;   /* 次要 */
+  --muted:     #546578;   /* 辅助标签 */
 
   --sans:      'Noto Sans SC', sans-serif;
   --mono:      'JetBrains Mono', monospace;
@@ -274,69 +279,150 @@ body     { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 ════════════════════════════════════════ */
 #wSheet {
   position: fixed; inset: 0; z-index: 800;
-  pointer-events: none; opacity: 0; transition: opacity .25s;
+  pointer-events: none; opacity: 0; transition: opacity .3s;
   display: flex; align-items: flex-end; justify-content: center;
-  cursor: pointer; /* iOS fix: outer wrapper also needs pointer */
+  cursor: pointer;
 }
 #wSheet.open { pointer-events: all; opacity: 1; }
 .ws-bg {
   position: absolute; inset: 0;
-  background: rgba(10,15,22,.75); backdrop-filter: blur(8px);
-  cursor: pointer; /* iOS fix: div needs cursor:pointer to receive tap events */
+  background: rgba(5,8,15,.85); backdrop-filter: blur(12px);
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* 面板：渐变背景 + 顶部金色装饰线 */
 .ws-panel {
   position: relative; z-index: 1;
   width: 100%; max-width: 780px;
-  background: var(--bg2); border-top: 1px solid var(--line);
-  border-radius: 22px 22px 0 0;
+  /* 内容容器：微弱渐变增加通透感 */
+  background: linear-gradient(145deg, #1a2235 0%, #141c2e 60%, #111827 100%);
+  border-top: 1px solid rgba(242,201,76,.2);
+  border-radius: 28px 28px 0 0;
   max-height: 92vh; display: flex; flex-direction: column;
-  transform: translateY(60px); transition: transform .35s cubic-bezier(.34,1.3,.64,1);
+  transform: translateY(60px); transition: transform .38s cubic-bezier(.34,1.2,.64,1);
+  box-shadow: 0 -12px 48px rgba(0,0,0,.6), 0 -1px 0 rgba(242,201,76,.12);
+}
+/* 顶部金色细线 */
+.ws-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 0 0 2px 2px;
+}
+/* 极淡网格底纹（华尔街报告感）*/
+.ws-panel::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: 28px 28px 0 0;
+  background-image:
+    linear-gradient(rgba(242,201,76,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242,201,76,.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
 }
 #wSheet.open .ws-panel { transform: translateY(0); }
+
+/* 拖动条 */
 .ws-handle-bar {
-  padding: 16px 0 12px; display: flex; justify-content: center; flex-shrink: 0;
-  cursor: pointer;
+  padding: 14px 0 10px; display: flex; justify-content: center; flex-shrink: 0;
+  cursor: pointer; position: relative; z-index: 1;
 }
-.ws-handle { width: 40px; height: 4px; background: var(--line2); border-radius: 2px; }
-.ws-scroll { flex: 1; overflow-y: auto; padding: 20px 24px 40px; }
-.ws-num    { font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 3px; margin-bottom: 6px; }
-.ws-category { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 2px; margin-bottom: 14px; }
-.ws-icon   { font-size: 52px; margin-bottom: 14px; }
-.ws-title  { font-family: var(--sans); font-size: 26px; font-weight: 800; color: var(--text2); line-height: 1.3; margin-bottom: 20px; }
-.ws-divider { height: 1px; background: var(--line); margin-bottom: 20px; }
-.ws-body   { font-size: 16px; color: var(--text); line-height: 1.9; font-weight: 300; }
-.ws-body p { margin-bottom: 16px; }
+.ws-handle {
+  width: 36px; height: 4px;
+  background: linear-gradient(90deg, transparent, rgba(242,201,76,.4), transparent);
+  border-radius: 2px;
+}
+
+/* 滚动区 */
+.ws-scroll {
+  flex: 1; overflow-y: auto; padding: 4px 26px 44px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  position: relative; z-index: 1;
+}
+.ws-scroll::-webkit-scrollbar { display: none; }
+
+/* 编号：金色，字间距加宽 */
+.ws-num {
+  font-family: var(--mono); font-size: 12px; color: var(--gold);
+  letter-spacing: 4px; margin-bottom: 8px; opacity: .7;
+}
+
+/* 分类标签：胶囊样式 */
+.ws-category {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 11px; color: var(--dim);
+  letter-spacing: 2px; margin-bottom: 16px;
+  padding: 4px 12px; border: 1px solid var(--line);
+  border-radius: 20px; background: rgba(255,255,255,.03);
+}
+
+/* 图标 */
+.ws-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+
+/* 标题：更大字间距，更有呼吸感 */
+.ws-title {
+  font-family: var(--sans); font-size: 24px; font-weight: 800;
+  color: #ffffff; line-height: 1.35; margin-bottom: 18px;
+  letter-spacing: .5px;  /* 标题字间距 */
+}
+
+/* 分割线：金色渐变 */
+.ws-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(242,201,76,.3), rgba(242,201,76,.05), transparent);
+  margin-bottom: 22px;
+}
+
+/* 正文：调亮至 #E6EDF3，行高充足 */
+.ws-body   { font-size: 16px; color: #e6edf3; line-height: 2.0; font-weight: 400; }
+.ws-body p { margin-bottom: 18px; }
+
+/* 交易启示：更明亮金色 + 轻盈背景 */
 .ws-insight {
   margin-top: 20px;
-  background: var(--card); border: 1px solid var(--line);
-  border-left: 3px solid var(--gold); border-radius: var(--r-sm); padding: 16px;
+  background: rgba(242,201,76,.07);
+  border: 1px solid rgba(242,201,76,.18);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r-sm); padding: 16px;
 }
 .ws-insight-label {
-  font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px;
+  font-family: var(--mono); font-size: 11px; color: var(--gold);
+  letter-spacing: 3px; margin-bottom: 10px; text-transform: uppercase;
 }
-.ws-insight-text { font-size: 13px; color: var(--dim); line-height: 1.75; }
+.ws-insight-text { font-size: 14px; color: #c8d4e0; line-height: 1.85; }
+
+/* 底部导航 */
 .ws-nav {
-  display: flex; gap: 10px; margin-top: 20px; flex-shrink: 0;
-  padding: 12px 24px 16px; border-top: 1px solid var(--line);
+  display: flex; gap: 10px; flex-shrink: 0;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(45,63,85,.8);
+  background: rgba(13,17,23,.8); backdrop-filter: blur(12px);
+  position: relative; z-index: 1;
 }
 .ws-nav-btn {
   flex: 1; padding: 14px; border-radius: var(--r-sm);
-  border: 1.5px solid var(--line); background: transparent;
-  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
-  color: var(--dim); cursor: pointer; transition: all .2s;
-  min-height: var(--tap);
+  border: 1px solid rgba(45,63,85,.9); background: transparent;
+  font-family: var(--mono); font-size: 13px; letter-spacing: 1px;
+  color: rgba(139,154,176,.6);  /* 弱化次要按钮 */
+  cursor: pointer; transition: all .2s; min-height: var(--tap);
 }
-.ws-nav-btn:active { border-color: var(--gold); color: var(--gold); }
+.ws-nav-btn:not(:disabled):active { border-color: var(--gold); color: var(--gold); }
+.ws-nav-btn:disabled { opacity: .2; }
+
+/* 标记已读：外发光，更有点击欲 */
 .ws-mark-btn {
   padding: 14px 20px; border-radius: var(--r-sm);
-  border: 1.5px solid var(--gold); background: var(--gold-bg);
-  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
-  color: var(--gold); cursor: pointer; transition: all .2s; flex-shrink: 0;
+  border: 1.5px solid var(--gold);
+  background: rgba(242,201,76,.12);
+  font-family: var(--mono); font-size: 13px; letter-spacing: 1px;
+  color: var(--gold); cursor: pointer; transition: all .25s; flex-shrink: 0;
   min-height: var(--tap);
+  box-shadow: 0 0 16px rgba(242,201,76,.18), inset 0 1px 0 rgba(242,201,76,.1);
 }
-.ws-mark-btn.done { background: var(--sage-bg); border-color: var(--sage); color: var(--sage); }
-.ws-mark-btn:active { opacity: .7; }
+.ws-mark-btn:hover { box-shadow: 0 0 24px rgba(242,201,76,.28), inset 0 1px 0 rgba(242,201,76,.15); }
+.ws-mark-btn.done  { background: rgba(82,201,125,.1); border-color: var(--sage); color: var(--sage); box-shadow: 0 0 16px rgba(82,201,125,.15); }
+.ws-mark-btn:active { opacity: .8; transform: scale(.97); }
 
 /* ════════════════════════════════════════
    TOOLS PAGE (快捷决策工具)
@@ -684,31 +770,45 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 .today-title { font-size: 14px; color: var(--text2); font-weight: 600; }
 .today-arrow { font-size: 18px; color: var(--gold); }
 
-/* wisdom sheet — quote block */
+/* 引言：亮蓝/薄荷边框，更有质感 */
 .ws-quote {
-  margin-top: 20px; padding: 16px 18px;
-  background: rgba(212,168,75,.05);
-  border-left: 3px solid var(--gold-lt);
+  margin-top: 22px; padding: 18px 20px;
+  background: rgba(86,207,225,.05);
+  border: 1px solid rgba(86,207,225,.2);
+  border-left: 3px solid #56cfe1;
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  position: relative;
+}
+.ws-quote::before {
+  content: '"';
+  position: absolute; top: 6px; left: 14px;
+  font-size: 52px; color: #56cfe1; opacity: .15;
+  font-family: Georgia, serif; line-height: 1;
 }
 .ws-quote-text {
-  font-size: 16px; color: var(--gold-lt); line-height: 1.75;
-  font-style: italic; margin-bottom: 8px;
+  font-size: 16px; color: #a8d8e8;
+  line-height: 1.8; font-style: italic;
+  margin-bottom: 10px; padding-top: 6px;
+  letter-spacing: .3px;
 }
 .ws-quote-by {
-  font-family: var(--mono); font-size: 13px; color: var(--muted); letter-spacing: 1px;
+  font-family: var(--mono); font-size: 12px;
+  color: rgba(86,207,225,.5); letter-spacing: 1px;
 }
 
-/* wisdom sheet — case study */
+/* 案例分析：薄荷绿系，代表"增长/机会" */
 .ws-case {
-  margin-top: 14px; background: var(--card); border: 1px solid var(--line);
+  margin-top: 16px;
+  background: rgba(67,217,173,.05);
+  border: 1px solid rgba(67,217,173,.18);
   border-radius: var(--r-sm); padding: 16px;
 }
 .ws-case-label {
-  font-family: var(--mono); font-size: 12px; color: var(--ice);
-  letter-spacing: 2.5px; margin-bottom: 10px;
+  font-family: var(--mono); font-size: 11px;
+  color: #43d9ad; letter-spacing: 3px; margin-bottom: 10px;
+  text-transform: uppercase;
 }
-.ws-case-text { font-size: 14px; color: var(--dim); line-height: 1.75; }
+.ws-case-text { font-size: 14px; color: #9db8b0; line-height: 1.85; }
 
 /* daily ritual */
 .ritual-block {
