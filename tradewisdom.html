@@ -3,22 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>牛市冷却系统 · 二十五条心法</title>
 
-<!-- ══ PWA 核心配置 ══ -->
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#d4a84b">
 <meta name="mobile-web-app-capable" content="yes">
-
-<!-- ══ iOS Safari 专属 ══ -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BMCS · 冷却">
 <link rel="apple-touch-icon" href="icon-192.png">
-
-<!-- ══ SEO & 分享 ══ -->
-<meta name="description" content="牛市冷却系统 · 二十五条心法 · 在狂热中保持理性">
-
+<title>牛市冷却系统 · 二十条心法</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════
@@ -69,8 +63,7 @@ body {
   font-size: 15px;
   line-height: 1.8;
   min-height: 100vh;
-  min-height: -webkit-fill-available;
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  padding-bottom: 72px;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -158,12 +151,24 @@ body {
   flex-shrink: 0;
 }
 
-/* sell category special highlight */
-.wisdom-row.cat-sell { border-left-color: var(--amber); }
+/* sell / buy category */
+.wisdom-row.cat-sell::before { background: var(--amber); }
+.wisdom-row.cat-buy::before  { background: var(--sage); }
 .wisdom-row.cat-sell .wr-src { color: var(--amber); }
-.ws-category.cat-sell { color: var(--amber); }
-.ws-insight.cat-sell { border-left-color: var(--amber); }
+.wisdom-row.cat-buy  .wr-src { color: var(--sage); }
+.ws-category.cat-sell { color: var(--amber); border-color: rgba(224,155,58,.3); }
+.ws-category.cat-buy  { color: var(--sage);  border-color: rgba(82,201,125,.3); }
+.ws-insight.cat-sell  { border-left-color: var(--amber); }
 .ws-insight.cat-sell .ws-insight-label { color: var(--amber); }
+
+/* iOS 底部安全区 */
+.tab-bar { padding-bottom: env(safe-area-inset-bottom); }
+.ws-nav  { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+body     { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+/* 防止 iOS 输入框自动缩放 */
+.field input, .field textarea { font-size: 16px; }
+.cf input { font-size: 16px; }
 
 /* ════════════════════════════════════════
    PAGES
@@ -265,206 +270,68 @@ body {
 .wr-badge.done { background: var(--sage-bg); color: var(--sage); border: 1px solid var(--sage); }
 
 /* ════════════════════════════════════════
-   WISDOM DETAIL SHEET (bottom sheet) — 阅读增强版
+   WISDOM DETAIL SHEET (bottom sheet)
 ════════════════════════════════════════ */
 #wSheet {
   position: fixed; inset: 0; z-index: 800;
-  pointer-events: none; opacity: 0; transition: opacity .3s;
+  pointer-events: none; opacity: 0; transition: opacity .25s;
   display: flex; align-items: flex-end; justify-content: center;
-  cursor: pointer;
+  cursor: pointer; /* iOS fix: outer wrapper also needs pointer */
 }
 #wSheet.open { pointer-events: all; opacity: 1; }
 .ws-bg {
   position: absolute; inset: 0;
-  background: rgba(8,12,20,.82); backdrop-filter: blur(12px);
-  cursor: pointer;
+  background: rgba(10,15,22,.75); backdrop-filter: blur(8px);
+  cursor: pointer; /* iOS fix: div needs cursor:pointer to receive tap events */
   -webkit-tap-highlight-color: transparent;
 }
 .ws-panel {
   position: relative; z-index: 1;
   width: 100%; max-width: 780px;
-  background: linear-gradient(180deg, #252f42 0%, #1e2838 100%);
-  border-top: 1px solid rgba(212,168,75,.25);
-  border-radius: 28px 28px 0 0;
-  max-height: 94vh; display: flex; flex-direction: column;
-  transform: translateY(80px); transition: transform .4s cubic-bezier(.34,1.2,.64,1);
-  box-shadow: 0 -8px 40px rgba(0,0,0,.5), 0 -1px 0 rgba(212,168,75,.15);
+  background: var(--bg2); border-top: 1px solid var(--line);
+  border-radius: 22px 22px 0 0;
+  max-height: 92vh; display: flex; flex-direction: column;
+  transform: translateY(60px); transition: transform .35s cubic-bezier(.34,1.3,.64,1);
 }
 #wSheet.open .ws-panel { transform: translateY(0); }
-
-/* 拖动条 */
 .ws-handle-bar {
-  padding: 14px 0 10px; display: flex; justify-content: center; flex-shrink: 0;
+  padding: 16px 0 12px; display: flex; justify-content: center; flex-shrink: 0;
   cursor: pointer;
 }
-.ws-handle {
-  width: 36px; height: 4px;
-  background: linear-gradient(90deg, transparent, var(--line2), transparent);
-  border-radius: 2px;
-}
-
-/* 顶部：金色细线装饰 */
-.ws-panel::before {
-  content: '';
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 60px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  border-radius: 0 0 2px 2px;
-}
-
-/* 滚动区 */
-.ws-scroll {
-  flex: 1; overflow-y: auto; padding: 8px 26px 36px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.ws-scroll::-webkit-scrollbar { display: none; }
-
-/* 头部信息行 */
-.ws-header-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 20px;
-}
-.ws-num {
-  font-family: var(--mono); font-size: 12px; color: var(--gold);
-  letter-spacing: 3px; opacity: .8;
-}
-.ws-progress-dots {
-  display: flex; gap: 5px; align-items: center;
-}
-.ws-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--line); transition: all .3s;
-}
-.ws-dot.active { background: var(--gold); transform: scale(1.3); }
-.ws-dot.read   { background: var(--sage); }
-
-/* 分类标签 */
-.ws-category {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--mono); font-size: 11px; color: var(--muted);
-  letter-spacing: 2px; margin-bottom: 18px;
-  padding: 4px 10px; border: 1px solid var(--line);
-  border-radius: 20px; background: var(--card);
-}
-.ws-category.cat-sell { color: var(--amber); border-color: rgba(224,155,58,.3); }
-
-/* 图标 + 标题区 */
-.ws-hero {
-  display: flex; align-items: flex-start; gap: 16px; margin-bottom: 22px;
-}
-.ws-icon-wrap {
-  width: 56px; height: 56px; flex-shrink: 0;
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 14px; display: flex; align-items: center; justify-content: center;
-  font-size: 28px;
-}
-.ws-title-wrap { flex: 1; }
-.ws-title {
-  font-family: var(--sans); font-size: 22px; font-weight: 800;
-  color: var(--text2); line-height: 1.35; letter-spacing: -.3px;
-}
-
-/* 分割线 */
-.ws-divider {
-  height: 1px;
-  background: linear-gradient(90deg, var(--gold-bg), transparent);
-  margin-bottom: 22px;
-}
-
-/* 正文 */
-.ws-body {
-  font-size: 16px; color: var(--text);
-  line-height: 2.0; font-weight: 400;
-  letter-spacing: .3px;
-}
-.ws-body p {
-  margin-bottom: 18px; padding-bottom: 18px;
-  border-bottom: 1px solid rgba(58,78,102,.4);
-}
-.ws-body p:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-
-/* 引言盒子 */
-.ws-quote {
-  margin: 22px 0;
-  padding: 18px 20px;
-  background: rgba(212,168,75,.06);
-  border: 1px solid rgba(212,168,75,.2);
-  border-left: 3px solid var(--gold);
-  border-radius: var(--r-sm);
-  position: relative;
-}
-.ws-quote::before {
-  content: '"';
-  position: absolute; top: -2px; left: 14px;
-  font-size: 48px; color: var(--gold); opacity: .2;
-  font-family: Georgia, serif; line-height: 1;
-}
-.ws-quote-text {
-  font-family: var(--sans); font-size: 16px; font-weight: 600;
-  color: var(--gold-lt); line-height: 1.7; font-style: italic;
-  padding-top: 8px;
-}
-.ws-quote-by {
-  font-family: var(--mono); font-size: 12px; color: var(--muted);
-  letter-spacing: 1px; margin-top: 10px;
-}
-
-/* 交易启示盒子 */
+.ws-handle { width: 40px; height: 4px; background: var(--line2); border-radius: 2px; }
+.ws-scroll { flex: 1; overflow-y: auto; padding: 20px 24px 40px; }
+.ws-num    { font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 3px; margin-bottom: 6px; }
+.ws-category { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 2px; margin-bottom: 14px; }
+.ws-icon   { font-size: 52px; margin-bottom: 14px; }
+.ws-title  { font-family: var(--sans); font-size: 26px; font-weight: 800; color: var(--text2); line-height: 1.3; margin-bottom: 20px; }
+.ws-divider { height: 1px; background: var(--line); margin-bottom: 20px; }
+.ws-body   { font-size: 16px; color: var(--text); line-height: 1.9; font-weight: 300; }
+.ws-body p { margin-bottom: 16px; }
 .ws-insight {
-  margin-top: 0; margin-bottom: 18px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--gold);
-  border-radius: var(--r-sm); padding: 18px;
+  margin-top: 20px;
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--gold); border-radius: var(--r-sm); padding: 16px;
 }
-.ws-insight.cat-sell { border-left-color: var(--amber); }
 .ws-insight-label {
-  font-family: var(--mono); font-size: 11px; color: var(--gold);
-  letter-spacing: 3px; margin-bottom: 10px; text-transform: uppercase;
+  font-family: var(--mono); font-size: 14px; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px;
 }
-.ws-insight.cat-sell .ws-insight-label { color: var(--amber); }
-.ws-insight-text { font-size: 14px; color: var(--text); line-height: 1.85; }
-
-/* 经典案例盒子 */
-.ws-case {
-  margin-top: 0; margin-bottom: 18px;
-  background: rgba(91,196,232,.04);
-  border: 1px solid rgba(91,196,232,.15);
-  border-radius: var(--r-sm); padding: 18px;
-}
-.ws-case-label {
-  font-family: var(--mono); font-size: 11px; color: var(--ice);
-  letter-spacing: 3px; margin-bottom: 10px;
-}
-.ws-case-text { font-size: 14px; color: var(--dim); line-height: 1.85; }
-
-/* 阅读进度提示 */
-.ws-read-hint {
-  text-align: center; margin: 8px 0 4px;
-  font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 2px;
-}
-
-/* 底部导航栏 */
+.ws-insight-text { font-size: 13px; color: var(--dim); line-height: 1.75; }
 .ws-nav {
-  display: flex; gap: 8px; flex-shrink: 0;
-  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--line);
-  background: rgba(28,35,48,.6); backdrop-filter: blur(8px);
+  display: flex; gap: 10px; margin-top: 20px; flex-shrink: 0;
+  padding: 12px 24px 16px; border-top: 1px solid var(--line);
 }
 .ws-nav-btn {
-  flex: 1; padding: 13px 8px; border-radius: var(--r-sm);
-  border: 1px solid var(--line); background: transparent;
-  font-family: var(--mono); font-size: 13px; letter-spacing: 1px;
+  flex: 1; padding: 14px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--line); background: transparent;
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
   color: var(--dim); cursor: pointer; transition: all .2s;
   min-height: var(--tap);
 }
-.ws-nav-btn:not(:disabled):active { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
-.ws-nav-btn:disabled { opacity: .25; }
+.ws-nav-btn:active { border-color: var(--gold); color: var(--gold); }
 .ws-mark-btn {
-  padding: 13px 16px; border-radius: var(--r-sm);
+  padding: 14px 20px; border-radius: var(--r-sm);
   border: 1.5px solid var(--gold); background: var(--gold-bg);
-  font-family: var(--mono); font-size: 13px; letter-spacing: 1px;
+  font-family: var(--mono); font-size: 14px; letter-spacing: 1px;
   color: var(--gold); cursor: pointer; transition: all .2s; flex-shrink: 0;
   min-height: var(--tap);
 }
@@ -791,142 +658,6 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 }
 
 /* ════════════════════════════════════════
-   iPhone PWA 独立模式专项优化
-   display-mode: standalone = 从主屏幕启动
-════════════════════════════════════════ */
-@media (display-mode: standalone) {
-
-  /* ── 全局字体：放大一档，更易阅读 ── */
-  body { font-size: 16px; }
-
-  /* ── 禁止系统文字大小调整干扰 ── */
-  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-
-  /* ── 禁止长按弹出系统菜单 ── */
-  * { -webkit-touch-callout: none; }
-  /* 但允许文字选中（阅读区域除外） */
-  input, textarea { -webkit-touch-callout: default; user-select: text; }
-
-  /* ── 顶栏：适配状态栏高度，防止内容顶到最上方 ── */
-  .topbar {
-    padding-top: 8px;
-    height: 60px;
-  }
-
-  /* ── 底部标签栏：加高，配合 Home Indicator ── */
-  .tab-bar {
-    padding-bottom: max(env(safe-area-inset-bottom), 8px);
-    height: auto;
-  }
-  .tab {
-    padding: 10px 4px;
-    min-height: 50px;
-  }
-  .tab-icon  { font-size: 22px; margin-bottom: 3px; }
-  .tab-label { font-size: 11px; letter-spacing: 0.5px; }
-
-  /* body 底部留出足够空间避免被 tab bar 遮住 */
-  body {
-    padding-bottom: calc(80px + max(env(safe-area-inset-bottom), 16px));
-  }
-
-  /* ── 冰块浮动按钮：避开 Home Indicator ── */
-  .panic-fab {
-    bottom: calc(90px + max(env(safe-area-inset-bottom), 8px));
-  }
-
-  /* ── 触控热区：所有可点击元素放大 ── */
-  .wisdom-row {
-    min-height: 64px;
-    padding: 16px 16px;
-    border-radius: 14px;
-    margin-bottom: 10px;
-  }
-  .wr-title { font-size: 16px; line-height: 1.4; }
-  .wr-icon  { font-size: 28px; }
-
-  /* ── 分类 Tab：更易点击 ── */
-  .cat-tab {
-    padding: 9px 16px;
-    font-size: 13px;
-    min-height: 38px;
-  }
-
-  /* ── 心法阅读面板 ── */
-  .ws-panel { border-radius: 32px 32px 0 0; }
-  .ws-title { font-size: 21px; }
-  .ws-body  { font-size: 16px; line-height: 2.05; }
-  .ws-insight-text { font-size: 15px; line-height: 1.9; }
-  .ws-case-text    { font-size: 15px; line-height: 1.85; }
-  .ws-quote-text   { font-size: 16px; }
-
-  /* 底部导航按钮：更大热区 */
-  .ws-nav {
-    padding-bottom: max(env(safe-area-inset-bottom), 16px);
-    gap: 10px;
-  }
-  .ws-nav-btn, .ws-mark-btn {
-    min-height: 54px;
-    font-size: 14px;
-  }
-
-  /* ── 首页 Hero ── */
-  .hh-title { font-size: 40px; }
-  .home-hero { padding: 28px 20px 22px; }
-
-  /* ── 今日精读按钮 ── */
-  .today-btn {
-    padding: 16px 18px;
-    border-radius: 18px;
-  }
-  .today-title { font-size: 15px; }
-
-  /* ── 工具页：表单输入优化 ── */
-  .field input, .field textarea {
-    font-size: 16px; /* 防止 iOS 自动缩放（<16px 会触发） */
-    padding: 14px 14px;
-    border-radius: 12px;
-  }
-  .field label { font-size: 12px; }
-  .submit-btn  { min-height: 56px; font-size: 15px; border-radius: 14px; }
-
-  /* ── 卡片与按钮 ── */
-  .card { border-radius: 16px; }
-  .inv-btn, .eve-btn, .ct-chip {
-    min-height: 44px;
-  }
-  .check-row { min-height: 60px; }
-
-  /* ── 情绪按钮：大一点更好按 ── */
-  .emo-btn { min-height: 64px; }
-  .emo-emoji { font-size: 26px; }
-  .emo-label { font-size: 12px; }
-
-  /* ── 冷静覆盖层：全屏无状态栏遮挡 ── */
-  #coolOverlay { padding: 32px 24px max(env(safe-area-inset-bottom), 32px); }
-  .co-title  { font-size: 36px; }
-  .co-q      { font-size: 17px; line-height: 1.9; }
-  .co-close  { min-height: 56px; }
-
-  /* ── 进度条 ── */
-  .wisdom-progress-bar { padding: 12px 20px; }
-
-  /* ── 侧边抽屉 ── */
-  .drawer-item { min-height: 58px; padding: 15px 20px; }
-  .di-label { font-size: 15px; }
-
-  /* ── 日志页 ── */
-  .pill { min-height: 54px; font-size: 15px; }
-  .type-pills { gap: 10px; }
-
-  /* ── active 状态：更明显的触控反馈 ── */
-  .wisdom-row:active    { transform: scale(.97); opacity: .9; }
-  .today-btn:active     { transform: scale(.97); }
-  .cat-tab:active       { transform: scale(.94); }
-  .ws-nav-btn:active    { transform: scale(.97); }
-}
-
-/* ════════════════════════════════════════
    V5 ADDITIONS
 ════════════════════════════════════════ */
 
@@ -1135,10 +866,10 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 <div id="drawer" onclick="closeDrawerOnBg(event)">
   <div class="drawer-bg"></div>
   <div class="drawer-panel">
-    <div class="drawer-brand">牛市冷却系统<br>二十五条心法</div>
+    <div class="drawer-brand">牛市冷却系统<br>二十条心法</div>
     <div class="drawer-section-label">主要功能</div>
     <div class="drawer-item active" onclick="goTab(0);closeDrawer()">
-      <div class="di-num">●</div><div class="di-label">二十五条心法</div><div class="di-tag">核心</div>
+      <div class="di-num">●</div><div class="di-label">二十条心法</div><div class="di-tag">核心</div>
     </div>
     <div class="drawer-item" onclick="goTab(1);closeDrawer()">
       <div class="di-num">●</div><div class="di-label">决策工具</div><div class="di-tag">工具</div>
@@ -1150,24 +881,23 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
       <div class="di-num">●</div><div class="di-label">交易日志</div><div class="di-tag">记录</div>
     </div>
     <div class="drawer-section-label" style="margin-top:8px;">心法分类</div>
-    <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">25</div><div class="di-label">全部心法</div></div>
+    <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">20</div><div class="di-label">全部心法</div></div>
     <div class="drawer-item" onclick="filterCat('mind');goTab(0);closeDrawer()"><div class="di-num">6</div><div class="di-label">认知与心理</div></div>
     <div class="drawer-item" onclick="filterCat('risk');goTab(0);closeDrawer()"><div class="di-num">6</div><div class="di-label">风险管理</div></div>
     <div class="drawer-item" onclick="filterCat('macro');goTab(0);closeDrawer()"><div class="di-num">4</div><div class="di-label">宏观视角</div></div>
     <div class="drawer-item" onclick="filterCat('system');goTab(0);closeDrawer()"><div class="di-num">4</div><div class="di-label">系统与执行</div></div>
-    <div class="drawer-item" onclick="filterCat('sell');goTab(0);closeDrawer()"><div class="di-num" style="color:var(--amber)">5</div><div class="di-label" style="color:var(--amber)">卖出的艺术 ★</div></div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════
-     PAGE 0 · 二十五条心法（核心）
+     PAGE 0 · 二十条心法（核心）
 ══════════════════════════════════════ -->
 <div class="page active" id="pg0">
   <div class="home-hero">
-    <div class="hh-eyebrow">BULL MARKET COOLING SYSTEM · 二十五条心法</div>
+    <div class="hh-eyebrow">BULL MARKET COOLING SYSTEM · 二十条心法</div>
     <div class="hh-title">在狂热中<br><em>保持理性</em></div>
-    <div class="hh-sub">这二十五条心法是本系统的基石。每一条都来自真实的市场教训，在你冲动操作之前，请先读完它们。新增「卖出的艺术」五条核心心法——只有卖出，利润才能落袋。</div>
-    <div class="hh-deco">25</div>
+    <div class="hh-sub">这二十条心法是本系统的基石。每一条都来自真实的市场教训，在你冲动操作之前，请先读完它们。</div>
+    <div class="hh-deco">20</div>
   </div>
 
   <div class="today-btn" onclick="openTodayWisdom()" style="margin-top:14px">
@@ -1179,38 +909,73 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     <div class="today-arrow">›</div>
   </div>
 
-  <!-- 卖出的艺术 快捷入口 -->
-  <div onclick="(function(){ var tabs=document.querySelectorAll('.cat-tab'); var sellTab; tabs.forEach(function(t){ if(t.textContent.indexOf('卖出')>-1) sellTab=t; }); filterCat('sell', sellTab); document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'}); })()" style="
-    margin: 12px 16px 0;
-    background: linear-gradient(135deg, rgba(224,155,58,0.15), rgba(224,155,58,0.05));
-    border: 1.5px solid var(--amber);
-    border-radius: var(--r);
-    padding: 16px 18px;
-    display: flex; align-items: center; gap: 14px;
-    cursor: pointer; transition: all .2s;
-  ">
-    <div style="font-size:32px;flex-shrink:0">💰</div>
-    <div style="flex:1">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:3px;margin-bottom:4px">★ 核心专题 · THE ART OF SELLING</div>
-      <div style="font-size:15px;font-weight:700;color:var(--text2);margin-bottom:2px">卖出的艺术 · 五条核心心法</div>
-      <div style="font-size:12px;color:var(--dim);line-height:1.5">只有卖出，利润才能落袋。只有落袋，才能在低位抄底。</div>
+  <!-- 今日市场快照 -->
+  <div style="margin:12px 16px 0;cursor:pointer" onclick="goTab(2,document.querySelectorAll('.tab')[2])">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:3px;padding:0 2px 8px;display:flex;justify-content:space-between;align-items:center">
+      <span>MARKET SNAPSHOT · 今日快照</span>
+      <span id="snapTime" style="color:var(--muted)">加载中... →</span>
     </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 10px;text-align:center">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">BTC</div>
+        <div id="snapBtcPrice" style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text2);margin-bottom:5px;line-height:1.2">--</div>
+        <div id="snapBtcChg" style="font-family:var(--mono);font-size:13px;color:var(--dim)">--</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 10px;text-align:center">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">恐贪</div>
+        <div id="snapFgVal" style="font-family:var(--mono);font-size:33px;font-weight:800;margin-bottom:5px;line-height:1.1">--</div>
+        <div id="snapFgLbl" style="font-family:var(--mono);font-size:12px;color:var(--dim)">--</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 10px;text-align:center">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">DVOL</div>
+        <div id="snapDvol" style="font-family:var(--mono);font-size:33px;font-weight:800;margin-bottom:5px;line-height:1.1">--</div>
+        <div id="snapDvolLbl" style="font-family:var(--mono);font-size:12px;color:var(--dim)">--</div>
+      </div>
+    </div>
+    <div style="margin-top:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap">极恐 0</div>
+      <div style="flex:1;height:7px;background:var(--line);border-radius:4px;overflow:hidden;position:relative">
+        <div style="height:100%;background:linear-gradient(90deg,var(--sage),var(--ice),var(--gold),var(--red));border-radius:4px"></div>
+        <div id="snapFgNeedle" style="position:absolute;top:-3px;width:3px;height:13px;background:white;border-radius:2px;transition:left .6s;left:50%"></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap">100 极贪</div>
+    </div>
+  </div>
+
+  <!-- 快捷工具 + 专题入口 -->
+  <div style="margin:10px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div onclick="goTab(1,document.querySelectorAll('.tab')[1])" style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">🔧</div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:1px">决策工具</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted)">交易前必读</div></div>
+    </div>
+    <div onclick="goTab(3,document.querySelectorAll('.tab')[3])" style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">📋</div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:1px">交易日志</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted)">记录决策</div></div>
+    </div>
+  </div>
+  <div onclick="(function(){var t=document.querySelectorAll('.cat-tab');var s;t.forEach(function(x){if(x.textContent.indexOf('卖出')>-1)s=x;});filterCat('sell',s);document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'});})()" style="margin:8px 16px 0;background:linear-gradient(135deg,rgba(224,155,58,.15),rgba(224,155,58,.05));border:1.5px solid var(--amber);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer">
+    <div style="font-size:28px;flex-shrink:0">💰</div>
+    <div style="flex:1"><div style="font-family:var(--mono);font-size:10px;color:var(--amber);letter-spacing:3px;margin-bottom:3px">卖出的艺术 · 10条心法</div><div style="font-size:14px;font-weight:700;color:var(--text2)">只有卖出，利润才能落袋</div></div>
     <div style="font-size:18px;color:var(--amber)">›</div>
+  </div>
+  <div onclick="(function(){var t=document.querySelectorAll('.cat-tab');var s;t.forEach(function(x){if(x.textContent.indexOf('抄底')>-1)s=x;});filterCat('buy',s);document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'});})()" style="margin:8px 16px 0;background:linear-gradient(135deg,rgba(82,201,125,.12),rgba(82,201,125,.04));border:1.5px solid var(--sage);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer">
+    <div style="font-size:28px;flex-shrink:0">🌱</div>
+    <div style="flex:1"><div style="font-family:var(--mono);font-size:10px;color:var(--sage);letter-spacing:3px;margin-bottom:3px">抄底的艺术 · 10条心法</div><div style="font-size:14px;font-weight:700;color:var(--text2)">在恐惧中寻找价值</div></div>
+    <div style="font-size:18px;color:var(--sage)">›</div>
   </div>
 
   <div class="wisdom-progress-bar">
     <span class="wpb-label">已读进度</span>
     <div class="wpb-track"><div class="wpb-fill" id="wpbFill" style="width:0%"></div></div>
-    <span class="wpb-count" id="wpbCount">0 / 25</span>
+    <span class="wpb-count" id="wpbCount">0 / 20</span>
   </div>
 
   <div class="cat-tabs" id="catTabs">
-    <div class="cat-tab active" onclick="filterCat('all',this)">全部 25</div>
+    <div class="cat-tab active" onclick="filterCat('all',this)">全部 20</div>
     <div class="cat-tab" onclick="filterCat('mind',this)">🧠 认知心理 6</div>
     <div class="cat-tab" onclick="filterCat('risk',this)">🛡 风险管理 6</div>
     <div class="cat-tab" onclick="filterCat('macro',this)">🌐 宏观视角 4</div>
     <div class="cat-tab" onclick="filterCat('system',this)">⚙️ 系统执行 4</div>
-    <div class="cat-tab" onclick="filterCat('sell',this)" style="border-color:var(--amber);color:var(--amber)">💰 卖出的艺术 5</div>
   </div>
 
   <div class="wisdom-list" id="wisdomList"></div>
@@ -1521,10 +1286,30 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     </div>
 
     <div class="ts-label">链上指标参考 · 心法⑭⑱对应</div>
-    <div class="metric-row"><div><div class="metric-name">MVRV Ratio</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--gold)">顶部 &gt; 3.5</div><div class="metric-sub">底部 &lt; 1.0</div></div></div>
-    <div class="metric-row"><div><div class="metric-name">NUPL</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--red)">顶部 &gt; 0.75</div><div class="metric-sub">底部 &lt; 0</div></div></div>
-    <div class="metric-row"><div><div class="metric-name">Funding Rate</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--gold)">危险 &gt; 0.1%/8h</div><div class="metric-sub">持续为正 = 过热</div></div></div>
-    <div class="metric-row" style="border-color:var(--sage);margin-bottom:20px"><div><div class="metric-name">BTC DVOL（期权波动率）</div></div><div style="text-align:right"><div class="metric-val" style="color:var(--sage)">卖权 &gt; 60</div><div class="metric-sub">你的卖权时机</div></div></div>
+    <div class="metric-row" id="mBtc">
+      <div><div class="metric-name">BTC 价格</div><div class="metric-sub" id="mBtcTime" style="font-size:12px;color:var(--muted)">加载中...</div></div>
+      <div style="text-align:right"><div class="metric-val" id="mBtcVal" style="color:var(--text2)">--</div><div class="metric-sub" id="mBtcChg">--</div></div>
+    </div>
+    <div class="metric-row">
+      <div><div class="metric-name">恐贪指数</div><div class="metric-sub">0极恐 · 100极贪婪</div></div>
+      <div style="text-align:right"><div class="metric-val" id="mFgVal">--</div><div class="metric-sub" id="mFgLbl">--</div></div>
+    </div>
+    <div class="metric-row">
+      <div><div class="metric-name">Funding Rate</div><div class="metric-sub">危险 &gt; 0.1% / 8h</div></div>
+      <div style="text-align:right"><div class="metric-val" id="mFrVal">--</div><div class="metric-sub" id="mFrLbl">--</div></div>
+    </div>
+    <div class="metric-row">
+      <div><div class="metric-name">BTC DVOL（期权波动率）</div><div class="metric-sub">卖权时机 &gt; 60</div></div>
+      <div style="text-align:right"><div class="metric-val" id="mDvolVal">--</div><div class="metric-sub" id="mDvolLbl">--</div></div>
+    </div>
+    <div class="metric-row" style="margin-bottom:4px">
+      <div><div class="metric-name">MVRV Ratio（估算）</div><div class="metric-sub">顶部 &gt;3.5 · 底部 &lt;1.0</div></div>
+      <div style="text-align:right"><div class="metric-val" id="mMvrvVal">--</div><div class="metric-sub" id="mMvrvLbl">--</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 2px 16px">
+      <div style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="metricsUpdatedAt">数据每小时缓存一次</div>
+      <button onclick="fetchMetrics(true)" style="font-family:var(--mono);font-size:12px;color:var(--gold);background:none;border:1px solid rgba(212,168,75,.3);border-radius:6px;padding:4px 10px;cursor:pointer">↻ 刷新</button>
+    </div>
 
     <div class="ts-label">周期自测 · 你现在在哪个季节？</div>
     <div class="cycle-tool">
@@ -1709,43 +1494,29 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 </div>
 
 <!-- ═══ WISDOM DETAIL SHEET ═══ -->
-<div id="wSheet" onclick="closeSheetBg(event)">
+<div id="wSheet" onclick="closeSheet()">
   <div class="ws-bg"></div>
   <div class="ws-panel" onclick="event.stopPropagation()">
     <div class="ws-handle-bar" onclick="closeSheet()"><div class="ws-handle"></div></div>
     <div class="ws-scroll">
-      <!-- 头部信息行 -->
-      <div class="ws-header-row">
-        <div class="ws-num" id="wsNum"></div>
-        <div class="ws-progress-dots" id="wsProgressDots"></div>
-      </div>
-      <!-- 分类标签 -->
+      <div class="ws-num" id="wsNum"></div>
       <div class="ws-category" id="wsCat"></div>
-      <!-- 图标 + 标题 -->
-      <div class="ws-hero">
-        <div class="ws-icon-wrap"><div id="wsIcon"></div></div>
-        <div class="ws-title-wrap"><div class="ws-title" id="wsTitle"></div></div>
-      </div>
-      <!-- 分割线 -->
+      <div class="ws-icon" id="wsIcon"></div>
+      <div class="ws-title" id="wsTitle"></div>
       <div class="ws-divider"></div>
-      <!-- 正文 -->
       <div class="ws-body" id="wsBody"></div>
-      <!-- 引言 -->
+      <div class="ws-insight">
+        <div class="ws-insight-label">TRADING IMPLICATION · 交易启示</div>
+        <div class="ws-insight-text" id="wsInsight"></div>
+      </div>
       <div class="ws-quote" id="wsQuoteBox" style="display:none">
         <div class="ws-quote-text" id="wsQuoteText"></div>
         <div class="ws-quote-by" id="wsQuoteBy"></div>
       </div>
-      <!-- 交易启示 -->
-      <div class="ws-insight" id="wsInsightBox">
-        <div class="ws-insight-label">TRADING IMPLICATION · 交易启示</div>
-        <div class="ws-insight-text" id="wsInsight"></div>
-      </div>
-      <!-- 经典案例 -->
       <div class="ws-case" id="wsCaseBox" style="display:none">
-        <div class="ws-case-label">CASE STUDY · 经典案例</div>
+        <div class="ws-case-label">经典案例 · CASE STUDY</div>
         <div class="ws-case-text" id="wsCaseText"></div>
       </div>
-      <div class="ws-read-hint" id="wsReadHint"></div>
     </div>
     <div class="ws-nav">
       <button class="ws-nav-btn" id="wsPrev" onclick="navSheet(-1)">← 上一条</button>
@@ -1996,10 +1767,148 @@ const wisdomData = [
     insight:'设立"社交媒体情绪警戒线"：当你的非交易类朋友圈中，开始频繁出现BTC/加密货币话题时，立即启动减仓程序，不需要等待任何价格确认。群众的共识，已经是顶部最可靠的先行指标。',
     quote:'"当你的鞋匠开始给你推荐股票，那就是离场的时候了。"',
     quoteBy:'— 约翰·F·肯尼迪之父·约瑟夫·肯尼迪（1929年）',
-    case:'2021年11月，NFT话题占据微博热搜，大量明星发行数字藏品，BTC登上CCTV新闻。那一周，BTC触及$69K历史高点。识别这一信号并在$60-69K完成主力仓位减仓的人，随后经历了-77%的下跌，却只是在场外"看着别人跌"。下次当你看到出租车司机、理发师、你母亲开始问你"现在买BTC还来得及吗"的那一刻——不是"来得及"的问题，是你该卖的时候了。' }
+    case:'2021年11月，NFT话题占据微博热搜，大量明星发行数字藏品，BTC登上CCTV新闻。那一周，BTC触及$69K历史高点。识别这一信号并在$60-69K完成主力仓位减仓的人，随后经历了-77%的下跌，却只是在场外"看着别人跌"。下次当你看到出租车司机、理发师、你母亲开始问你"现在买BTC还来得及吗"的那一刻——不是"来得及"的问题，是你该卖的时候了。' },
+
+  // ═══ 抄底的艺术 · 五条核心心法（霍华德·马克斯哲学）═══
+  { icon:'🌊', src:'THE ART OF BUYING · 抄底的艺术 #1', cat:'buy',
+    title:'痛苦是价格，恐惧是门票——最好的买点从不舒适',
+    body:['霍华德·马克斯在《周期》中写道：当所有人都相信某样东西没有风险时，风险往往已经到了极值。反过来，当所有人都相信某样东西极度危险时，风险往往已经被充分定价，甚至过度定价了。',
+          '真正的抄底机会，从来不会出现在你感觉"安全"的时候。它出现在你需要鼓起勇气、克服直觉、对抗周围所有人的悲观情绪的时候。买入本身不难，难的是在满屏割肉截图、在群里哀嚎遍野、在自己账户也深度亏损的时候，还能按下买入键。那种不舒适感，恰恰是高赔率的代价。'],
+    insight:'建立"恐惧温度计"：每当恐贪指数跌破20，主流媒体开始用"崩盘""归零"等词汇，身边持币者开始割肉离场时，把这个时刻标记为"潜在买入观察期"，而不是逃跑的理由。',
+    quote:'"投资最困难的事，不是分析，而是在最佳机会出现时鼓起勇气买入。"',
+    quoteBy:'— 霍华德·马克斯《周期》',
+    case:'2020年3月12日（"312"），BTC单日暴跌近50%至$3,800。恐贪指数跌至历史最低8。当天社交媒体充斥着"比特币归零"的声音，大量长期持有者在底部割肉。然而此后18个月，BTC从$3,800涨至$69,000，涨幅超过18倍。那种极度恐惧的一天，是近十年最好的买入机会之一。' },
+
+  { icon:'🎯', src:'THE ART OF BUYING · 抄底的艺术 #2', cat:'buy',
+    title:'没有人能抄到最低点——分批建仓才是真理',
+    body:['马克斯反复强调：试图找到"精确底部"是一种自我欺骗。没有人知道底部在哪里，即使是最聪明的机构投资者，也只能事后才知道底部已经过去。执着于"买在最低点"，往往导致的结果是：因为担心"还会更低"而一直等待，最终错过整个上涨。',
+          '分批建仓（Dollar Cost Averaging + 分级加仓）是对抗这种认知局限的最理性工具。它的逻辑不是"我知道底部在哪"，而是"我承认我不知道底部在哪，所以我把风险分散在时间轴上"。每一次下跌都是机会，而不是应该等待的理由。'],
+    insight:'制定"熊市分批建仓计划"：把计划用于抄底的总资金分成5-8份，设定触发价格（如每下跌15%买入一份），并在牛市顶部就写好这份计划。熊市中执行计划，而不是在恐惧中临时决策。',
+    quote:'"我们从不试图预测市场底部。我们只是在价格变得有吸引力时买入，并分散在时间上。"',
+    quoteBy:'— 霍华德·马克斯',
+    case:'2022年熊市中，BTC从$69K跌至$15.5K，历时约一年。全程等待"最低点"的投资者，或因恐惧而空仓踏空，或在$20K买入后又经历$15.5K的进一步下跌而崩溃离场。而每月定额买入的人（无论$30K、$25K、$20K、$16K），最终平均成本约$22K，在2023-24年牛市中获得3-5倍收益。' },
+
+  { icon:'⚖️', src:'THE ART OF BUYING · 抄底的艺术 #3', cat:'buy',
+    title:'风险不是波动——而是在错误时间永久失去本金',
+    body:['这是马克斯最重要的思想之一，也是最被误解的一条。大多数人把"价格波动"等同于"风险"，这导致他们在资产大幅下跌时感到"风险极高"，从而卖出；在资产大幅上涨时感到"风险很低"，从而买入。这是完全颠倒的。',
+          '真正的风险，是在价格被低估时卖出，永久地放弃了未来的价值回归。一个持有BTC并经历-77%回撤但没有卖出的人，他的风险从未真正实现。一个在$60K买入、$20K割肉的人，才是真正承担了永久损失的风险。波动是暂时的，卖出才让亏损变得永久。'],
+    insight:'在每次想要割肉之前，问自己一个问题：这个资产的长期价值判断有没有改变？如果答案是"没有"，那么下跌只是波动，不是风险。只有当你对长期价值的判断发生了根本性改变，才是真正应该离场的理由。',
+    quote:'"风险意味着可能发生坏事。波动提供了买入好资产的机会，而不是真正的风险。"',
+    quoteBy:'— 霍华德·马克斯《最重要的事》',
+    case:'2021年5月，BTC从$64K跌至$28K，跌幅-56%。大量"忍受不了波动"的投资者在$28-35K割肉出局，认为"风险极高"。6个月后，BTC涨至$69K新高。那次-56%的波动，对于没有卖出的人来说，风险从未真正发生。割肉的人，才让风险从"浮亏"变成了"永久损失"。' },
+
+  { icon:'🧭', src:'THE ART OF BUYING · 抄底的艺术 #4', cat:'buy',
+    title:'悲观叙事最盛行时，往往是定价最有利的时刻',
+    body:['马克斯在橡树资本的备忘录中多次提到：市场价格反映的是"共识预期"，而超额收益来自于"你的判断比共识更准确"。当所有人都在说某个资产"没有未来"，当最悲观的叙事主导了市场，这个叙事往往已经被充分定价，有时甚至过度定价了。',
+          'BTC历史上每一次被宣告"死亡"（累计超过480次），都对应着一个买入机会。"监管会杀死BTC"、"量子计算会破解BTC"、"ETF被拒绝BTC完了"——这些叙事在当时看起来无比合理，但事后都成了买入的理由。悲观叙事最有说服力的时候，恰恰是市场为你提供最大安全边际的时候。'],
+    insight:'收集当前市场上最主流的"看空理由"，逐条评估：这些理由是真的改变了BTC的长期价值，还是只是短期情绪放大了恐惧？如果是后者，悲观叙事本身就是你的买入信号。',
+    quote:'"当别人不顾一切地卖出时，你应该检查一下，这究竟是资产失去了价值，还是只是价格暂时失去了理性。"',
+    quoteBy:'— 霍华德·马克斯',
+    case:'2022年11月，FTX崩盘，BTC跌至$15.5K。主流媒体头版充斥"加密货币已死""区块链骗局终结"的声音。那一周是近年最悲观的时刻，也是最好的买入时机。此后14个月，BTC从$15.5K涨至$73K，涨幅370%。最好的买点，总是伴随着最可怕的叙事出现。' },
+
+  { icon:'🌱', src:'THE ART OF BUYING · 抄底的艺术 #5', cat:'buy',
+    title:'子弹是用来射击的——现金储备的最终使命',
+    body:['霍华德·马克斯在2008年金融危机期间，用橡树资本管理的资金大规模买入被低估的信贷资产，获得了职业生涯中最好的回报。他事后总结：能做到这一点，是因为在市场狂热时他们没有把现金全部投出去——他们保留了"子弹"。',
+          '卖出的意义从来不只是"落袋为安"，更重要的是"为抄底储备弹药"。那些在牛市顶部笑着卖出、在熊市底部笑着买入的人，不是因为他们更聪明，而是因为他们更有纪律。卖出给了他们现金，现金给了他们选择，选择给了他们在别人恐惧时贪婪的能力。有子弹，才能扣动扳机。'],
+    insight:'设立"抄底准备金"账户：每次止盈后，把至少30%的收益转入这个专用账户，只用于熊市底部建仓。这笔钱不用于日常消费，不用于其他投资，它只有一个使命：在市场最恐惧的时候出手。',
+    quote:'"在别人贪婪时恐惧，在别人恐惧时贪婪。但要做到这一点，你必须先有钱可用。"',
+    quoteBy:'— 沃伦·巴菲特（改编）· 霍华德·马克斯实践',
+    case:'2020年3月至4月，橡树资本在市场最恐惧时投入约150亿美元购买被抛售的信贷资产，随后获得超额回报。在加密领域，Michael Saylor在2020-2021年用MicroStrategy囤积BTC时，也是在市场相对低迷期分批建仓。他们的共同点：在高点保留了足够的弹药，才能在低点扣动扳机。' },
+
+  // ═══ 卖出的艺术 · 第二辑（#6-10）═══
+  { icon:'🪤', src:'THE ART OF SELLING · 卖出的艺术 #6', cat:'sell',
+    title:'止盈单是你对自己的承诺——设好了就别动',
+    body:['最昂贵的交易习惯之一：在价格接近止盈位时，把止盈单往上移——"再涨一点再卖"。这个动作看起来是在优化收益，本质是在用贪婪覆盖纪律。它的终点几乎总是一样的：价格在更高处反转，止盈单永远没有触发，最终变成了深度套牢。',
+          '止盈单是你在冷静时对自己的承诺。当价格在接近时你想撤单，正是因为市场情绪感染了你——这恰恰是最需要执行的时刻。能触发止盈的市场，一定是情绪高涨的市场，也是最危险的市场。相信你冷静时的判断，不相信你兴奋时的直觉。'],
+    insight:'设置止盈单时，同时在备忘录写下：「不论价格继续上涨到多少，我不修改这个止盈单。」每次感到想要上移时，先读一遍这句话。',
+    quote:'"设好计划，然后执行计划。不要在战场上修改作战方案。"',
+    quoteBy:'— 保罗·都铎·琼斯',
+    case:'2021年4月，BTC触及$64K后回调至$28K。大量在$55K附近设置止盈的交易者，因为"感觉会到$80K"而把止盈上移至$70K+，最终没有触发，随后经历-56%的下跌。止盈单被上移的那一刻，纪律就已经失守。' },
+
+  { icon:'⚡', src:'THE ART OF SELLING · 卖出的艺术 #7', cat:'sell',
+    title:'分批卖出比一次全出更强大——永远不押注完美时机',
+    body:['没有人能精确预测顶部。试图在最高点一次性全部卖出，是一种对自己预测能力的过度自信——这种自信在市场历史上很少被证明是正确的。分批卖出是对不确定性的尊重：你承认自己不知道价格会在哪里见顶，所以你分散在不同价位锁定利润。',
+          '分批卖出的心理优势同样重要：卖出第一批后，即使价格继续涨，你仍然持有仓位；如果价格反转，你已经锁定了部分利润。这种结构让你在任何情况下都不会"全错"，也不会因为"卖飞"而产生极端后悔情绪，从而在下一次做出更冲动的决策。'],
+    insight:'用「三分法」：目标位置分三批卖出。第一批在目标价-15%触发（提前落袋），第二批在目标价触发，第三批设移动止损，让最后一部分追踪趋势。这样不论市场如何走，你都有收获。',
+    quote:'"把鸡蛋放进不同的篮子，同样适用于你的卖出时机。"',
+    quoteBy:'— 经典风险管理原则',
+    case:'2021年，BTC从$30K涨至$69K。在$50K、$60K、$68K各卖出三分之一的交易者，平均成交价约$59K；押注一次性在顶部$69K全出的交易者，因为犹豫错过，最终在$50K以下恐慌离场，远低于分批执行者的均价。分批出，永远优于赌顶部。' },
+
+  { icon:'🧲', src:'THE ART OF SELLING · 卖出的艺术 #8', cat:'sell',
+    title:'「再涨一倍」的幻觉——警惕盈利对判断力的腐蚀',
+    body:['当账户浮盈达到+100%时，大脑会发生一种奇特的变化：它开始用"盈利"来衡量风险，而不是用"本金"。"我用利润在赌，亏了也无所谓"——这个念头是对风险最危险的错误理解。利润一旦进入账户，它就是你的本金，不是赌注。',
+          '盈利越多，「再赚一倍」的幻觉越强烈。这是进化给人类的陷阱：大脑在得到奖励时会产生多巴胺，并驱使你寻找更大的奖励。在交易中，这种机制会让你在最应该减仓的时候加仓，在最需要冷静的时候最为冲动。盈利是你的钱，不是赌场筹码。'],
+    insight:'当账户浮盈超过50%时，强制执行「盈利税」：提取浮盈的20%转为现金或稳定币，放入独立账户。这个动作有两个作用：让你真实感受到利润的价值，同时降低后续的风险敞口。',
+    quote:'"市场会让你在最不应该自信的时候最为自信。"',
+    quoteBy:'— 霍华德·马克斯',
+    case:'2021年，大量在$30K建仓并浮盈100%+的投资者，在$60K附近开始加仓——用「利润」继续押注。随后BTC从$69K跌至$15.5K，不仅归还了所有利润，还亏损了本金。「用利润赌博」的心态，是牛市末期最常见的亏损来源。' },
+
+  { icon:'🚪', src:'THE ART OF SELLING · 卖出的艺术 #9', cat:'sell',
+    title:'减仓是手术，不是逃跑——外科医生式的执行',
+    body:['很多人把「减仓」理解为认输或看空，因此从心理上抗拒。但最顶尖的交易者看待减仓的方式，更像外科医生看待手术：这是一个精确、无情绪、基于规则的操作，目的是维护整体的健康。',
+          '外科医生不会在切除肿瘤时犹豫，因为他们知道这是正确的行动。好的减仓同样如此：当指标触发，当市场过热，当仓位超出风险预算，你的工作不是「再等等看」，而是精确执行已经写好的操作方案。减仓后价格继续涨？那是市场的事，不是你决策的失误。'],
+    insight:'为每个持仓设置「减仓触发清单」，包含至少3个条件：价格触达目标位、MVRV超过3.5、恐贪指数连续5天>80。触发任意2个，无条件减仓至少30%。清单在开仓时写，不在减仓时改。',
+    quote:'"好的交易员和外科医生一样，在操作时没有情绪，只有执行。"',
+    quoteBy:'— 雷·达利欧',
+    case:'2021年底，Glassnode数据显示MVRV达到3.8，链上长期持有者开始大规模向交易所转移BTC（分发信号）。提前设置了「MVRV>3.5触发减仓」规则的交易者，在$55-65K区间完成了减仓。随后BTC见顶$69K后暴跌，他们的减仓均价远优于后来的市价。' },
+
+  { icon:'🎪', src:'THE ART OF SELLING · 卖出的艺术 #10', cat:'sell',
+    title:'媒体狂欢是退场的铃声——最热闹的时刻最危险',
+    body:['每一轮牛市顶部，都有一个共同的特征：主流媒体开始全面、持续、充满溢美之词地报道加密货币。不是币圈媒体，而是CNN、BBC、NYT的头版。当一项资产成为大众话题，它的「潜在新买家」就已经大幅减少——因为所有人都已经知道并讨论过它了。',
+          '媒体报道是一个滞后指标：记者写报道需要时间，编辑审核需要时间，读者形成决策需要时间。当你在报纸头版看到BTC相关报道时，聪明的钱已经在悄悄出货了。媒体狂欢不是上涨的信号，是出货的掩护。这不是阴谋论，这是信息传播速度和市场价格反应速度之间永恒的时差。'],
+    insight:'建立「媒体温度计」：当超过3个非财经主流媒体在同一周用正面方式报道BTC，启动第一批减仓程序，无需等待价格信号。媒体报道是最可靠的顶部领先指标之一。',
+    quote:'"当你在报纸头版看到这条新闻时，为时已晚。"',
+    quoteBy:'— 沃伦·巴菲特（据说）',
+    case:'2021年10月，比特币期货ETF获批，登上几乎所有主流媒体头版，BTC随即触及$67K。2021年11月，NFT和元宇宙在各大媒体铺天盖地，BTC在$69K见顶，随后开始长达一年的下跌。两次媒体狂欢，都精准对应了周期顶部。' },
+
+  // ═══ 抄底的艺术 · 第二辑（#6-10）═══
+  { icon:'🔬', src:'THE ART OF BUYING · 抄底的艺术 #6', cat:'buy',
+    title:'链上数据不会说谎——当矿工在卖，当长期持有者在买',
+    body:['价格是情绪的短期投票，链上数据是资金的长期行为。在市场最恐惧的时刻，价格可以因为恐慌被砸到任意低位；但链上数据会记录谁在真正买入、谁在真正卖出。当「长期持有者」（持币超过155天）开始大规模净买入，而矿工已经完成了抛压，这是最可靠的底部信号之一。',
+          '「哑铃式积累」是聪明钱的典型行为：在极端低位用小仓位试探，在确认企稳后加仓，在第一波反弹时不追涨而是等待第二次回调加仓。他们不在乎买到最低点，他们在乎的是在「合理低位」建立足够大的仓位。链上数据是他们留下的足迹。'],
+    insight:'关注两个链上指标：（1）SOPR（已实现利润/亏损比）持续低于1，说明卖出的人都在亏损——接近底部；（2）交易所净流出持续为正，说明资产在离开交易所被长期持有——积累信号。',
+    quote:'"链上数据是市场的心跳监测仪，比价格图表更诚实。"',
+    quoteBy:'— Willy Woo，链上分析师',
+    case:'2022年11月至12月，FTX崩盘后，链上数据显示长期持有者地址净增持BTC超过40万枚，而交易所BTC余额降至近年最低。价格在$15.5K至$17K区间震荡了近2个月。那段时间入场的人，在2024年BTC触及$73K时获得了超4倍的回报。' },
+
+  { icon:'📉', src:'THE ART OF BUYING · 抄底的艺术 #7', cat:'buy',
+    title:'下跌速度峰值=恐慌峰值=机会峰值',
+    body:['市场底部很少是一个平静的价格区间，它几乎总是伴随着剧烈的下跌速度——在短时间内急速砸出一个「尖底」。这种急速下跌，往往是杠杆爆仓的集中触发：爆仓引发抛售，抛售引发更多爆仓，最终在某个价位把所有「撑不住的人」全部洗出去，然后陷入沉寂。',
+          '这个沉寂期，正是最好的入场时机。但几乎没有人能在那个时刻保持冷静，因为那时的新闻头条、社交媒体、身边的人，都在传递恐惧。买入不需要你预测底部，只需要你能在极端恐惧中保持行动力。下跌速度最快的那几天，是市场清洗杠杆的时刻，不是世界末日。'],
+    insight:'设置「暴跌触发买入清单」：当BTC单日跌幅超过15%或单周跌幅超过30%，自动触发第一笔预设建仓（总子弹的10-15%）。不分析原因，不等待企稳，直接执行。这笔单子可能买在半山腰，但它建立了你的「进场锚点」。',
+    quote:'"当街道上血流成河时买入，哪怕其中一些血是你自己的。"',
+    quoteBy:'— 内森·罗斯柴尔德',
+    case:'2020年3月12日「312暴跌」，BTC在24小时内从$7900跌至$3800，跌幅52%。那一天，合约平台爆仓金额超过10亿美元。大多数人在恐慌中平仓或观望，少数人在$4000-5000区间建仓。18个月后，BTC触及$69000，那一笔买入回报超过15倍。' },
+
+  { icon:'🕰️', src:'THE ART OF BUYING · 抄底的艺术 #8', cat:'buy',
+    title:'时间是底部最好的朋友——不要急于一次性满仓',
+    body:['抄底最常见的错误之一：在第一次大跌后认为「底部到了」，一次性重仓，结果发现后面还有更低的低点。市场底部是一个区域，不是一个精确的价格。在这个区域里，可能要经历多次测试、多次反弹、多次假突破，历时数月甚至一年以上。',
+          '时间维度的分散，和价格维度的分散同样重要。不要在你认为的「底部」一次性投入所有子弹，而是把建仓过程拉长到3-6个月，设定多个价格触发点，让时间帮你平滑成本。你不需要买在最低点，你需要的是在「底部区域」积累到足够多的筹码。'],
+    insight:'用「冰山建仓法」：把总子弹分成10份。第一次暴跌后投入2份，每下跌10%追加1份，每过一个月无论涨跌追加1份。这个方法同时覆盖了价格分散和时间分散，最终成本一定低于大多数入场者。',
+    quote:'"我不知道底部在哪里，但我知道现在足够便宜了。"',
+    quoteBy:'— 霍华德·马克斯，2008年金融危机期间',
+    case:'2018年熊市，BTC从$20K跌至$3K。分批建仓的投资者：在$12K买第一批、在$8K买第二批、在$5K买第三批、在$3.5K买第四批，最终成本约$7K。一次性在$12K满仓的投资者成本是$12K，心理压力极大且难以坚持。分批者不仅成本更低，且更容易持有到2021年$69K。' },
+
+  { icon:'🌡️', src:'THE ART OF BUYING · 抄底的艺术 #9', cat:'buy',
+    title:'用「情绪温度计」定位底部——叙事越绝望越接近机会',
+    body:['熊市底部有一种特殊的叙事氛围，它不是「下跌」，而是「永远不会回来了」。2018年底，主流说法是「区块链是骗局」；2022年底，主流说法是「加密货币监管将扼杀一切」。这种从「行情不好」升级到「这个东西本身有问题」的叙事转变，是接近底部的重要信号。',
+          '当你身边讨论加密货币的人从「什么时候能回本」变成「我再也不碰这东西了」，当你的群里有人愤怒地表示要永久退出，当新闻从价格下跌变成批判加密货币「本质」——这不是行业终结的信号，这是市场极端悲观情绪即将达到峰值的信号。极端的悲观，几乎总是买入的长期窗口。'],
+    insight:'用「身边人情绪法」做定性判断：当你身边3个以上的非专业投资者公开表示「彻底放弃加密货币」，记录这个时间点，从这个时间点起开始分批建仓。不精确，但历史上这个方法从未失灵。',
+    quote:'"悲观情绪的极值，就是乐观预期的起点。"',
+    quoteBy:'— 约翰·邓普顿爵士',
+    case:'2022年11月，FTX创始人SBF被捕，全球主要媒体大篇幅报道「加密货币欺诈」，Twitter上#CryptoDead标签趋势排名第一。恐贪指数跌至5/100（历史极值）。那个月底部建仓者，在接下来18个月经历了BTC从$16K涨至$73K的完整上涨。' },
+
+  { icon:'🏗️', src:'THE ART OF BUYING · 抄底的艺术 #10', cat:'buy',
+    title:'熊市是建仓期，不是反省期——行动比等待更有价值',
+    body:['熊市有一种心理陷阱：因为之前的亏损和错误决策，很多人进入了无休止的「反省模式」——研究为什么亏损，总结哪里错了，感到愧疚和自我怀疑。这种状态消耗了大量精力，却没有带来行动。等到他们终于整理好心情，价格已经涨回去了。',
+          '熊市是建仓期，不是反省期。对过去的分析和总结当然有价值，但它应该在两周内完成，而不是占据整个熊市。你真正需要的行动只有三件事：制定建仓计划、设定触发价格、等待执行。反省是工具，不是状态。越快从反省切换到行动，你就越能利用熊市留给的窗口期。'],
+    insight:'在下一次熊市到来时，给自己设定一个「反省截止日」：从开始亏损起，给自己最多4周时间复盘总结。4周后，无论复盘是否完成，强制切换到「建仓执行模式」。写下你的建仓计划，设好触发价，开始行动。',
+    quote:'"最好的时间是十年前，其次是现在。"',
+    quoteBy:'— 中国谚语',
+    case:'2018年12月至2019年3月，BTC在$3000-4000区间底部震荡长达3个月。大量投资者在这3个月里都在「等待企稳信号」或「分析为什么跌」，没有行动。2019年4月，BTC突破$5000，随后6个月涨至$14000。那3个月的底部窗口，是这轮周期最好的建仓机会，大多数人目送它离开。' }
 ];
 
-const catLabels = { all:'全部', mind:'认知心理', risk:'风险管理', macro:'宏观视角', system:'系统执行', sell:'卖出的艺术' };
+const catLabels = { all:'全部', mind:'认知心理', risk:'风险管理', macro:'宏观视角', system:'系统执行' };
 
 // ══════════════════════════════════════
 // STATE
@@ -2051,12 +1960,11 @@ function renderList() {
   list.innerHTML = filtered.map(function(x){
     var num = String(x.i+1).padStart(2,'0');
     var isRead = readSet.has(x.i);
-    var isSell = x.d.cat === 'sell';
-    return '<div class="wisdom-row'+(isRead?' read':'')+(isSell?' cat-sell':'')+'" onclick="openSheet('+x.i+')">' +
+    return '<div class="wisdom-row'+(isRead?' read':'')+'" onclick="openSheet('+x.i+')">' +
       '<div class="wr-num">'+num+'</div>' +
       '<div class="wr-icon">'+x.d.icon+'</div>' +
-      '<div class="wr-body"><div class="wr-title">'+x.d.title+'</div><div class="wr-src"'+(isSell?' style="color:var(--amber)"':'')+'>'+x.d.src.split(' · ')[0]+'</div></div>' +
-      (isRead ? '<div class="wr-badge done">已读</div>' : (isSell ? '<div class="wr-badge new" style="border-color:var(--amber);color:var(--amber);background:var(--amber-bg)">核心</div>' : '')) +
+      '<div class="wr-body"><div class="wr-title">'+x.d.title+'</div><div class="wr-src">'+x.d.src.split(' · ')[0]+'</div></div>' +
+      (isRead ? '<div class="wr-badge done">已读</div>' : '') +
       '<div class="wr-arrow">›</div>' +
       '</div>';
   }).join('');
@@ -2071,15 +1979,7 @@ function updateProgress() {
 function filterCat(cat, btn) {
   currentCat = cat;
   document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
-  if(btn) {
-    btn.classList.add('active');
-  } else {
-    // called from drawer — find matching tab and activate it
-    document.querySelectorAll('.cat-tab').forEach(function(t){
-      var tc = t.getAttribute('onclick') || '';
-      if(tc.indexOf("'"+cat+"'") > -1) t.classList.add('active');
-    });
-  }
+  if(btn) btn.classList.add('active');
   renderList();
 }
 
@@ -2093,25 +1993,16 @@ function openSheet(idx) {
   currentSheetIdx = idx;
   var d = wisdomData[idx];
 
-  // 头部
+  // 编号
   document.getElementById('wsNum').textContent = 'WISDOM · ' + String(idx+1).padStart(2,'0') + ' / ' + wisdomData.length;
 
-  // 进度点（最多显示9个邻近的）
-  var dots = document.getElementById('wsProgressDots');
-  var total = wisdomData.length;
-  var start = Math.max(0, Math.min(idx - 4, total - 9));
-  var end   = Math.min(total, start + 9);
-  dots.innerHTML = '';
-  for (var i = start; i < end; i++) {
-    var dot = document.createElement('div');
-    dot.className = 'ws-dot' + (i === idx ? ' active' : (readSet.has(i) ? ' read' : ''));
-    dots.appendChild(dot);
-  }
-
-  // 分类
+  // 分类标签
   var catEl = document.getElementById('wsCat');
-  catEl.textContent = catLabels[d.cat] || d.cat;
-  catEl.className = 'ws-category' + (d.cat === 'sell' ? ' cat-sell' : '');
+  if (catEl) {
+    catEl.textContent = catLabels[d.cat] || d.cat;
+    catEl.className = 'ws-category' +
+      (d.cat === 'sell' ? ' cat-sell' : d.cat === 'buy' ? ' cat-buy' : '');
+  }
 
   // 图标 & 标题
   document.getElementById('wsIcon').textContent = d.icon;
@@ -2120,153 +2011,60 @@ function openSheet(idx) {
   // 正文
   document.getElementById('wsBody').innerHTML = d.body.map(function(p){ return '<p>'+p+'</p>'; }).join('');
 
-  // 引言（放在正文后）
-  var qBox = document.getElementById('wsQuoteBox');
-  if (d.quote) {
-    document.getElementById('wsQuoteText').textContent = d.quote;
-    document.getElementById('wsQuoteBy').textContent = d.quoteBy || '';
-    qBox.style.display = '';
-  } else { qBox.style.display = 'none'; }
-
   // 交易启示
   document.getElementById('wsInsight').textContent = d.insight;
-  var insightBox = document.getElementById('wsInsightBox');
-  insightBox.className = 'ws-insight' + (d.cat === 'sell' ? ' cat-sell' : '');
+  var insightWrap = document.querySelector('.ws-insight');
+  if (insightWrap) insightWrap.className = 'ws-insight' + (d.cat === 'sell' ? ' cat-sell' : '');
+
+  // 引言
+  var qBox = document.getElementById('wsQuoteBox');
+  if (qBox) {
+    if (d.quote) {
+      document.getElementById('wsQuoteText').textContent = d.quote;
+      document.getElementById('wsQuoteBy').textContent = d.quoteBy || '';
+      qBox.style.display = '';
+    } else {
+      qBox.style.display = 'none';
+    }
+  }
 
   // 经典案例
   var cBox = document.getElementById('wsCaseBox');
-  if (d.case) {
-    document.getElementById('wsCaseText').textContent = d.case;
-    cBox.style.display = '';
-  } else { cBox.style.display = 'none'; }
+  if (cBox) {
+    if (d.case) {
+      document.getElementById('wsCaseText').textContent = d.case;
+      cBox.style.display = '';
+    } else {
+      cBox.style.display = 'none';
+    }
+  }
 
-  // 阅读提示
-  var hint = document.getElementById('wsReadHint');
-  hint.textContent = readSet.has(idx) ? '✓ 已标记为已读' : '向上滑动阅读全文 · 读完后标记已读';
-
-  // 上下导航按钮
+  // 导航按钮
   var markBtn = document.getElementById('wsMark');
   markBtn.textContent = readSet.has(idx) ? '✓ 已标记' : '标记已读';
   markBtn.className = 'ws-mark-btn' + (readSet.has(idx) ? ' done' : '');
   document.getElementById('wsPrev').disabled = idx === 0;
   document.getElementById('wsNext').disabled = idx === wisdomData.length - 1;
 
-  // 打开
+  // 打开面板，滚回顶部
   document.getElementById('wSheet').classList.add('open');
   document.body.style.overflow = 'hidden';
-  // 回到顶部
-  document.querySelector('.ws-scroll').scrollTop = 0;
+  var scroll = document.querySelector('.ws-scroll');
+  if (scroll) scroll.scrollTop = 0;
 }
 
 function closeSheetBg(e) {
   if(e.target===document.getElementById('wSheet')||e.target===document.querySelector('.ws-bg')) closeSheet();
 }
 function closeSheet() {
-  var sheet = document.getElementById('wSheet');
-  sheet.classList.remove('open');
+  document.getElementById('wSheet').classList.remove('open');
   document.body.style.overflow = '';
-  // 确保 panel transform 被重置
-  var panel = document.querySelector('.ws-panel');
-  if(panel) { panel.style.transform = ''; panel.style.transition = ''; }
-  var bg = document.querySelector('.ws-bg');
-  if(bg) bg.style.opacity = '';
 }
 
 function navSheet(dir) {
   var next = currentSheetIdx + dir;
   if(next >= 0 && next < wisdomData.length) openSheet(next);
 }
-
-// ══════════════════════════════════════
-// SWIPE DOWN TO DISMISS — ws-panel
-// ══════════════════════════════════════
-(function() {
-  var panel, scroll;
-  var startY = 0, startScrollTop = 0;
-  var isDragging = false, isScrollIntent = null;
-  var currentY = 0;
-
-  function onTouchStart(e) {
-    panel  = document.querySelector('.ws-panel');
-    scroll = document.querySelector('.ws-scroll');
-    if (!panel || !document.getElementById('wSheet').classList.contains('open')) return;
-    var t = e.touches[0];
-    startY         = t.clientY;
-    startScrollTop = scroll.scrollTop;
-    isDragging     = false;
-    isScrollIntent = null;
-    currentY       = 0;
-    panel.style.transition = 'none';
-  }
-
-  function onTouchMove(e) {
-    panel  = document.querySelector('.ws-panel');
-    scroll = document.querySelector('.ws-scroll');
-    if (!panel || !document.getElementById('wSheet').classList.contains('open')) return;
-    var t   = e.touches[0];
-    var dy  = t.clientY - startY;  // positive = finger moving down
-
-    // 第一次 move：判断用户意图（滚动 vs 拖拽面板）
-    if (isScrollIntent === null) {
-      if (Math.abs(dy) < 6) return; // 未明确方向，等待
-      // 如果内容未到顶，且手指向下 → 先让内容滚动
-      if (startScrollTop > 0) {
-        isScrollIntent = true;
-      } else if (dy > 0) {
-        // 内容已在顶部 + 手指向下 → 拖拽关闭
-        isScrollIntent = false;
-      } else {
-        isScrollIntent = true; // 向上滑 → 滚动内容
-      }
-    }
-
-    if (isScrollIntent) return; // 交给浏览器原生滚动
-
-    // 拖拽关闭模式
-    if (dy <= 0) {
-      panel.style.transform = 'translateY(0)'; // 不允许向上拖
-      return;
-    }
-    isDragging = true;
-    currentY   = dy;
-    panel.style.transform = 'translateY(' + dy + 'px)';
-
-    // 拖拽时背景渐出
-    var bg = document.querySelector('.ws-bg');
-    if (bg) bg.style.opacity = Math.max(0, 1 - dy / 320);
-
-    e.preventDefault(); // 阻止页面滚动
-  }
-
-  function onTouchEnd() {
-    panel  = document.querySelector('.ws-panel');
-    scroll = document.querySelector('.ws-scroll');
-    if (!panel) return;
-    panel.style.transition = ''; // 恢复动画
-
-    var bg = document.querySelector('.ws-bg');
-    if (bg) bg.style.opacity = '';
-
-    if (isDragging && currentY > 100) {
-      // 超过阈值 → 关闭
-      panel.style.transform = 'translateY(100%)';
-      panel.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-      setTimeout(function() {
-        closeSheet();
-        panel.style.transform = '';
-        panel.style.transition = '';
-      }, 280);
-    } else {
-      // 未超过阈值 → 弹回
-      panel.style.transform = 'translateY(0)';
-    }
-    isDragging = false; isScrollIntent = null; currentY = 0;
-  }
-
-  document.addEventListener('touchstart',  onTouchStart, { passive: true });
-  document.addEventListener('touchmove',   onTouchMove,  { passive: false });
-  document.addEventListener('touchend',    onTouchEnd,   { passive: true });
-})();
 
 function markRead() {
   if(readSet.has(currentSheetIdx)) {
@@ -2277,26 +2075,9 @@ function markRead() {
   }
   updateProgress();
   renderList();
-  var isRead = readSet.has(currentSheetIdx);
   var markBtn = document.getElementById('wsMark');
-  markBtn.textContent = isRead ? '✓ 已标记' : '标记已读';
-  markBtn.className = 'ws-mark-btn' + (isRead ? ' done' : '');
-  var hint = document.getElementById('wsReadHint');
-  if(hint) hint.textContent = isRead ? '✓ 已标记为已读' : '向上滑动阅读全文 · 读完后标记已读';
-  // refresh progress dots
-  var dots = document.getElementById('wsProgressDots');
-  if(dots) {
-    var total = wisdomData.length;
-    var idx = currentSheetIdx;
-    var start = Math.max(0, Math.min(idx - 4, total - 9));
-    var end   = Math.min(total, start + 9);
-    dots.innerHTML = '';
-    for(var i = start; i < end; i++) {
-      var dot = document.createElement('div');
-      dot.className = 'ws-dot' + (i === idx ? ' active' : (readSet.has(i) ? ' read' : ''));
-      dots.appendChild(dot);
-    }
-  }
+  markBtn.textContent = readSet.has(currentSheetIdx) ? '✓ 已标记' : '标记已读';
+  markBtn.className = 'ws-mark-btn' + (readSet.has(currentSheetIdx) ? ' done' : '');
 }
 
 // ══════════════════════════════════════
@@ -2560,7 +2341,6 @@ var _origMarkRead = markRead;
 markRead = function() { _origMarkRead(); saveState(); };
 
 // patch addLog to save
-var currentEmoScore = 5;
 var _origAddLog = addLog;
 addLog = function() {
   var prevCount = savedLogs.length;
@@ -2579,6 +2359,7 @@ addLog = function() {
 // ══════════════════════════════════════
 // JOURNAL STATS
 // ══════════════════════════════════════
+var currentEmoScore = 5;
 function updateJStats() {
   var total = savedLogs.length;
   var buy   = savedLogs.filter(function(l){ return l.type==='buy'; }).length;
@@ -2671,65 +2452,172 @@ function evalCycle() {
     result.innerHTML = '❄️ <strong>积累期（冬/春）</strong><br>历史最佳买入区域。低估值+高恐惧 = 极端风险溢价。建议：分批建仓，长期持有，设定最大亏损线，耐心等待。心法①⑦⑬';
   }
 }
+
+
 // ══════════════════════════════════════
-// PWA — Service Worker 注册
+// catLabels 扩展（支持 sell / buy）
+// ══════════════════════════════════════
+var catLabelsExtra = { sell:'卖出的艺术', buy:'抄底的艺术' };
+
+// ══════════════════════════════════════
+// renderList 扩展：支持 buy 分类
+// ══════════════════════════════════════
+renderList = function() {
+  var list = document.getElementById('wisdomList');
+  var filtered = wisdomData.map(function(d,i){ return {d:d,i:i}; }).filter(function(x){
+    return currentCat === 'all' || x.d.cat === currentCat;
+  });
+  list.innerHTML = filtered.map(function(x){
+    var num = String(x.i+1).padStart(2,'0');
+    var isRead = readSet.has(x.i);
+    var isSell = x.d.cat === 'sell';
+    var isBuy  = x.d.cat === 'buy';
+    var accent = isSell ? 'var(--amber)' : isBuy ? 'var(--sage)' : null;
+    return '<div class="wisdom-row'+(isRead?' read':'')+(isSell?' cat-sell':isBuy?' cat-buy':'')+'" onclick="openSheet('+x.i+')">' +
+      '<div class="wr-num">'+num+'</div>' +
+      '<div class="wr-icon">'+x.d.icon+'</div>' +
+      '<div class="wr-body"><div class="wr-title">'+x.d.title+'</div><div class="wr-src"'+(accent?' style="color:'+accent+'"':'')+'>'+x.d.src.split(' · ')[0]+'</div></div>' +
+      (isRead ? '<div class="wr-badge done">已读</div>' : '') +
+      '<div class="wr-arrow">›</div>' +
+      '</div>';
+  }).join('');
+};
+
+// ══════════════════════════════════════
+// filterCat 扩展：支持 buy
+// ══════════════════════════════════════
+var _origFilterCat = filterCat;
+filterCat = function(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (btn) {
+    btn.classList.add('active');
+  }
+  renderList();
+};
+
+// ══════════════════════════════════════
+// 实时指标（Binance + alternative.me + Deribit）
+// 1小时缓存
+// ══════════════════════════════════════
+var METRICS_KEY = 'bmcs_metrics_v3';
+var METRICS_TTL = 60 * 60 * 1000;
+
+function setMEl(id, text, color) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  if (color) el.style.color = color;
+}
+
+function renderMetrics(d) {
+  // 首页快照
+  var btcC = d.btcChg >= 0 ? 'var(--sage)' : 'var(--red)';
+  var priceStr = d.btcPrice >= 100000 ? '$'+(d.btcPrice/1000).toFixed(1)+'K' : '$'+Math.round(d.btcPrice).toLocaleString('en-US');
+  setMEl('snapBtcPrice', priceStr, 'var(--text2)');
+  setMEl('snapBtcChg', (d.btcChg>=0?'+':'')+d.btcChg.toFixed(2)+'%', btcC);
+  var fg = d.fearGreed;
+  var fgC = fg<=25?'var(--sage)':fg<=50?'var(--ice)':fg<=75?'var(--gold)':'var(--red)';
+  var fgS = fg<=20?'极度恐惧':fg<=40?'恐惧':fg<=60?'中性':fg<=80?'贪婪':'极度贪婪';
+  setMEl('snapFgVal', fg, fgC);
+  setMEl('snapFgLbl', fgS, fgC);
+  var dvolC = d.dvol<45?'var(--sage)':d.dvol<60?'var(--gold)':'var(--red)';
+  setMEl('snapDvol', d.dvol.toFixed(0), dvolC);
+  setMEl('snapDvolLbl', d.dvol>=60?'高波动':d.dvol>=45?'中等':'低波动', dvolC);
+  var n = document.getElementById('snapFgNeedle');
+  if (n) n.style.left = 'calc('+fg+'% - 1.5px)';
+  var st = document.getElementById('snapTime');
+  if (st) st.textContent = d.updatedAt + (d.fromCache?' · 缓存':' · 实时') + ' →';
+
+  // 历史页指标
+  setMEl('mBtcVal', priceStr, 'var(--text2)');
+  setMEl('mBtcChg', (d.btcChg>=0?'+':'')+d.btcChg.toFixed(2)+'% 24h', btcC);
+  setMEl('mBtcTime', d.updatedAt);
+  setMEl('mFgVal', fg+' / 100', fgC);
+  setMEl('mFgLbl', fg<=20?'极度恐惧 ← 买入区':fg<=40?'恐惧':fg<=60?'中性':fg<=80?'贪婪 ⚠':'极度贪婪 ← 减仓区', fgC);
+  var fr = d.fundingRate;
+  var frC = Math.abs(fr)<0.0005?'var(--sage)':Math.abs(fr)<0.001?'var(--gold)':'var(--red)';
+  setMEl('mFrVal', (fr>=0?'+':'')+(fr*100).toFixed(4)+'%', frC);
+  setMEl('mFrLbl', fr>0.001?'过热 ⚠':fr<-0.001?'恐慌':'中性', frC);
+  setMEl('mDvolVal', d.dvol.toFixed(1), dvolC);
+  setMEl('mDvolLbl', d.dvol>=60?'高波动 · 卖权时机 ✓':d.dvol>=45?'中等波动':'低波动 · 买权时机', dvolC);
+  var mvrv = d.mvrv;
+  var mvrvC = mvrv<1.5?'var(--sage)':mvrv<2.5?'var(--ice)':mvrv<3.5?'var(--gold)':'var(--red)';
+  setMEl('mMvrvVal', mvrv.toFixed(2), mvrvC);
+  setMEl('mMvrvLbl', mvrv<1?'极度低估':mvrv<2.5?'合理区间':mvrv<3.5?'高估 · 注意':'极度高估 ← 减仓区', mvrvC);
+  var tu = document.getElementById('metricsUpdatedAt');
+  if (tu) tu.textContent = '更新于 '+d.updatedAt+(d.fromCache?' · 缓存':' · 实时');
+}
+
+async function fetchMetrics(force) {
+  if (!force) {
+    try {
+      var c = JSON.parse(localStorage.getItem(METRICS_KEY)||'null');
+      if (c && Date.now()-c.ts < METRICS_TTL) { c.fromCache=true; renderMetrics(c); return; }
+    } catch(e){}
+  }
+  var d = { ts:Date.now(), fromCache:false };
+  try {
+    var rs = await Promise.allSettled([
+      fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(function(r){return r.json();}),
+      fetch('https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1').then(function(r){return r.json();})
+    ]);
+    if (rs[0].status==='fulfilled') { d.btcPrice=parseFloat(rs[0].value.lastPrice); d.btcChg=parseFloat(rs[0].value.priceChangePercent); }
+    else { d.btcPrice=0; d.btcChg=0; }
+    d.fundingRate = rs[1].status==='fulfilled' ? parseFloat(rs[1].value[0].fundingRate) : 0;
+  } catch(e){ d.btcPrice=0; d.btcChg=0; d.fundingRate=0; }
+  try {
+    var fg = await fetch('https://api.alternative.me/fng/?limit=1').then(function(r){return r.json();});
+    d.fearGreed = parseInt(fg.data[0].value);
+  } catch(e){ d.fearGreed=50; }
+  try {
+    var ts = Date.now();
+    var dv = await fetch('https://www.deribit.com/api/v2/public/get_volatility_index_data?currency=BTC&start_timestamp='+(ts-3600000)+'&end_timestamp='+ts+'&resolution=3600').then(function(r){return r.json();});
+    var rows = dv.result && dv.result.data;
+    d.dvol = rows && rows.length ? rows[rows.length-1][4] : 60;
+  } catch(e){ d.dvol=60; }
+  try {
+    var kl = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=200').then(function(r){return r.json();});
+    var ma = kl.map(function(k){return parseFloat(k[4]);}).reduce(function(a,b){return a+b;},0)/kl.length;
+    d.mvrv = Math.max(0.5, Math.min(5, (d.btcPrice/ma)*1.6));
+  } catch(e){ d.mvrv=2.0; }
+  var now = new Date();
+  d.updatedAt = (now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  try { localStorage.setItem(METRICS_KEY, JSON.stringify(d)); } catch(e){}
+  renderMetrics(d);
+}
+
+// 切换到历史页自动加载
+var _origGoTabM = goTab;
+goTab = function(n, btn) {
+  _origGoTabM(n, btn);
+  if (n === 2) fetchMetrics(false);
+};
+
+// 启动时加载（驱动首页快照）
+fetchMetrics(false);
+
+// ══════════════════════════════════════
+// PWA — Service Worker
 // ══════════════════════════════════════
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js', { scope: './' })
-      .then(function(reg) {
-        console.log('[BMCS] SW 已注册:', reg.scope);
-      })
-      .catch(function(err) {
-        console.warn('[BMCS] SW 注册失败:', err);
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(function(reg){
+        console.log('[BMCS] SW:', reg.scope);
+        reg.addEventListener('updatefound', function(){
+          var w = reg.installing;
+          w.addEventListener('statechange', function(){
+            if (w.state==='installed' && navigator.serviceWorker.controller)
+              window.location.reload();
+          });
+        });
       });
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      window.location.reload();
+    });
   });
 }
-
-// ══════════════════════════════════════
-// iPhone PWA — 键盘 & 滚动修复
-// ══════════════════════════════════════
-(function() {
-  // 1. 输入框 focus 时，防止页面被键盘顶出视口
-  document.addEventListener('focusin', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-      // 延迟等键盘完全弹出
-      setTimeout(function() {
-        e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350);
-    }
-  });
-
-  // 2. 输入框失焦时，恢复滚动位置（防止 iOS 留白）
-  document.addEventListener('focusout', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-      setTimeout(function() {
-        window.scrollTo({ top: window.scrollY, behavior: 'instant' });
-      }, 100);
-    }
-  });
-
-  // 3. 防止双击缩放（PWA 模式下仍可能触发）
-  var lastTap = 0;
-  document.addEventListener('touchend', function(e) {
-    var now = Date.now();
-    if (now - lastTap < 300) {
-      // 只在非输入区域阻止双击缩放
-      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        e.preventDefault();
-      }
-    }
-    lastTap = now;
-  }, { passive: false });
-
-  // 4. 橡皮筋效果（bounce scroll）控制
-  // 只在 body 层面阻止过度滚动，不影响内部滚动容器
-  document.body.addEventListener('touchmove', function(e) {
-    if (e.target === document.body || e.target === document.documentElement) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-})();
 </script>
 </body>
 </html>
