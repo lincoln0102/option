@@ -735,12 +735,110 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   .wisdom-row { padding: 18px 20px; }
   .sec { padding: 20px 24px 0; }
 }
+/* ════════════════════════════════════════
+   宽屏布局 Mac Chrome / iPad 横屏
+   左侧 260px 导航 + 右侧内容区自适应
+════════════════════════════════════════ */
 @media (min-width: 900px) {
-  body { max-width: 780px; margin: 0 auto; }
-  .tab-bar { max-width: 780px; left: 50%; transform: translateX(-50%); }
-  .panic-fab { right: calc(50% - 390px + 16px); }
-  .topbar { max-width: 780px; left: 50%; transform: translateX(-50%); }
-  #drawer .drawer-panel { width: 280px; }
+
+  html { background: var(--bg); }
+
+  body {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+    padding-bottom: 0 !important;
+    align-items: start;
+  }
+
+  /* topbar 横跨两列 */
+  .topbar {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-width: none !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    padding: 0 20px;
+  }
+
+  /* 侧边栏常驻左列 */
+  #drawer {
+    grid-column: 1;
+    grid-row: 2;
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px);
+    pointer-events: all !important;
+    opacity: 1 !important;
+    display: block !important;
+    z-index: 10;
+  }
+  #drawer .drawer-bg { display: none !important; }
+  #drawer .drawer-panel {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    border-right: 1px solid var(--line) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow-y: auto;
+  }
+
+  /* 汉堡菜单隐藏 */
+  .tb-menu-btn { display: none !important; }
+
+  /* 内容区在右列 */
+  .page { grid-column: 2; grid-row: 2; }
+
+  /* 底部 tab-bar 隐藏 */
+  .tab-bar { display: none !important; }
+
+  /* panic-fab */
+  .panic-fab { bottom: 24px; right: 24px; }
+
+  /* Bottom sheets 向右偏移侧边栏宽度 */
+  #wSheet, #ftPullupSheet, #ftDeskSheet, #ftBreathSheet {
+    left: 260px !important;
+  }
+  #coolOverlay { left: 260px !important; }
+
+  /* 登录浮层覆盖整个视口（不偏移）*/
+  #fbAuthOverlay {
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+  }
+
+  /* 用户菜单位置 */
+  #fbUserMenu { right: 20px; top: 58px; }
+
+  /* 侧边栏 drawer 宽度 */
+  #drawer .drawer-panel { width: 260px; }
+}
+
+/* ════════ 超宽屏 1400px+ ════════ */
+@media (min-width: 1400px) {
+  body { max-width: 1440px; }
+}
+
+/* ════════ 小屏手机 374px 以下 ════════ */
+@media (max-width: 374px) {
+  .hh-title { font-size: 34px; }
+  .tab-label { font-size: 9px; letter-spacing: 0; }
+  .home-hero { padding: 18px 14px 14px; }
+}
+
+/* ════════ iPhone 横屏 ════════ */
+@media (max-height: 500px) and (orientation: landscape) {
+  body { padding-bottom: 52px; }
+  .tab-bar { padding-bottom: 0; }
+  .hh-title { font-size: 28px; }
 }
 
 /* ════════════════════════════════════════
@@ -942,6 +1040,40 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 .co-breath-phase {
   font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 2px;
 }
+
+/* ════════════════════════════════════════
+   宽屏视觉优化补充
+════════════════════════════════════════ */
+@media (min-width: 900px) {
+
+  /* 内容区左侧边界线 */
+  .page { border-left: 1px solid var(--line); min-height: calc(100vh - 52px); }
+
+  /* 首页标题宽屏放大 */
+  .hh-title { font-size: 52px; }
+  .home-hero { padding: 36px 32px 28px; }
+  .hh-deco { font-size: 120px; opacity: .04; }
+
+  /* 侧边栏导航项 */
+  .drawer-item { min-height: 46px; }
+  .drawer-brand { font-size: 17px; }
+
+  /* 工具页信号网格宽屏4列 */
+  .sig-grid { grid-template-columns: repeat(4,1fr) !important; }
+
+  /* drawer 在宽屏不需要 open 动画，直接显示 */
+  #drawer { transition: none !important; }
+
+  /* 宽屏下心法列表更宽 */
+  .wisdom-list { padding: 14px 24px 0; }
+  .wisdom-row { padding: 16px 20px; }
+
+  /* 宽屏下所有 sheet 面板最大宽度 */
+  #wSheet .ws-panel { max-width: 720px; }
+  #ftPullupSheet > div:last-child,
+  #ftDeskSheet > div:last-child,
+  #ftBreathSheet > div:last-child { max-width: 720px; }
+}
 </style>
 
 <!-- ═══ FIREBASE SDK ═══ -->
@@ -1121,6 +1253,12 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
       <div class="di-num">💪</div>
       <div class="di-label">交易者体能</div>
       <div class="di-tag" style="background:rgba(67,217,173,.12);color:var(--mint);border:1px solid rgba(67,217,173,.3)">体能</div>
+    </div>
+    <div class="drawer-section-label" style="margin-top:8px;">扩展模块</div>
+    <div class="drawer-item" id="drawerFitness" onclick="goTab(4,document.getElementById('tabFitness'));closeDrawer()">
+      <div class="di-num" style="color:var(--mint)">💪</div>
+      <div class="di-label">交易者体能</div>
+      <div class="di-tag" style="background:rgba(67,217,173,.1);color:var(--mint);border:1px solid rgba(67,217,173,.3)">体能</div>
     </div>
     <div class="drawer-section-label" style="margin-top:8px;">心法分类</div>
     <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">20</div><div class="di-label">全部心法</div></div>
@@ -2410,15 +2548,38 @@ setInterval(function(){ setHeat(heat + (Math.random()-.47)*1.5); }, 3000);
 // ══════════════════════════════════════
 var tabs = document.querySelectorAll('.tab');
 function goTab(n, btn) {
+  // 切换页面
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
-  document.getElementById('pg'+n).classList.add('active');
-  tabs.forEach(function(t){ t.classList.remove('active'); });
-  (btn || tabs[n]).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  var pg = document.getElementById('pg'+n);
+  if (pg) pg.classList.add('active');
+  // 底部 tab 高亮（手机端）
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var allTabs = document.querySelectorAll('.tab');
+  var activeTab = (btn && btn.classList && btn.classList.contains('tab')) ? btn : allTabs[n];
+  if (activeTab) activeTab.classList.add('active');
+  // 宽屏侧边栏高亮
+  document.querySelectorAll('.drawer-item').forEach(function(d){ d.classList.remove('active'); });
+  var drawerItems = document.querySelectorAll('.drawer-item');
+  if (n >= 0 && n <= 3 && drawerItems[n]) {
+    drawerItems[n].classList.add('active');
+  } else if (n === 4) {
+    var fi = document.getElementById('drawerFitness');
+    if (fi) fi.classList.add('active');
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
 }
-function toggleDrawer() { document.getElementById('drawer').classList.toggle('open'); }
-function closeDrawer()   { document.getElementById('drawer').classList.remove('open'); }
-function closeDrawerOnBg(e) { if(e.target===document.getElementById('drawer')||e.target===document.querySelector('.drawer-bg')) closeDrawer(); }
+function toggleDrawer() {
+  if (window.innerWidth >= 900) return;
+  document.getElementById('drawer').classList.toggle('open');
+}
+function closeDrawer() {
+  if (window.innerWidth >= 900) return;
+  document.getElementById('drawer').classList.remove('open');
+}
+function closeDrawerOnBg(e) {
+  if (window.innerWidth >= 900) return;
+  if(e.target===document.getElementById('drawer')||e.target===document.querySelector('.drawer-bg')) closeDrawer();
+}
 
 // ══════════════════════════════════════
 // WISDOM LIST RENDER
