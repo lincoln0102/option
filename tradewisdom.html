@@ -943,8 +943,139 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 2px;
 }
 </style>
+
+<!-- ═══ FIREBASE SDK ═══ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<style>
+/* ── Firebase 登录浮层 ── */
+#fbAuthOverlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(5,8,15,.96); backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; transition: opacity .3s;
+}
+#fbAuthOverlay.hidden { opacity: 0; pointer-events: none; }
+.fb-auth-card {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 20px; padding: 32px 28px; width: 100%;
+  max-width: 360px; text-align: center;
+}
+.fb-auth-logo { font-size: 44px; margin-bottom: 12px; }
+.fb-auth-title { font-family: var(--sans); font-size: 22px; font-weight: 800; color: var(--text2); margin-bottom: 6px; }
+.fb-auth-sub { font-size: 13px; color: var(--dim); line-height: 1.7; margin-bottom: 24px; }
+.fb-google-btn {
+  width: 100%; padding: 14px; border-radius: 12px;
+  border: 1.5px solid var(--line2); background: var(--card);
+  color: var(--text2); font-family: var(--sans); font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 10px; transition: all .2s; margin-bottom: 12px;
+}
+.fb-google-btn:hover { border-color: var(--gold); background: var(--card2); }
+.fb-google-btn:active { transform: scale(.97); }
+.fb-google-icon { width: 20px; height: 20px; flex-shrink: 0; }
+.fb-divider { display: flex; align-items: center; gap: 10px; margin: 4px 0 16px; }
+.fb-divider::before, .fb-divider::after { content:''; flex:1; height:1px; background:var(--line); }
+.fb-divider span { font-size: 12px; color: var(--muted); }
+.fb-email-input {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--line2); background: var(--bg);
+  color: var(--text2); font-family: var(--sans); font-size: 14px;
+  margin-bottom: 10px; outline: none; transition: border-color .2s;
+  -webkit-appearance: none;
+}
+.fb-email-input:focus { border-color: var(--gold); }
+.fb-email-btn {
+  width: 100%; padding: 13px; border-radius: 10px;
+  border: none; background: var(--gold); color: #0d1117;
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .2s; margin-bottom: 8px;
+}
+.fb-email-btn:hover { opacity: .9; }
+.fb-email-btn:active { transform: scale(.97); }
+.fb-auth-msg { font-size: 12px; color: var(--mint); min-height: 18px; margin-top: 4px; }
+.fb-auth-err { color: var(--red); }
+.fb-skip { font-size: 12px; color: var(--muted); margin-top: 14px; cursor: pointer; text-decoration: underline; }
+.fb-skip:hover { color: var(--dim); }
+
+/* ── 顶栏用户信息 ── */
+.tb-user {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 20px; padding: 4px 10px 4px 6px;
+  cursor: pointer; transition: border-color .2s;
+}
+.tb-user:hover { border-color: var(--gold); }
+.tb-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--gold-bg); border: 1px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: var(--gold); flex-shrink: 0;
+  overflow: hidden;
+}
+.tb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.tb-uname { font-family: var(--mono); font-size: 11px; color: var(--dim); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); flex-shrink: 0; }
+.tb-sync-dot.syncing { background: var(--gold); animation: pulse 1s infinite; }
+
+/* 用户菜单弹出 */
+#fbUserMenu {
+  position: fixed; top: 58px; right: 12px; z-index: 700;
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 8px 0; min-width: 180px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  display: none;
+}
+#fbUserMenu.show { display: block; animation: fadeUp .2s ease; }
+.fbm-item {
+  padding: 11px 16px; font-size: 13px; color: var(--dim);
+  cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: 10px;
+}
+.fbm-item:hover { background: var(--card); color: var(--text); }
+.fbm-item.danger { color: var(--red); }
+.fbm-email { padding: 10px 16px 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+</style>
 </head>
 <body>
+
+
+<!-- ═══ FIREBASE 登录浮层 ═══ -->
+<div id="fbAuthOverlay">
+  <div class="fb-auth-card">
+    <div class="fb-auth-logo">📖</div>
+    <div class="fb-auth-title">牛市冷却系统</div>
+    <div class="fb-auth-sub">登录后，你的心法进度、交易日志和体能记录将跨设备同步保存。</div>
+
+    <!-- Google 登录 -->
+    <button class="fb-google-btn" onclick="fbSignInGoogle()">
+      <svg class="fb-google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      使用 Google 账号登录
+    </button>
+
+    <div class="fb-divider"><span>或用邮箱</span></div>
+
+    <input class="fb-email-input" id="fbEmail" type="email" placeholder="输入邮箱地址" autocomplete="email">
+    <input class="fb-email-input" id="fbPassword" type="password" placeholder="输入密码（6位以上）" autocomplete="current-password">
+    <button class="fb-email-btn" onclick="fbSignInEmail()">登录 / 注册</button>
+    <div class="fb-auth-msg" id="fbAuthMsg"></div>
+
+    <div class="fb-skip" onclick="fbSkipAuth()">暂时跳过，不同步数据</div>
+  </div>
+</div>
+
+<!-- 用户菜单 -->
+<div id="fbUserMenu">
+  <div class="fbm-email" id="fbmEmail">未登录</div>
+  <div class="fbm-item" onclick="fbExportData()">⬇ 导出所有数据</div>
+  <div class="fbm-item danger" onclick="fbSignOut()">退出登录</div>
+</div>
 
 <div class="light l1"></div>
 <div class="light l2"></div>
@@ -956,6 +1087,11 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   <div class="tb-heat">
     <div class="tb-bar"><div class="tb-fill" id="tbFill"></div></div>
     <div class="tb-val" id="tbVal">--</div>
+  </div>
+  <div class="tb-user" id="tbUser" onclick="fbToggleUserMenu()" style="display:none">
+    <div class="tb-avatar" id="tbAvatar">?</div>
+    <span class="tb-uname" id="tbUname">用户</span>
+    <div class="tb-sync-dot" id="tbSyncDot"></div>
   </div>
   <button class="tb-menu-btn" onclick="toggleDrawer()" aria-label="菜单">
     <span></span><span></span><span></span>
@@ -979,6 +1115,12 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     </div>
     <div class="drawer-item" onclick="goTab(3);closeDrawer()">
       <div class="di-num">●</div><div class="di-label">交易日志</div><div class="di-tag">记录</div>
+    </div>
+    <div class="drawer-section-label" style="margin-top:8px;">扩展模块</div>
+    <div class="drawer-item" onclick="goTab(4);closeDrawer()" id="drawerFitness">
+      <div class="di-num">💪</div>
+      <div class="di-label">交易者体能</div>
+      <div class="di-tag" style="background:rgba(67,217,173,.12);color:var(--mint);border:1px solid rgba(67,217,173,.3)">体能</div>
     </div>
     <div class="drawer-section-label" style="margin-top:8px;">心法分类</div>
     <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">20</div><div class="di-label">全部心法</div></div>
@@ -1052,6 +1194,11 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
       <div style="font-size:22px">📋</div>
       <div><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:1px">交易日志</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted)">记录决策</div></div>
     </div>
+  </div>
+  <div onclick="goTab(4,document.querySelectorAll('.tab')[4])" style="margin:8px 16px 0;background:linear-gradient(135deg,rgba(67,217,173,.12),rgba(67,217,173,.04));border:1.5px solid var(--mint);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer">
+    <div style="font-size:28px;flex-shrink:0">💪</div>
+    <div style="flex:1"><div style="font-family:var(--mono);font-size:10px;color:var(--mint);letter-spacing:3px;margin-bottom:3px">TRADER FITNESS · 体能系统</div><div style="font-size:14px;font-weight:700;color:var(--text2)">身体是最重要的交易资产</div></div>
+    <div style="font-size:18px;color:var(--mint)">›</div>
   </div>
   <div onclick="(function(){var t=document.querySelectorAll('.cat-tab');var s;t.forEach(function(x){if(x.textContent.indexOf('卖出')>-1)s=x;});filterCat('sell',s);document.getElementById('wisdomList').scrollIntoView({behavior:'smooth'});})()" style="margin:8px 16px 0;background:linear-gradient(135deg,rgba(224,155,58,.15),rgba(224,155,58,.05));border:1.5px solid var(--amber);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer">
     <div style="font-size:28px;flex-shrink:0">💰</div>
@@ -1626,6 +1773,229 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   </div>
 </div>
 
+<!-- ══════════════════════════════════════
+     PAGE 4 · 交易者体能系统
+══════════════════════════════════════ -->
+<div class="page" id="pg4">
+
+  <div class="home-hero">
+    <div class="hh-eyebrow">TRADER FITNESS OS · 身体即仓位</div>
+    <div class="hh-title">体能<br><em>即优势</em></div>
+    <div class="hh-sub">专注力、纪律与情绪调节，都从身体开始。体能是你在市场中被最低估的竞争壁垒。</div>
+    <div class="hh-deco">💪</div>
+  </div>
+
+  <!-- 今日统计 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--bg2)">
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center">
+      <div id="ft-pullups" style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--mint)">0</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:1px">今日引体</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center">
+      <div id="ft-focus" style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold)">0</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:1px">冥想分钟</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center">
+      <div id="ft-breaks" style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ice)">0</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:1px">久坐打断</div>
+    </div>
+  </div>
+
+  <!-- 今日洞见 -->
+  <div style="margin:14px 16px 0;background:rgba(242,201,76,.07);border:1px solid rgba(242,201,76,.18);border-left:3px solid var(--gold);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:14px 16px">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:3px;margin-bottom:6px">TODAY · 体能格言</div>
+    <div id="ft-daily-quote" style="font-size:13px;color:var(--text);line-height:1.8;font-style:italic">"体能是最被低估的交易优势。疲惫的大脑无法执行纪律，就像枯竭的资金无法执行计划。"</div>
+  </div>
+
+  <!-- 模块入口 -->
+  <div style="padding:14px 16px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:3px;margin-bottom:10px">MODULES · 训练模块</div>
+
+    <div onclick="ftOpenModule('pullup')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--mint);border-radius:var(--r);margin-bottom:9px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden">
+      <div style="font-size:26px;flex-shrink:0">🏋️</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:3px">引体向上 · GTG 训练</div>
+        <div style="font-size:12px;color:var(--dim)">轻松打卡 · 盯盘间隙穿插 · 从不力竭</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--mint);margin-bottom:2px" id="ft-sets-today">0 组</div>
+        <div style="font-size:18px;color:var(--line2)">›</div>
+      </div>
+    </div>
+
+    <div onclick="ftOpenModule('desk')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--ice);border-radius:var(--r);margin-bottom:9px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden">
+      <div style="font-size:26px;flex-shrink:0">⏱️</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:3px">久坐对抗 · 60分钟提醒</div>
+        <div style="font-size:12px;color:var(--dim)">颈肩 / 踮脚 / 深蹲 / 护眼 · 5分钟恢复</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--ice);margin-bottom:2px" id="ft-sit-mini">60:00</div>
+        <div style="font-size:18px;color:var(--line2)">›</div>
+      </div>
+    </div>
+
+    <div onclick="ftOpenModule('breath')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--line);border-left:3px solid #a78bfa;border-radius:var(--r);margin-bottom:9px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden">
+      <div style="font-size:26px;flex-shrink:0">🧘</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:3px">呼吸冥想 · 专注力训练</div>
+        <div style="font-size:12px;color:var(--dim)">4-7-8 / 方形呼吸 / 交易前仪式</div>
+      </div>
+      <div style="font-size:18px;color:var(--line2)">›</div>
+    </div>
+  </div>
+
+  <!-- 今日计划 -->
+  <div style="padding:10px 16px 0">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:3px;margin-bottom:10px">TODAY PLAN · 今日计划</div>
+    <div id="ft-schedule" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden"></div>
+  </div>
+
+  <!-- 体能原则 -->
+  <div style="padding:14px 16px 20px">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:3px;margin-bottom:10px">PRINCIPLES · 体能原则</div>
+    <div style="background:linear-gradient(135deg,rgba(67,217,173,.08),rgba(67,217,173,.03));border:1px solid rgba(67,217,173,.2);border-radius:var(--r);padding:16px">
+      <div style="font-size:13px;color:var(--text);line-height:1.9">
+        <div style="margin-bottom:8px">🧠 <strong style="color:var(--text2)">盯盘90分钟不动</strong>，前额叶活动降低37%——这是你的决策中枢</div>
+        <div style="margin-bottom:8px">💪 <strong style="color:var(--text2)">GTG引体</strong>：每组不超过最大次数的60%，每30-60分钟一组</div>
+        <div style="margin-bottom:8px">🧘 <strong style="color:var(--text2)">止损后急救</strong>：离开屏幕→4-7-8呼吸→写日志→一组引体</div>
+        <div>📊 <strong style="color:var(--text2)">理性决策后</strong>立即做一组引体，用肢体锚定大脑的理性回路</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FITNESS SHEET: 引体向上 ═══ -->
+<div id="ftPullupSheet" style="position:fixed;inset:0;z-index:810;pointer-events:none;opacity:0;transition:opacity .3s;display:flex;align-items:flex-end;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(5,8,15,.85);backdrop-filter:blur(12px);cursor:pointer" onclick="ftCloseSheet('pullup')"></div>
+  <div id="ftPullupPanel" style="position:relative;z-index:1;width:100%;max-width:700px;background:linear-gradient(145deg,#1a2235,#141c2e,#111827);border-top:1px solid rgba(67,217,173,.2);border-radius:28px 28px 0 0;max-height:90vh;display:flex;flex-direction:column;transform:translateY(60px);transition:transform .38s cubic-bezier(.34,1.2,.64,1)">
+    <div style="padding:14px 0 10px;display:flex;justify-content:center;flex-shrink:0;cursor:pointer" onclick="ftCloseSheet('pullup')">
+      <div style="width:36px;height:4px;background:linear-gradient(90deg,transparent,rgba(67,217,173,.4),transparent);border-radius:2px"></div>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:0 20px 44px;-webkit-overflow-scrolling:touch">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--mint);letter-spacing:3px;margin-bottom:4px">PULL-UP · GTG METHOD</div>
+      <div style="font-size:20px;font-weight:800;color:var(--text2);margin-bottom:14px">引体向上记录</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <select id="ft-grip" style="background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;-webkit-appearance:none;flex:1;min-width:0">
+          <option>正握（宽距）</option><option>正握（肩宽）</option><option>反握（二头）</option><option>对握（中立）</option><option>窄握</option>
+        </select>
+        <select id="ft-rest-dur" style="background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:13px;-webkit-appearance:none;flex:1;min-width:0">
+          <option value="90">组休 90秒</option><option value="120">组休 2分钟</option><option value="180">组休 3分钟</option>
+        </select>
+      </div>
+
+      <div id="ft-sets-list" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button onclick="ftAddSet()" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--line2);background:var(--card);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">＋ 添加一组</button>
+        <button onclick="ftSaveSession()" style="flex:1;padding:11px;border-radius:10px;border:none;background:var(--mint);color:#0d1117;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">保存本次</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center"><div id="ft-sess-sets" style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--mint)">0</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px">组数</div></div>
+        <div style="background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center"><div id="ft-sess-total" style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)">0</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px">总次数</div></div>
+        <div style="background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center"><div id="ft-sess-max" style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ice)">0</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px">最大组</div></div>
+      </div>
+
+      <!-- 组间计时 -->
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:6px" id="ft-rest-phase">组间休息</div>
+        <div style="font-family:var(--mono);font-size:46px;font-weight:700;letter-spacing:2px;color:var(--gold)" id="ft-rest-display">01:30</div>
+        <div style="height:3px;background:var(--line);border-radius:2px;margin:12px 0;overflow:hidden"><div id="ft-rest-prog" style="height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width .5s linear"></div></div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button id="ft-rest-btn" onclick="ftToggleRest()" style="padding:10px 24px;border-radius:10px;border:none;background:var(--gold);color:#0d1117;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">开始休息</button>
+          <button onclick="ftResetRest()" style="padding:10px 20px;border-radius:10px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-size:13px;cursor:pointer">重置</button>
+        </div>
+      </div>
+
+      <!-- GTG 说明 -->
+      <div style="background:rgba(242,201,76,.07);border:1px solid rgba(242,201,76,.18);border-left:3px solid var(--gold);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:14px;margin-bottom:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:6px">GTG METHOD · 轻松打卡法</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.75">只用最大次数的 <strong style="color:var(--text)">40-60%</strong>，从不力竭，每30-60分钟一组。<br><br>⚡ 理性决策后做一组，用身体锚定大脑的理性回路。<br>⚠ 情绪化操作后不要锻炼——避免将错误行为与愉悦感关联。</div>
+      </div>
+
+      <!-- 历史记录 -->
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:8px">HISTORY · 历史记录</div>
+      <div id="ft-history" style="font-size:13px;color:var(--muted);text-align:center;padding:16px 0">完成第一次后将显示</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FITNESS SHEET: 久坐对抗 ═══ -->
+<div id="ftDeskSheet" style="position:fixed;inset:0;z-index:810;pointer-events:none;opacity:0;transition:opacity .3s;display:flex;align-items:flex-end;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(5,8,15,.85);backdrop-filter:blur(12px);cursor:pointer" onclick="ftCloseSheet('desk')"></div>
+  <div id="ftDeskPanel" style="position:relative;z-index:1;width:100%;max-width:700px;background:linear-gradient(145deg,#1a2235,#141c2e,#111827);border-top:1px solid rgba(86,207,225,.2);border-radius:28px 28px 0 0;max-height:90vh;display:flex;flex-direction:column;transform:translateY(60px);transition:transform .38s cubic-bezier(.34,1.2,.64,1)">
+    <div style="padding:14px 0 10px;display:flex;justify-content:center;flex-shrink:0;cursor:pointer" onclick="ftCloseSheet('desk')">
+      <div style="width:36px;height:4px;background:linear-gradient(90deg,transparent,rgba(86,207,225,.4),transparent);border-radius:2px"></div>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:0 20px 44px;-webkit-overflow-scrolling:touch">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--ice);letter-spacing:3px;margin-bottom:4px">ANTI-SEDENTARY PROTOCOL</div>
+      <div style="font-size:20px;font-weight:800;color:var(--text2);margin-bottom:14px">久坐对抗</div>
+
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:6px" id="ft-sit-phase">久坐计时 · 60分钟提醒</div>
+        <div style="font-family:var(--mono);font-size:46px;font-weight:700;letter-spacing:2px;color:var(--ice)" id="ft-sit-display">60:00</div>
+        <div style="height:3px;background:var(--line);border-radius:2px;margin:12px 0;overflow:hidden"><div id="ft-sit-prog" style="height:100%;background:var(--ice);border-radius:2px;width:0%;transition:width .5s linear"></div></div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button id="ft-sit-btn" onclick="ftToggleSit()" style="padding:10px 24px;border-radius:10px;border:1.5px solid var(--ice);background:transparent;color:var(--ice);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">开始计时</button>
+          <button onclick="ftResetSit()" style="padding:10px 20px;border-radius:10px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-size:13px;cursor:pointer">重置</button>
+        </div>
+      </div>
+
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:10px">起身运动菜单</div>
+      <div id="ft-desk-exercises"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FITNESS SHEET: 冥想 ═══ -->
+<div id="ftBreathSheet" style="position:fixed;inset:0;z-index:810;pointer-events:none;opacity:0;transition:opacity .3s;display:flex;align-items:flex-end;justify-content:center">
+  <div style="position:absolute;inset:0;background:rgba(5,8,15,.85);backdrop-filter:blur(12px);cursor:pointer" onclick="ftCloseSheet('breath')"></div>
+  <div id="ftBreathPanel" style="position:relative;z-index:1;width:100%;max-width:700px;background:linear-gradient(145deg,#1a2235,#141c2e,#111827);border-top:1px solid rgba(167,139,250,.2);border-radius:28px 28px 0 0;max-height:90vh;display:flex;flex-direction:column;transform:translateY(60px);transition:transform .38s cubic-bezier(.34,1.2,.64,1)">
+    <div style="padding:14px 0 10px;display:flex;justify-content:center;flex-shrink:0;cursor:pointer" onclick="ftCloseSheet('breath')">
+      <div style="width:36px;height:4px;background:linear-gradient(90deg,transparent,rgba(167,139,250,.4),transparent);border-radius:2px"></div>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:0 20px 44px;-webkit-overflow-scrolling:touch">
+      <div style="font-family:var(--mono);font-size:11px;color:#a78bfa;letter-spacing:3px;margin-bottom:4px">MEDITATION · 呼吸冥想</div>
+      <div style="font-size:20px;font-weight:800;color:var(--text2);margin-bottom:14px">专注力训练</div>
+
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button id="ft-bm-478" onclick="ftSelectBreath('478',this)" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid #a78bfa;background:rgba(167,139,250,.1);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--mono)">4-7-8</button>
+        <button id="ft-bm-box" onclick="ftSelectBreath('box',this)" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--mono)">方形呼吸</button>
+        <button id="ft-bm-coh" onclick="ftSelectBreath('coherent',this)" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--mono)">和谐5-5</button>
+      </div>
+      <div id="ft-breath-desc" style="font-size:12px;color:var(--dim);line-height:1.7;margin-bottom:14px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--line)">4-7-8：吸气4秒→屏气7秒→呼气8秒。激活副交感神经，快速降低皮质醇。开盘前或情绪激动时使用。</div>
+
+      <div style="background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px">
+        <div id="ft-breath-ring" style="width:120px;height:120px;border-radius:50%;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:28px;font-weight:700;color:var(--muted);transition:all 4s ease-in-out;background:var(--card);margin:0 auto 14px"><span id="ft-breath-cnt">4</span></div>
+        <div style="font-size:17px;font-weight:700;min-height:26px;transition:color .4s;color:var(--muted)" id="ft-breath-phase">准备开始</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;min-height:18px" id="ft-breath-hint">选择模式后点击开始</div>
+        <div style="display:flex;gap:20px;justify-content:center;margin:14px 0 16px">
+          <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text2)" id="ft-breath-cycles">0</div><div style="font-size:10px;color:var(--muted);margin-top:3px">已完成轮</div></div>
+          <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#a78bfa" id="ft-breath-target">6</div><div style="font-size:10px;color:var(--muted);margin-top:3px">目标轮数</div></div>
+          <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)" id="ft-breath-elapsed">0:00</div><div style="font-size:10px;color:var(--muted);margin-top:3px">已用时间</div></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button id="ft-breath-btn" onclick="ftToggleBreath()" style="padding:10px 28px;border-radius:10px;border:none;background:#a78bfa;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">开始冥想</button>
+          <button onclick="ftResetBreath()" style="padding:10px 20px;border-radius:10px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-size:13px;cursor:pointer">重置</button>
+        </div>
+      </div>
+
+      <div style="background:rgba(242,201,76,.07);border:1px solid rgba(242,201,76,.18);border-left:3px solid var(--gold);border-radius:0 var(--r-sm) var(--r-sm) 0;padding:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">开盘前 5 分钟仪式</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.9">
+          <strong style="color:var(--text2)">① 回顾计划</strong> · 今日关键位？止损在哪里？<br>
+          <strong style="color:var(--text2)">② 检查情绪</strong> · 有没有报复市场的冲动？<br>
+          <strong style="color:var(--text2)">③ 接受不确定性</strong> · 我只能控制仓位和行动<br>
+          <strong style="color:var(--text2)">④ 三次深呼吸</strong> · 4秒吸，7秒屏，8秒呼<br>
+          <strong style="color:var(--text2)">⑤ 止损后急救</strong> · 离屏→呼吸→日志→引体
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- ═══ PANIC FAB ═══ -->
 <button class="panic-fab" onclick="openCool()" title="立即冷静">🧊</button>
 
@@ -1655,6 +2025,7 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   <button class="tab" onclick="goTab(1,this)"><div class="tab-icon">🔧</div><div class="tab-label">工具</div></button>
   <button class="tab" onclick="goTab(2,this)"><div class="tab-icon">📊</div><div class="tab-label">历史</div></button>
   <button class="tab" onclick="goTab(3,this)"><div class="tab-icon">📋</div><div class="tab-label">日志</div></button>
+  <button class="tab" onclick="goTab(4,this)" style="color:var(--mint)" id="tabFitness"><div class="tab-icon">💪</div><div class="tab-label">体能</div></button>
 </div>
 
 <script>
@@ -2718,6 +3089,570 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+// ══════════════════════════════════════
+// FITNESS MODULE (pg4) · 交易者体能系统
+// ══════════════════════════════════════
+
+var ftState = {
+  pullups: 0, focusMins: 0, breaks: 0,
+  sets: [],
+  sessions: JSON.parse(localStorage.getItem('bmcs_ft_sess') || '[]'),
+};
+
+var ftQuotes = [
+  '"体能是最被低估的交易优势。疲惫的大脑无法执行纪律。"',
+  '"在市场中，你不仅与全球最聪明的人竞争，更与自己的情绪竞争。"',
+  '"身体活动是最有效的天然抗焦虑剂。做完运动再看图，市场会不同。"',
+  '"GTG的哲学与交易一致：小仓位、高频、复利。每组远离力竭，每次远离爆仓。"',
+  '"盘中最好的决策往往不是来自最聪明的分析，而是来自最平静的心智。"',
+  '"你无法用昨天的疲惫赢得今天的市场。睡眠是最佳的持仓保险。"',
+  '"久坐90分钟不动，前额叶皮质活动降低，这是你的决策中枢。"',
+];
+
+var ftScheduleData = [
+  { time:'09:00', color:'var(--mint)', label:'<strong style="color:var(--text2)">开盘前冥想</strong> · 4-7-8呼吸法 · 5分钟', done:false },
+  { time:'10:30', color:'var(--ice)',  label:'<strong style="color:var(--text2)">久坐打断</strong> · 颈肩活动 + GTG一组', done:false },
+  { time:'12:00', color:'var(--gold)', label:'<strong style="color:var(--text2)">午间引体训练</strong> · 3-5组 · GTG打卡', done:false },
+  { time:'14:00', color:'var(--ice)',  label:'<strong style="color:var(--text2)">久坐打断</strong> · 下肢激活 + 踮脚', done:false },
+  { time:'16:00', color:'#a78bfa',     label:'<strong style="color:var(--text2)">专注力冥想</strong> · 观息法 · 10分钟', done:false },
+  { time:'收盘后', color:'var(--sage)', label:'<strong style="color:var(--text2)">收盘挑战</strong> · 最大强度引体 + 拉伸', done:false },
+];
+
+var ftExData = [
+  { icon:'🔄', name:'颈部环绕',      desc:'顺逆时针各5圈，感受拉伸感', secs:30 },
+  { icon:'🦅', name:'扩胸开肩',      desc:'肘部后展10次×2组，对抗驼背', secs:45 },
+  { icon:'🦵', name:'深蹲站起',      desc:'椅子辅助，激活臀腿15次', secs:60 },
+  { icon:'🏃', name:'原地踮脚',      desc:'激活小腿，促进血液回流20次', secs:40 },
+  { icon:'✋', name:'腕部拉伸',      desc:'预防鼠标手，两手各15秒×2', secs:50 },
+  { icon:'👁️', name:'20-20-20护眼', desc:'注视6米外20秒，预防眼疲劳', secs:20 },
+];
+
+// ── 渲染今日计划 ──
+function ftRenderSchedule() {
+  var el = document.getElementById('ft-schedule');
+  if (!el) return;
+  el.innerHTML = ftScheduleData.map(function(s, i) {
+    return '<div onclick="ftMarkSch('+i+')" style="display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);cursor:pointer;min-height:48px;transition:background .15s">' +
+      '<span style="font-family:var(--mono);font-size:11px;color:var(--muted);width:54px;flex-shrink:0">'+s.time+'</span>' +
+      '<div style="width:7px;height:7px;border-radius:50%;background:'+(s.done?'var(--sage)':s.color)+';flex-shrink:0"></div>' +
+      '<div style="font-size:13px;color:var(--dim);flex:1;line-height:1.5">'+s.label+'</div>' +
+      '<span style="font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:4px;flex-shrink:0;'+(s.done?'background:var(--sage-bg);color:var(--sage);border:1px solid var(--sage)':'background:var(--card2);color:var(--muted);border:1px solid var(--line)')+'">'+
+      (s.done?'已完成':'待完成')+'</span></div>';
+  }).join('') + '<div style="height:1px"></div>';
+}
+function ftMarkSch(i) { ftScheduleData[i].done = !ftScheduleData[i].done; ftRenderSchedule(); }
+
+// ── 渲染久坐运动菜单 ──
+function ftRenderDesk() {
+  var el = document.getElementById('ft-desk-exercises');
+  if (!el) return;
+  el.innerHTML = ftExData.map(function(e, i) {
+    return '<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)">' +
+      '<div style="font-size:22px;flex-shrink:0;width:32px;text-align:center">'+e.icon+'</div>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:2px">'+e.name+'</div>' +
+      '<div style="font-size:11px;color:var(--dim)">'+e.desc+'</div></div>' +
+      '<div style="text-align:right;flex-shrink:0">' +
+      '<div style="font-family:var(--mono);font-size:11px;color:var(--ice);margin-bottom:4px">'+e.secs+'s</div>' +
+      '<button id="ftex-'+i+'" onclick="ftStartEx('+i+')" style="padding:5px 12px;border-radius:7px;border:1px solid var(--ice);background:transparent;color:var(--ice);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--mono);min-width:40px">开始</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+var ftExIv = null;
+function ftStartEx(i) {
+  if (ftExIv) clearInterval(ftExIv);
+  var btn = document.getElementById('ftex-'+i);
+  if (!btn) return;
+  var secs = ftExData[i].secs, total = secs;
+  btn.style.borderColor = 'var(--sage)'; btn.style.color = 'var(--sage)';
+  ftExIv = setInterval(function() {
+    secs--;
+    btn.textContent = secs+'s';
+    if (secs <= 0) {
+      clearInterval(ftExIv);
+      btn.textContent = '✓';
+      btn.style.borderColor = 'var(--gold)'; btn.style.color = 'var(--gold)';
+      ftState.breaks++;
+      var be = document.getElementById('ft-breaks'); if(be) be.textContent = ftState.breaks;
+      setTimeout(function(){ btn.textContent='开始'; btn.style.borderColor='var(--ice)'; btn.style.color='var(--ice)'; }, 2000);
+    }
+  }, 1000);
+}
+
+// ── 模块开关 ──
+function ftOpenModule(name) {
+  ['pullup','desk','breath'].forEach(function(s) {
+    var sheet = document.getElementById('ft'+s.charAt(0).toUpperCase()+s.slice(1)+'Sheet');
+    var panel = document.getElementById('ft'+s.charAt(0).toUpperCase()+s.slice(1)+'Panel');
+    if (!sheet || !panel) return;
+    if (s === name) {
+      sheet.style.pointerEvents = 'all'; sheet.style.opacity = '1';
+      panel.style.transform = 'translateY(0)';
+      document.body.style.overflow = 'hidden';
+      if (s === 'desk') ftRenderDesk();
+      if (s === 'pullup') ftRenderSets();
+    } else {
+      sheet.style.pointerEvents = 'none'; sheet.style.opacity = '0';
+      if (panel) panel.style.transform = 'translateY(60px)';
+    }
+  });
+}
+function ftCloseSheet(name) {
+  var n = name.charAt(0).toUpperCase()+name.slice(1);
+  var sheet = document.getElementById('ft'+n+'Sheet');
+  var panel = document.getElementById('ft'+n+'Panel');
+  if (sheet) { sheet.style.pointerEvents='none'; sheet.style.opacity='0'; }
+  if (panel) panel.style.transform = 'translateY(60px)';
+  document.body.style.overflow = '';
+}
+
+// ── 引体组数 ──
+function ftAddSet() { ftState.sets.push({reps:0,done:false}); ftRenderSets(); }
+function ftRenderSets() {
+  var c = document.getElementById('ft-sets-list'); if(!c) return;
+  if (!ftState.sets.length) { c.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:14px 0">点击"添加一组"开始记录</div>'; ftSessStats(); return; }
+  c.innerHTML = ftState.sets.map(function(s,i){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)">' +
+      '<span style="font-family:var(--mono);font-size:12px;color:var(--muted);width:36px;flex-shrink:0">第'+(i+1)+'组</span>' +
+      '<input type="number" min="0" max="99" value="'+(s.reps||0)+'" style="background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:8px 10px;color:var(--text2);font-family:var(--mono);font-size:15px;width:58px;text-align:center" oninput="ftState.sets['+i+'].reps=parseInt(this.value)||0;ftSessStats()">' +
+      '<span style="flex:1;font-size:11px;color:var(--muted)">次</span>' +
+      '<button onclick="ftDoneSet('+i+')" style="width:34px;height:34px;border-radius:8px;border:1px solid '+(s.done?'var(--sage)':'var(--line2)')+';background:'+(s.done?'var(--sage-bg)':'var(--bg2)')+';color:'+(s.done?'var(--sage)':'var(--muted)')+';cursor:pointer;font-size:14px;flex-shrink:0">✓</button>' +
+    '</div>';
+  }).join('');
+  ftSessStats();
+}
+function ftDoneSet(i) { ftState.sets[i].done = !ftState.sets[i].done; ftRenderSets(); if(ftState.sets[i].done) ftStartRestAuto(); }
+function ftSessStats() {
+  var total = ftState.sets.reduce(function(a,x){return a+(x.reps||0);},0);
+  var maxV = ftState.sets.length ? Math.max.apply(null, ftState.sets.map(function(x){return x.reps||0;})) : 0;
+  var ss=document.getElementById('ft-sess-sets'); if(ss) ss.textContent=ftState.sets.length;
+  var st=document.getElementById('ft-sess-total'); if(st) st.textContent=total;
+  var sm=document.getElementById('ft-sess-max'); if(sm) sm.textContent=maxV;
+}
+function ftSaveSession() {
+  var total = ftState.sets.reduce(function(a,x){return a+(x.reps||0);},0);
+  if (!total) { alert('请先添加记录！'); return; }
+  var sess = { date:new Date().toLocaleDateString('zh-CN'), time:new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}), sets:ftState.sets.length, total:total, maxV:Math.max.apply(null,ftState.sets.map(function(x){return x.reps||0;})) };
+  ftState.sessions.unshift(sess);
+  try { localStorage.setItem('bmcs_ft_sess', JSON.stringify(ftState.sessions.slice(0,50))); } catch(e){}
+  ftState.pullups += total;
+  ftState.sets = [];
+  var fp=document.getElementById('ft-pullups'); if(fp) fp.textContent=ftState.pullups;
+  var fst=document.getElementById('ft-sets-today'); if(fst) fst.textContent=ftState.sessions.length+'组';
+  ftRenderSets(); ftRenderHistory();
+  alert('✅ 已保存！'+sess.sets+'组 · 共'+sess.total+'次');
+}
+function ftRenderHistory() {
+  var c = document.getElementById('ft-history'); if(!c) return;
+  if (!ftState.sessions.length) { c.innerHTML='<div style="color:var(--muted);text-align:center;padding:16px 0;font-size:13px">暂无记录</div>'; return; }
+  c.innerHTML = ftState.sessions.slice(0,10).map(function(s){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">' +
+      '<div style="flex:1"><div style="font-size:13px;color:var(--text)">'+s.date+' '+s.time+'</div><div style="font-size:11px;color:var(--muted)">'+s.sets+'组</div></div>' +
+      '<div style="text-align:right"><div style="font-family:var(--mono);font-size:16px;color:var(--gold)">'+s.total+'次</div><div style="font-size:11px;color:var(--muted)">最大'+s.maxV+'</div></div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── 组间计时 ──
+var ftRestIv=null, ftRestTotal=90, ftRestRem=90, ftRestOn=false;
+function ftStartRestAuto() { if(!ftRestOn) ftToggleRest(); }
+function ftToggleRest() {
+  var sel = document.getElementById('ft-rest-dur');
+  var dur = sel ? parseInt(sel.value)||90 : 90;
+  if (!ftRestOn) {
+    ftRestTotal=dur; ftRestRem=dur; ftRestOn=true;
+    var b=document.getElementById('ft-rest-btn');
+    if(b){b.textContent='暂停';b.style.background='var(--red)';b.style.color='#fff';}
+    ftRestIv=setInterval(function(){
+      ftRestRem--; ftRestUI();
+      if(ftRestRem<=0){clearInterval(ftRestIv);ftRestOn=false;var b2=document.getElementById('ft-rest-btn');if(b2){b2.textContent='再来一次';b2.style.background='var(--gold)';b2.style.color='#0d1117';}}
+    },1000);
+  } else {
+    clearInterval(ftRestIv); ftRestOn=false;
+    var b=document.getElementById('ft-rest-btn');
+    if(b){b.textContent='继续';b.style.background='var(--gold)';b.style.color='#0d1117';}
+  }
+  ftRestUI();
+}
+function ftResetRest(){clearInterval(ftRestIv);ftRestOn=false;ftRestRem=ftRestTotal;var b=document.getElementById('ft-rest-btn');if(b){b.textContent='开始休息';b.style.background='var(--gold)';b.style.color='#0d1117';}ftRestUI();}
+function ftRestUI(){var m=Math.floor(ftRestRem/60),s=ftRestRem%60;var d=document.getElementById('ft-rest-display');if(d)d.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');var p=document.getElementById('ft-rest-prog');if(p)p.style.width=((1-ftRestRem/ftRestTotal)*100)+'%';var ph=document.getElementById('ft-rest-phase');if(ph)ph.textContent=ftRestRem<=0?'✅ 准备下一组！':'组间休息 · 剩余'+ftRestRem+'s';}
+
+// ── 久坐计时 ──
+var ftSitIv=null, ftSitTotal=3600, ftSitRem=3600, ftSitOn=false;
+function ftToggleSit(){
+  if(!ftSitOn){
+    ftSitOn=true;
+    var b=document.getElementById('ft-sit-btn');if(b){b.textContent='暂停';b.style.borderColor='var(--red)';b.style.color='var(--red)';}
+    ftSitIv=setInterval(function(){
+      ftSitRem--; ftSitUI();
+      if(ftSitRem<=0){
+        clearInterval(ftSitIv);ftSitOn=false;
+        ftState.breaks++;var be=document.getElementById('ft-breaks');if(be)be.textContent=ftState.breaks;
+        var ph=document.getElementById('ft-sit-phase');if(ph)ph.textContent='🔔 起身活动！';
+        var di=document.getElementById('ft-sit-display');if(di)di.style.color='var(--red)';
+        var b2=document.getElementById('ft-sit-btn');if(b2){b2.textContent='重新开始';b2.style.borderColor='var(--mint)';b2.style.color='var(--mint)';}
+      }
+    },1000);
+  } else {clearInterval(ftSitIv);ftSitOn=false;var b=document.getElementById('ft-sit-btn');if(b){b.textContent='继续';b.style.borderColor='var(--ice)';b.style.color='var(--ice)';}}
+  ftSitUI();
+}
+function ftResetSit(){clearInterval(ftSitIv);ftSitOn=false;ftSitRem=ftSitTotal;var d=document.getElementById('ft-sit-display');if(d){d.textContent='60:00';d.style.color='var(--ice)';}var p=document.getElementById('ft-sit-prog');if(p)p.style.width='0%';var ph=document.getElementById('ft-sit-phase');if(ph)ph.textContent='久坐计时 · 60分钟提醒';var b=document.getElementById('ft-sit-btn');if(b){b.textContent='开始计时';b.style.borderColor='var(--ice)';b.style.color='var(--ice)';}var m=document.getElementById('ft-sit-mini');if(m)m.textContent='60:00';}
+function ftSitUI(){var m=Math.floor(ftSitRem/60),s=ftSitRem%60;var str=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');var d=document.getElementById('ft-sit-display');if(d)d.textContent=str;var d2=document.getElementById('ft-sit-mini');if(d2)d2.textContent=str;var p=document.getElementById('ft-sit-prog');if(p)p.style.width=((1-ftSitRem/ftSitTotal)*100)+'%';var ph=document.getElementById('ft-sit-phase');if(ph&&ftSitRem>0)ph.textContent='已坐'+Math.floor((ftSitTotal-ftSitRem)/60)+'分钟';}
+
+// ── 呼吸冥想 ──
+var ftBP = {
+  '478':     {p:[['吸气','#43d9ad',4],['屏气','#f2c94c',7],['呼气','#a78bfa',8]],c:6,d:'4-7-8：吸气4秒→屏气7秒→呼气8秒。激活副交感神经，快速降低皮质醇水平。开盘前或情绪激动时使用。'},
+  'box':     {p:[['吸气','#43d9ad',4],['屏气','#f2c94c',4],['呼气','#a78bfa',4],['屏气','#f2c94c',4]],c:8,d:'方形呼吸4-4-4-4。海豹突击队标准训练法，用于压力下保持清醒。盘中焦虑或追单冲动时使用。'},
+  'coherent':{p:[['吸气','#43d9ad',5],['呼气','#a78bfa',5]],c:12,d:'和谐呼吸5-5，每分钟6次。进入心率变异最优区间，长期练习显著提升情绪调节能力。'},
+};
+var ftBCur=ftBP['478'],ftBOn=false,ftBIv=null,ftBPhIdx=0,ftBCyc=0,ftBEl=0,ftBElIv=null;
+
+function ftSelectBreath(key,btn){
+  ftResetBreath(); ftBCur=ftBP[key];
+  var d=document.getElementById('ft-breath-desc');if(d)d.textContent=ftBCur.d;
+  var t=document.getElementById('ft-breath-target');if(t)t.textContent=ftBCur.c;
+  var cn=document.getElementById('ft-breath-cnt');if(cn)cn.textContent=ftBCur.p[0][2];
+  ['ft-bm-478','ft-bm-box','ft-bm-coh'].forEach(function(id){var b=document.getElementById(id);if(b){b.style.background='transparent';b.style.borderColor='var(--line)';b.style.color='var(--dim)';}});
+  if(btn){btn.style.background='rgba(167,139,250,.1)';btn.style.borderColor='#a78bfa';btn.style.color='#a78bfa';}
+}
+function ftToggleBreath(){
+  if(!ftBOn){
+    ftBOn=true;var btn=document.getElementById('ft-breath-btn');if(btn){btn.textContent='暂停';btn.style.background='var(--red)';}
+    ftBPhase();
+    ftBElIv=setInterval(function(){ftBEl++;var m=Math.floor(ftBEl/60),s=ftBEl%60;var el=document.getElementById('ft-breath-elapsed');if(el)el.textContent=m+':'+String(s).padStart(2,'0');},1000);
+  } else {clearInterval(ftBIv);clearInterval(ftBElIv);ftBOn=false;var btn=document.getElementById('ft-breath-btn');if(btn){btn.textContent='继续';btn.style.background='#a78bfa';}}
+}
+function ftBPhase(){
+  var ph=ftBCur.p[ftBPhIdx],col=ph[1],dur=ph[2];
+  var ring=document.getElementById('ft-breath-ring');
+  if(ring){ring.style.transition='all 4s ease-in-out';ring.style.color=col;ring.style.borderColor=col;ring.style.background=col==='#43d9ad'?'rgba(67,217,173,.1)':col==='#f2c94c'?'rgba(242,201,76,.1)':'rgba(167,139,250,.1)';ring.style.transform=ph[0]==='呼气'?'scale(.82)':'scale(1.28)';}
+  var phase=document.getElementById('ft-breath-phase');if(phase){phase.style.color=col;phase.textContent=ph[0];}
+  var hint=document.getElementById('ft-breath-hint');if(hint)hint.textContent=ph[0]==='吸气'?'鼻腔缓缓吸气':ph[0]==='屏气'?'保持，不要移动':'嘴巴缓慢呼气';
+  var cnt=document.getElementById('ft-breath-cnt');if(cnt)cnt.textContent=dur;
+  var sec=dur;
+  ftBIv=setInterval(function(){
+    sec--;var c=document.getElementById('ft-breath-cnt');if(c)c.textContent=sec;
+    if(sec<=0){clearInterval(ftBIv);ftBPhIdx=(ftBPhIdx+1)%ftBCur.p.length;
+      if(ftBPhIdx===0){ftBCyc++;var cy=document.getElementById('ft-breath-cycles');if(cy)cy.textContent=ftBCyc;if(ftBCyc>=ftBCur.c){ftBreathDone();return;}}
+      if(ftBOn)ftBPhase();}
+  },1000);
+}
+function ftBreathDone(){
+  ftBOn=false;clearInterval(ftBElIv);
+  var ph=document.getElementById('ft-breath-phase');if(ph){ph.style.color='var(--sage)';ph.textContent='✅ 完成';}
+  var ring=document.getElementById('ft-breath-ring');if(ring){ring.style.transform='scale(1)';ring.style.borderColor='var(--sage)';ring.style.color='var(--sage)';}
+  var hint=document.getElementById('ft-breath-hint');if(hint)hint.textContent='恭喜完成冥想练习！';
+  var btn=document.getElementById('ft-breath-btn');if(btn){btn.textContent='重新开始';btn.style.background='#a78bfa';}
+  ftState.focusMins+=Math.floor(ftBEl/60);var fo=document.getElementById('ft-focus');if(fo)fo.textContent=ftState.focusMins;
+}
+function ftResetBreath(){
+  clearInterval(ftBIv);clearInterval(ftBElIv);ftBOn=false;ftBPhIdx=0;ftBCyc=0;ftBEl=0;
+  var ring=document.getElementById('ft-breath-ring');if(ring){ring.style.transition='all .5s';ring.style.transform='scale(1)';ring.style.borderColor='var(--line2)';ring.style.color='var(--muted)';ring.style.background='var(--card)';}
+  var c=document.getElementById('ft-breath-cnt');if(c)c.textContent=ftBCur.p[0][2];
+  var p=document.getElementById('ft-breath-phase');if(p){p.style.color='var(--muted)';p.textContent='准备开始';}
+  var h=document.getElementById('ft-breath-hint');if(h)h.textContent='选择模式后点击开始';
+  var cy=document.getElementById('ft-breath-cycles');if(cy)cy.textContent='0';
+  var el=document.getElementById('ft-breath-elapsed');if(el)el.textContent='0:00';
+  var btn=document.getElementById('ft-breath-btn');if(btn){btn.textContent='开始冥想';btn.style.background='#a78bfa';}
+}
+
+// ── 初始化 pg4 ──
+(function(){
+  var d = new Date();
+  var q = document.getElementById('ft-daily-quote');
+  if (q) q.textContent = ftQuotes[d.getDay() % ftQuotes.length];
+  ftRenderSchedule();
+  ftRenderHistory();
+  ftAddSet(); ftAddSet(); ftAddSet();
+  ftRestUI();
+})();
+
+// ── patch goTab: 重新查询tabs使第5个体能tab生效 ──
+// 重新获取含体能tab的tabs NodeList（原变量只缓存了4个）
+var tabs = document.querySelectorAll('.tab');
+var _ftOrigGoTab = goTab;
+goTab = function(n, btn) {
+  // 手动更新所有tab active状态（兼容第5个）
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  var pg = document.getElementById('pg'+n);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.tab').forEach(function(t, i){
+    t.classList.remove('active');
+    t.style.color = '';
+  });
+  var allTabs = document.querySelectorAll('.tab');
+  var activeTab = btn || allTabs[n];
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.style.color = n === 4 ? 'var(--mint)' : 'var(--gold)';
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+};
+
+
+// ══════════════════════════════════════════════════════
+// FIREBASE · 登录 + 云端数据同步
+// ══════════════════════════════════════════════════════
+
+var firebaseConfig = {
+  apiKey: "AIzaSyCDOQtFnhY2eWC8QhSB3alWSB97husVCvE",
+  authDomain: "tradewisdom-log-in.firebaseapp.com",
+  projectId: "tradewisdom-log-in",
+  storageBucket: "tradewisdom-log-in.firebasestorage.app",
+  messagingSenderId: "100144979542",
+  appId: "1:100144979542:web:fcacd3dc84e1371c31a5f7"
+};
+
+firebase.initializeApp(firebaseConfig);
+var fbAuth = firebase.auth();
+var fbDb   = firebase.firestore();
+var fbUser = null;
+var fbSyncing = false;
+
+// ── 当前用户的 Firestore 路径 ──
+function fbUserDoc() {
+  return fbUser ? fbDb.collection('users').doc(fbUser.uid) : null;
+}
+
+// ── 登录状态监听 ──
+fbAuth.onAuthStateChanged(function(user) {
+  fbUser = user;
+  if (user) {
+    // 已登录：隐藏浮层，显示用户信息
+    document.getElementById('fbAuthOverlay').classList.add('hidden');
+    document.getElementById('tbUser').style.display = 'flex';
+    // 显示头像/名字
+    var avatar = document.getElementById('tbAvatar');
+    var uname  = document.getElementById('tbUname');
+    if (user.photoURL) {
+      avatar.innerHTML = '<img src="'+user.photoURL+'" alt="">';
+    } else {
+      avatar.textContent = (user.displayName || user.email || '?')[0].toUpperCase();
+    }
+    uname.textContent = user.displayName || user.email.split('@')[0];
+    document.getElementById('fbmEmail').textContent = user.email || user.displayName || '';
+    // 从云端拉取数据
+    fbPullData();
+  } else {
+    // 未登录：显示浮层
+    document.getElementById('tbUser').style.display = 'none';
+  }
+});
+
+// ── Google 登录 ──
+function fbSignInGoogle() {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  fbSetMsg('正在跳转 Google 登录...', false);
+  fbAuth.signInWithPopup(provider).catch(function(err) {
+    fbSetMsg('登录失败：' + err.message, true);
+  });
+}
+
+// ── 邮箱登录/注册 ──
+function fbSignInEmail() {
+  var email = document.getElementById('fbEmail').value.trim();
+  var pass  = document.getElementById('fbPassword').value;
+  if (!email || !pass) { fbSetMsg('请填写邮箱和密码', true); return; }
+  fbSetMsg('处理中...', false);
+  // 先尝试登录，失败则注册
+  fbAuth.signInWithEmailAndPassword(email, pass)
+    .catch(function(err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        return fbAuth.createUserWithEmailAndPassword(email, pass);
+      }
+      throw err;
+    })
+    .then(function() { fbSetMsg('登录成功 ✓', false); })
+    .catch(function(err) {
+      var msgs = {
+        'auth/wrong-password': '密码错误',
+        'auth/invalid-email': '邮箱格式不正确',
+        'auth/weak-password': '密码至少需要6位',
+        'auth/too-many-requests': '尝试次数过多，请稍后再试',
+      };
+      fbSetMsg(msgs[err.code] || err.message, true);
+    });
+}
+
+function fbSetMsg(msg, isErr) {
+  var el = document.getElementById('fbAuthMsg');
+  el.textContent = msg;
+  el.className = 'fb-auth-msg' + (isErr ? ' fb-auth-err' : '');
+}
+
+// ── 跳过登录 ──
+function fbSkipAuth() {
+  document.getElementById('fbAuthOverlay').classList.add('hidden');
+}
+
+// ── 退出登录 ──
+function fbSignOut() {
+  fbAuth.signOut().then(function() {
+    fbHideUserMenu();
+    document.getElementById('fbAuthOverlay').classList.remove('hidden');
+    document.getElementById('fbEmail').value = '';
+    document.getElementById('fbPassword').value = '';
+    fbSetMsg('', false);
+  });
+}
+
+// ── 用户菜单 ──
+function fbToggleUserMenu() {
+  var menu = document.getElementById('fbUserMenu');
+  menu.classList.toggle('show');
+}
+function fbHideUserMenu() {
+  document.getElementById('fbUserMenu').classList.remove('show');
+}
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('fbUserMenu');
+  var user = document.getElementById('tbUser');
+  if (!menu.contains(e.target) && !user.contains(e.target)) fbHideUserMenu();
+});
+
+// ── 同步状态指示 ──
+function fbSetSyncing(on) {
+  fbSyncing = on;
+  var dot = document.getElementById('tbSyncDot');
+  if (dot) dot.className = 'tb-sync-dot' + (on ? ' syncing' : '');
+}
+
+// ══════════════════════════════════════
+// 数据推送到 Firestore（节流：2秒一次）
+// ══════════════════════════════════════
+var fbPushTimer = null;
+function fbSchedulePush() {
+  if (!fbUser) return;
+  clearTimeout(fbPushTimer);
+  fbPushTimer = setTimeout(fbPushData, 2000);
+}
+
+function fbPushData() {
+  if (!fbUser) return;
+  fbSetSyncing(true);
+  var doc = fbUserDoc();
+  var data = {
+    // 心法已读
+    readSet: JSON.stringify([...readSet]),
+    // 交易日志
+    savedLogs: JSON.stringify(savedLogs),
+    // 体能记录
+    ft_sessions: JSON.stringify(ftState.sessions),
+    ft_pullups: ftState.pullups,
+    ft_focusMins: ftState.focusMins,
+    ft_breaks: ftState.breaks,
+    // 时间戳
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  doc.set(data, {merge: true})
+    .then(function() { fbSetSyncing(false); })
+    .catch(function(err) { fbSetSyncing(false); console.warn('Firestore push err:', err); });
+}
+
+// ══════════════════════════════════════
+// 从 Firestore 拉取数据
+// ══════════════════════════════════════
+function fbPullData() {
+  if (!fbUser) return;
+  fbSetSyncing(true);
+  fbUserDoc().get().then(function(doc) {
+    fbSetSyncing(false);
+    if (!doc.exists) return; // 新用户，无数据
+    var d = doc.data();
+
+    // 恢复心法已读
+    if (d.readSet) {
+      try {
+        readSet = new Set(JSON.parse(d.readSet));
+        updateProgress(); renderList();
+      } catch(e){}
+    }
+
+    // 恢复交易日志
+    if (d.savedLogs) {
+      try {
+        savedLogs = JSON.parse(d.savedLogs);
+        var cont = document.getElementById('logEntries');
+        var ph = cont.querySelector('div[style*="尚无记录"]');
+        if (ph && savedLogs.length) ph.remove();
+        // 清空再重建，避免重复
+        cont.innerHTML = savedLogs.length
+          ? '<div style="text-align:center;padding:28px 0;font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:2px;">尚无记录 · 写下你的第一笔交易逻辑</div>'
+          : '<div style="text-align:center;padding:28px 0;font-family:var(--mono);font-size:13px;color:var(--muted);letter-spacing:2px;">尚无记录 · 写下你的第一笔交易逻辑</div>';
+        if (savedLogs.length) {
+          cont.innerHTML = '';
+          savedLogs.forEach(function(entry) {
+            var el = document.createElement('div');
+            el.className = 'log-entry';
+            el.style.borderLeftColor = entry.borderColor;
+            el.innerHTML = entry.html;
+            cont.appendChild(el);
+          });
+        }
+        updateJStats();
+      } catch(e){}
+    }
+
+    // 恢复体能记录
+    if (d.ft_sessions) {
+      try {
+        ftState.sessions = JSON.parse(d.ft_sessions);
+        ftState.pullups  = d.ft_pullups  || 0;
+        ftState.focusMins = d.ft_focusMins || 0;
+        ftState.breaks   = d.ft_breaks   || 0;
+        var fp = document.getElementById('ft-pullups');   if(fp) fp.textContent = ftState.pullups;
+        var ff = document.getElementById('ft-focus');     if(ff) ff.textContent = ftState.focusMins;
+        var fb = document.getElementById('ft-breaks');    if(fb) fb.textContent = ftState.breaks;
+        var fs = document.getElementById('ft-sets-today');if(fs) fs.textContent = ftState.sessions.length + '组';
+        ftRenderHistory();
+      } catch(e){}
+    }
+  }).catch(function(err) {
+    fbSetSyncing(false);
+    console.warn('Firestore pull err:', err);
+  });
+}
+
+// ══════════════════════════════════════
+// Hook：数据变更时自动推送
+// 拦截原有的 saveState / saveSession / addLog
+// ══════════════════════════════════════
+var _fbOrigSaveState = saveState;
+saveState = function() {
+  _fbOrigSaveState();
+  fbSchedulePush();
+};
+
+var _fbOrigFtSave = ftSaveSession;
+ftSaveSession = function() {
+  _fbOrigFtSave();
+  fbSchedulePush();
+};
+
+var _fbOrigAddLog = addLog;
+addLog = function() {
+  _fbOrigAddLog();
+  fbSchedulePush();
+};
+
+// ── 导出全部数据为 JSON ──
+function fbExportData() {
+  fbHideUserMenu();
+  var data = {
+    exportedAt: new Date().toLocaleString('zh-CN'),
+    readSet: [...readSet],
+    savedLogs: savedLogs,
+    ft_sessions: ftState.sessions,
+    ft_pullups: ftState.pullups,
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tradewisdom_backup_' + new Date().toLocaleDateString('zh-CN').replace(/\//g,'-') + '.json';
+  a.click();
+}
+
+
 </script>
 </body>
 </html>
