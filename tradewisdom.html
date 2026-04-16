@@ -735,31 +735,25 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   .wisdom-row { padding: 18px 20px; }
   .sec { padding: 20px 24px 0; }
 }
-/* ════════════════════════════════════════
-   宽屏布局 Mac Chrome / iPad 横屏
-   左侧 260px 导航 + 右侧内容区自适应
-════════════════════════════════════════ */
 @media (min-width: 900px) {
 
   html { background: var(--bg); }
 
+  /* Grid: 左侧260px导航 + 右侧内容 */
   body {
     max-width: 1280px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 260px 1fr;
-    min-height: 100vh;
-    padding-bottom: 0 !important;
     align-items: start;
+    padding-bottom: 0 !important;
   }
 
-  /* topbar 横跨两列 */
+  /* Topbar 跨两列 */
   .topbar {
     grid-column: 1 / -1;
-    grid-row: 1;
     max-width: none !important;
-    left: 0 !important;
-    right: 0 !important;
+    left: 0 !important; right: 0 !important;
     transform: none !important;
     width: 100% !important;
     padding: 0 20px;
@@ -767,78 +761,57 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 
   /* 侧边栏常驻左列 */
   #drawer {
-    grid-column: 1;
-    grid-row: 2;
-    position: sticky;
-    top: 52px;
+    grid-column: 1; grid-row: 2;
+    position: sticky; top: 52px;
     height: calc(100vh - 52px);
     pointer-events: all !important;
     opacity: 1 !important;
     display: block !important;
-    z-index: 10;
   }
   #drawer .drawer-bg { display: none !important; }
   #drawer .drawer-panel {
     position: relative !important;
-    width: 100% !important;
+    width: 260px !important;
     height: 100% !important;
     transform: none !important;
     border-right: 1px solid var(--line) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
-  /* 汉堡菜单隐藏 */
+  /* drawer-item tag标签不被裁 */
+  .drawer-item {
+    padding: 12px 12px 12px 20px;
+    overflow: visible;
+  }
+  .di-tag {
+    font-size: 11px;
+    padding: 2px 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* 汉堡按钮隐藏 */
   .tb-menu-btn { display: none !important; }
 
-  /* 内容区在右列 */
-  .page { grid-column: 2; grid-row: 2; }
+  /* 内容区右列 */
+  .page { grid-column: 2; grid-row: 2; min-height: calc(100vh - 52px); }
 
-  /* 底部 tab-bar 隐藏 */
+  /* 底部tab隐藏 */
   .tab-bar { display: none !important; }
 
   /* panic-fab */
   .panic-fab { bottom: 24px; right: 24px; }
 
-  /* Bottom sheets 向右偏移侧边栏宽度 */
-  #wSheet, #ftPullupSheet, #ftDeskSheet, #ftBreathSheet {
-    left: 260px !important;
-  }
+  /* Sheets向右偏移 */
+  #wSheet, #ftPullupSheet, #ftDeskSheet, #ftBreathSheet { left: 260px !important; }
   #coolOverlay { left: 260px !important; }
 
-  /* 登录浮层覆盖整个视口（不偏移）*/
-  #fbAuthOverlay {
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-  }
-
-  /* 用户菜单位置 */
+  /* 登录浮层铺满全屏（不偏移） */
+  #fbAuthOverlay { left: 0 !important; }
   #fbUserMenu { right: 20px; top: 58px; }
-
-  /* 侧边栏 drawer 宽度 */
-  #drawer .drawer-panel { width: 260px; }
-}
-
-/* ════════ 超宽屏 1400px+ ════════ */
-@media (min-width: 1400px) {
-  body { max-width: 1440px; }
-}
-
-/* ════════ 小屏手机 374px 以下 ════════ */
-@media (max-width: 374px) {
-  .hh-title { font-size: 34px; }
-  .tab-label { font-size: 9px; letter-spacing: 0; }
-  .home-hero { padding: 18px 14px 14px; }
-}
-
-/* ════════ iPhone 横屏 ════════ */
-@media (max-height: 500px) and (orientation: landscape) {
-  body { padding-bottom: 52px; }
-  .tab-bar { padding-bottom: 0; }
-  .hh-title { font-size: 28px; }
 }
 
 /* ════════════════════════════════════════
@@ -1041,38 +1014,34 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
   font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 2px;
 }
 
-/* ════════════════════════════════════════
-   宽屏视觉优化补充
-════════════════════════════════════════ */
+/* ════ 宽屏视觉优化 ════ */
 @media (min-width: 900px) {
-
-  /* 内容区左侧边界线 */
-  .page { border-left: 1px solid var(--line); min-height: calc(100vh - 52px); }
-
-  /* 首页标题宽屏放大 */
+  .page { border-left: 1px solid var(--line); }
   .hh-title { font-size: 52px; }
   .home-hero { padding: 36px 32px 28px; }
-  .hh-deco { font-size: 120px; opacity: .04; }
-
-  /* 侧边栏导航项 */
-  .drawer-item { min-height: 46px; }
-  .drawer-brand { font-size: 17px; }
-
-  /* 工具页信号网格宽屏4列 */
-  .sig-grid { grid-template-columns: repeat(4,1fr) !important; }
-
-  /* drawer 在宽屏不需要 open 动画，直接显示 */
-  #drawer { transition: none !important; }
-
-  /* 宽屏下心法列表更宽 */
   .wisdom-list { padding: 14px 24px 0; }
   .wisdom-row { padding: 16px 20px; }
-
-  /* 宽屏下所有 sheet 面板最大宽度 */
+  #drawer { transition: none !important; }
   #wSheet .ws-panel { max-width: 720px; }
-  #ftPullupSheet > div:last-child,
-  #ftDeskSheet > div:last-child,
-  #ftBreathSheet > div:last-child { max-width: 720px; }
+}
+
+/* ════ 超宽屏 ════ */
+@media (min-width: 1400px) {
+  body { max-width: 1440px; }
+}
+
+/* ════ 小屏手机 ════ */
+@media (max-width: 374px) {
+  .hh-title { font-size: 34px; }
+  .tab-label { font-size: 9px; letter-spacing: 0; }
+  .home-hero { padding: 18px 14px 14px; }
+}
+
+/* ════ iPhone横屏 ════ */
+@media (max-height: 500px) and (orientation: landscape) {
+  body { padding-bottom: 52px; }
+  .tab-bar { padding-bottom: 0; }
+  .hh-title { font-size: 28px; }
 }
 </style>
 
@@ -1133,6 +1102,10 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 .fb-skip:hover { color: var(--dim); }
 
 /* ── 顶栏用户信息 ── */
+#tbLoginBtn:hover {
+  border-color: var(--gold) !important;
+  color: var(--gold) !important;
+}
 .tb-user {
   display: flex; align-items: center; gap: 6px;
   background: var(--card); border: 1px solid var(--line);
@@ -1174,8 +1147,12 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
 
 
 <!-- ═══ FIREBASE 登录浮层 ═══ -->
-<div id="fbAuthOverlay">
-  <div class="fb-auth-card">
+<div id="fbAuthOverlay" class="hidden">
+  <!-- 点背景关闭 -->
+  <div style="position:absolute;inset:0;cursor:pointer" onclick="fbHideLogin()"></div>
+  <div class="fb-auth-card" style="position:relative;z-index:1">
+    <!-- 关闭按钮 -->
+    <button onclick="fbHideLogin()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;line-height:1;padding:4px;border-radius:6px" title="以访客身份继续">✕</button>
     <div class="fb-auth-logo">📖</div>
     <div class="fb-auth-title">牛市冷却系统</div>
     <div class="fb-auth-sub">登录后，你的心法进度、交易日志和体能记录将跨设备同步保存。</div>
@@ -1198,7 +1175,7 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     <button class="fb-email-btn" onclick="fbSignInEmail()">登录 / 注册</button>
     <div class="fb-auth-msg" id="fbAuthMsg"></div>
 
-    <div class="fb-skip" onclick="fbSkipAuth()">暂时跳过，不同步数据</div>
+    <button onclick="fbHideLogin()" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--muted);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all .2s">以访客身份继续浏览</button>
   </div>
 </div>
 
@@ -1220,6 +1197,9 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
     <div class="tb-bar"><div class="tb-fill" id="tbFill"></div></div>
     <div class="tb-val" id="tbVal">--</div>
   </div>
+  <button id="tbLoginBtn" onclick="fbShowLogin()" style="display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--line2);background:transparent;color:var(--dim);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .2s;letter-spacing:.5px;white-space:nowrap">
+    <span>👤</span> 登录
+  </button>
   <div class="tb-user" id="tbUser" onclick="fbToggleUserMenu()" style="display:none">
     <div class="tb-avatar" id="tbAvatar">?</div>
     <span class="tb-uname" id="tbUname">用户</span>
@@ -1253,12 +1233,6 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
       <div class="di-num">💪</div>
       <div class="di-label">交易者体能</div>
       <div class="di-tag" style="background:rgba(67,217,173,.12);color:var(--mint);border:1px solid rgba(67,217,173,.3)">体能</div>
-    </div>
-    <div class="drawer-section-label" style="margin-top:8px;">扩展模块</div>
-    <div class="drawer-item" id="drawerFitness" onclick="goTab(4,document.getElementById('tabFitness'));closeDrawer()">
-      <div class="di-num" style="color:var(--mint)">💪</div>
-      <div class="di-label">交易者体能</div>
-      <div class="di-tag" style="background:rgba(67,217,173,.1);color:var(--mint);border:1px solid rgba(67,217,173,.3)">体能</div>
     </div>
     <div class="drawer-section-label" style="margin-top:8px;">心法分类</div>
     <div class="drawer-item" onclick="filterCat('all');goTab(0);closeDrawer()"><div class="di-num">20</div><div class="di-label">全部心法</div></div>
@@ -2113,6 +2087,20 @@ input[type=range]:active::-webkit-slider-thumb { transform: scale(1.2); }
           <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#a78bfa" id="ft-breath-target">6</div><div style="font-size:10px;color:var(--muted);margin-top:3px">目标轮数</div></div>
           <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--gold)" id="ft-breath-elapsed">0:00</div><div style="font-size:10px;color:var(--muted);margin-top:3px">已用时间</div></div>
         </div>
+        <!-- 音效选择 -->
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px;flex-wrap:wrap">
+          <button id="snd-none" onclick="ftSetSound('none',this)" style="padding:6px 10px;border-radius:20px;border:1px solid #a78bfa;background:rgba(167,139,250,.15);color:#a78bfa;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--mono);letter-spacing:.5px">🔇 静音</button>
+          <button id="snd-bowl" onclick="ftSetSound('bowl',this)" style="padding:6px 10px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--mono);letter-spacing:.5px">🔔 颂钵</button>
+          <button id="snd-rain" onclick="ftSetSound('rain',this)" style="padding:6px 10px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--mono);letter-spacing:.5px">🌧 雨声</button>
+          <button id="snd-binaural" onclick="ftSetSound('binaural',this)" style="padding:6px 10px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--mono);letter-spacing:.5px">🎶 双耳</button>
+          <button id="snd-guide" onclick="ftSetSound('guide',this)" style="padding:6px 10px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--mono);letter-spacing:.5px">🌬 引导音</button>
+        </div>
+        <!-- 音量控制 -->
+        <div id="snd-vol-row" style="display:flex;align-items:center;gap:10px;margin-bottom:14px;display:none">
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">音量</span>
+          <input type="range" id="snd-vol" min="0" max="100" value="40" style="flex:1;accent-color:#a78bfa" oninput="ftSetVolume(this.value)">
+          <span id="snd-vol-val" style="font-family:var(--mono);font-size:11px;color:var(--dim);width:28px">40</span>
+        </div>
         <div style="display:flex;gap:8px;justify-content:center">
           <button id="ft-breath-btn" onclick="ftToggleBreath()" style="padding:10px 28px;border-radius:10px;border:none;background:#a78bfa;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">开始冥想</button>
           <button onclick="ftResetBreath()" style="padding:10px 20px;border-radius:10px;border:1.5px solid var(--red);background:transparent;color:var(--red);font-size:13px;cursor:pointer">重置</button>
@@ -2548,11 +2536,10 @@ setInterval(function(){ setHeat(heat + (Math.random()-.47)*1.5); }, 3000);
 // ══════════════════════════════════════
 var tabs = document.querySelectorAll('.tab');
 function goTab(n, btn) {
-  // 切换页面
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
   var pg = document.getElementById('pg'+n);
   if (pg) pg.classList.add('active');
-  // 底部 tab 高亮（手机端）
+  // 底部tab高亮
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   var allTabs = document.querySelectorAll('.tab');
   var activeTab = (btn && btn.classList && btn.classList.contains('tab')) ? btn : allTabs[n];
@@ -3578,10 +3565,13 @@ function fbUserDoc() {
 // ── 登录状态监听 ──
 fbAuth.onAuthStateChanged(function(user) {
   fbUser = user;
+  var loginBtn = document.getElementById('tbLoginBtn');
+  var userBtn  = document.getElementById('tbUser');
   if (user) {
-    // 已登录：隐藏浮层，显示用户信息
+    // 已登录：隐藏登录按钮，隐藏浮层，显示用户头像
     document.getElementById('fbAuthOverlay').classList.add('hidden');
-    document.getElementById('tbUser').style.display = 'flex';
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userBtn) userBtn.style.display = 'flex';
     // 显示头像/名字
     var avatar = document.getElementById('tbAvatar');
     var uname  = document.getElementById('tbUname');
@@ -3595,10 +3585,21 @@ fbAuth.onAuthStateChanged(function(user) {
     // 从云端拉取数据
     fbPullData();
   } else {
-    // 未登录：显示浮层
-    document.getElementById('tbUser').style.display = 'none';
+    // 未登录：显示登录按钮，隐藏头像（不强制弹窗，用户自己点）
+    if (loginBtn) loginBtn.style.display = 'flex';
+    if (userBtn) userBtn.style.display = 'none';
   }
 });
+
+// 显示登录浮层
+function fbShowLogin() {
+  document.getElementById('fbAuthOverlay').classList.remove('hidden');
+}
+
+// 隐藏登录浮层（访客模式继续）
+function fbHideLogin() {
+  document.getElementById('fbAuthOverlay').classList.add('hidden');
+}
 
 // ── Google 登录 ──
 function fbSignInGoogle() {
@@ -3641,16 +3642,13 @@ function fbSetMsg(msg, isErr) {
   el.className = 'fb-auth-msg' + (isErr ? ' fb-auth-err' : '');
 }
 
-// ── 跳过登录 ──
-function fbSkipAuth() {
-  document.getElementById('fbAuthOverlay').classList.add('hidden');
-}
+// fbSkipAuth 已由 fbHideLogin 替代
 
 // ── 退出登录 ──
 function fbSignOut() {
   fbAuth.signOut().then(function() {
     fbHideUserMenu();
-    document.getElementById('fbAuthOverlay').classList.remove('hidden');
+    // 退出后回到访客模式，不强制弹出登录框
     document.getElementById('fbEmail').value = '';
     document.getElementById('fbPassword').value = '';
     fbSetMsg('', false);
@@ -3813,6 +3811,397 @@ function fbExportData() {
   a.click();
 }
 
+
+// ══════════════════════════════════════════════════════
+// 冥想音频引擎 · Web Audio API
+// 四种模式：颂钵 / 雨声白噪音 / 双耳节拍 / 呼吸引导音
+// ══════════════════════════════════════════════════════
+
+var ftAudioCtx = null;
+var ftCurrentSound = 'none';  // none | bowl | rain | binaural | guide
+var ftVolume = 0.4;
+var ftAudioNodes = [];  // 当前播放的所有节点
+var ftRainInterval = null;
+var ftGuideRunning = false;
+
+// ── 初始化 AudioContext（需要用户交互后才能创建）──
+function ftGetAudioCtx() {
+  if (!ftAudioCtx) {
+    ftAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (ftAudioCtx.state === 'suspended') {
+    ftAudioCtx.resume();
+  }
+  return ftAudioCtx;
+}
+
+// ── 停止所有音频 ──
+function ftStopAllAudio() {
+  ftAudioNodes.forEach(function(node) {
+    try { node.stop(); } catch(e) {}
+    try { node.disconnect(); } catch(e) {}
+  });
+  ftAudioNodes = [];
+  if (ftRainInterval) { clearInterval(ftRainInterval); ftRainInterval = null; }
+  ftGuideRunning = false;
+}
+
+// ══════════════════════════════
+// 颂钵音 · 用正弦波模拟金属共鸣
+// ══════════════════════════════
+function ftPlayBowl(frequency, duration, volume) {
+  var ctx = ftGetAudioCtx();
+  var osc = ctx.createOscillator();
+  var gainNode = ctx.createGain();
+  var masterGain = ctx.createGain();
+
+  osc.connect(gainNode);
+  gainNode.connect(masterGain);
+  masterGain.connect(ctx.destination);
+
+  // 叠加泛音，让声音更像真实颂钵
+  var osc2 = ctx.createOscillator();
+  var gain2 = ctx.createGain();
+  osc2.connect(gain2);
+  gain2.connect(masterGain);
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(frequency || 432, ctx.currentTime);
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime((frequency || 432) * 2.756, ctx.currentTime); // 泛音
+
+  var vol = (volume || ftVolume) * 0.7;
+  gainNode.gain.setValueAtTime(0, ctx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.01);  // 快速起音
+  gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (duration || 3));
+
+  gain2.gain.setValueAtTime(0, ctx.currentTime);
+  gain2.gain.linearRampToValueAtTime(vol * 0.3, ctx.currentTime + 0.01);
+  gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (duration || 3) * 0.7);
+
+  masterGain.gain.setValueAtTime(1, ctx.currentTime);
+
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + (duration || 3));
+  osc2.start(ctx.currentTime);
+  osc2.stop(ctx.currentTime + (duration || 3));
+
+  ftAudioNodes.push(osc, osc2);
+}
+
+// 开始/结束的颂钵声（更饱满）
+function ftBowlStrike() {
+  ftPlayBowl(432, 4, ftVolume);      // 基频 432Hz
+  setTimeout(function() {
+    ftPlayBowl(528, 3.5, ftVolume * 0.5);  // 和声
+  }, 80);
+}
+
+// ══════════════════════════════
+// 雨声白噪音 · Brown Noise 更暖
+// ══════════════════════════════
+function ftStartRain() {
+  var ctx = ftGetAudioCtx();
+  var bufferSize = ctx.sampleRate * 2;
+  var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  var data = buffer.getChannelData(0);
+
+  // Brown noise（比白噪音更柔和，更像雨声）
+  var lastOut = 0;
+  for (var i = 0; i < bufferSize; i++) {
+    var white = Math.random() * 2 - 1;
+    data[i] = (lastOut + (0.02 * white)) / 1.02;
+    lastOut = data[i];
+    data[i] *= 3.5;
+  }
+
+  var source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  // 低通滤波，让音色更像远处雨声
+  var filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 0.5;
+
+  var gainNode = ctx.createGain();
+  gainNode.gain.setValueAtTime(0, ctx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(ftVolume * 0.6, ctx.currentTime + 1.5);
+
+  source.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(ctx.destination);
+  source.start();
+
+  ftAudioNodes.push(source, gainNode);
+
+  // 偶发雨滴声（增加真实感）
+  ftRainInterval = setInterval(function() {
+    if (!ftAudioCtx) return;
+    var dropCtx = ftGetAudioCtx();
+    var dropOsc = dropCtx.createOscillator();
+    var dropGain = dropCtx.createGain();
+    dropOsc.connect(dropGain);
+    dropGain.connect(dropCtx.destination);
+    dropOsc.frequency.value = 800 + Math.random() * 400;
+    dropOsc.type = 'sine';
+    dropGain.gain.setValueAtTime(0, dropCtx.currentTime);
+    dropGain.gain.linearRampToValueAtTime(ftVolume * 0.08, dropCtx.currentTime + 0.01);
+    dropGain.gain.exponentialRampToValueAtTime(0.001, dropCtx.currentTime + 0.3);
+    dropOsc.start(dropCtx.currentTime);
+    dropOsc.stop(dropCtx.currentTime + 0.3);
+    ftAudioNodes.push(dropOsc);
+  }, 400 + Math.random() * 1200);
+}
+
+// ══════════════════════════════
+// 双耳节拍 · Binaural Beats
+// 左耳 200Hz，右耳 210Hz → 感知到 10Hz α波（放松专注）
+// ══════════════════════════════
+function ftStartBinaural() {
+  var ctx = ftGetAudioCtx();
+
+  // 左耳
+  var oscL = ctx.createOscillator();
+  var gainL = ctx.createGain();
+  var panL = ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createPanner();
+
+  oscL.type = 'sine';
+  oscL.frequency.value = 200;
+  gainL.gain.setValueAtTime(0, ctx.currentTime);
+  gainL.gain.linearRampToValueAtTime(ftVolume * 0.4, ctx.currentTime + 2);
+
+  if (panL.pan) { panL.pan.value = -1; }  // StereoPanner
+  else { panL.panningModel = 'equalpower'; panL.setPosition(-1,0,0); }
+
+  oscL.connect(gainL);
+  gainL.connect(panL);
+  panL.connect(ctx.destination);
+  oscL.start();
+
+  // 右耳（频率差10Hz = Alpha波段，促进放松+专注）
+  var oscR = ctx.createOscillator();
+  var gainR = ctx.createGain();
+  var panR = ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createPanner();
+
+  oscR.type = 'sine';
+  oscR.frequency.value = 210;
+  gainR.gain.setValueAtTime(0, ctx.currentTime);
+  gainR.gain.linearRampToValueAtTime(ftVolume * 0.4, ctx.currentTime + 2);
+
+  if (panR.pan) { panR.pan.value = 1; }
+  else { panR.panningModel = 'equalpower'; panR.setPosition(1,0,0); }
+
+  oscR.connect(gainR);
+  gainR.connect(panR);
+  panR.connect(ctx.destination);
+  oscR.start();
+
+  // 底层棕噪音作背景
+  var bufferSize = ctx.sampleRate * 2;
+  var buf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  var last = 0;
+  for (var i = 0; i < bufferSize; i++) {
+    var w = Math.random() * 2 - 1;
+    d[i] = (last + 0.02 * w) / 1.02;
+    last = d[i];
+  }
+  var bgSrc = ctx.createBufferSource();
+  bgSrc.buffer = buf; bgSrc.loop = true;
+  var bgGain = ctx.createGain();
+  var bgFilter = ctx.createBiquadFilter();
+  bgFilter.type = 'lowpass'; bgFilter.frequency.value = 400;
+  bgSrc.connect(bgFilter); bgFilter.connect(bgGain); bgGain.connect(ctx.destination);
+  bgGain.gain.setValueAtTime(ftVolume * 0.15, ctx.currentTime);
+  bgSrc.start();
+
+  ftAudioNodes.push(oscL, oscR, bgSrc, gainL, gainR, bgGain);
+}
+
+// ══════════════════════════════
+// 呼吸引导音 · 跟随呼吸节奏升降音调
+// ══════════════════════════════
+function ftStartGuideSound(pattern) {
+  ftGuideRunning = true;
+  var phases = pattern || ftBCur.p;
+  var phaseIdx = 0;
+
+  function playPhase() {
+    if (!ftGuideRunning || !ftBOn) return;
+    var ctx = ftGetAudioCtx();
+    var ph = phases[phaseIdx % phases.length];
+    var phaseName = ph[0];
+    var dur = ph[2];
+
+    var osc = ctx.createOscillator();
+    var gainNode = ctx.createGain();
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    osc.type = 'sine';
+
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(ftVolume * 0.25, ctx.currentTime + 0.3);
+    gainNode.gain.linearRampToValueAtTime(ftVolume * 0.25, ctx.currentTime + dur - 0.3);
+    gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + dur);
+
+    if (phaseName === '吸气') {
+      // 吸气：音调从低到高（180Hz → 300Hz）
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(300, ctx.currentTime + dur);
+    } else if (phaseName === '呼气') {
+      // 呼气：音调从高到低（300Hz → 180Hz）
+      osc.frequency.setValueAtTime(300, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(180, ctx.currentTime + dur);
+    } else {
+      // 屏气：持续中音（240Hz，轻柔颤音）
+      osc.frequency.setValueAtTime(240, ctx.currentTime);
+      var tremolo = ctx.createOscillator();
+      var tremoloGain = ctx.createGain();
+      tremolo.connect(tremoloGain);
+      tremoloGain.connect(gainNode.gain);
+      tremolo.frequency.value = 4;
+      tremoloGain.gain.value = 0.02;
+      tremolo.start(ctx.currentTime);
+      tremolo.stop(ctx.currentTime + dur);
+      ftAudioNodes.push(tremolo);
+    }
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + dur);
+    ftAudioNodes.push(osc, gainNode);
+
+    phaseIdx++;
+    setTimeout(function() {
+      if (ftGuideRunning && ftBOn) playPhase();
+    }, dur * 1000);
+  }
+
+  playPhase();
+}
+
+// ══════════════════════════════
+// 音效选择控制
+// ══════════════════════════════
+function ftSetSound(type, btn) {
+  ftCurrentSound = type;
+  // 更新UI
+  ['snd-none','snd-bowl','snd-rain','snd-binaural','snd-guide'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.style.borderColor = 'var(--line)';
+    b.style.background = 'transparent';
+    b.style.color = 'var(--dim)';
+  });
+  if (btn) {
+    btn.style.borderColor = '#a78bfa';
+    btn.style.background = 'rgba(167,139,250,.15)';
+    btn.style.color = '#a78bfa';
+  }
+  // 显示/隐藏音量控制
+  var volRow = document.getElementById('snd-vol-row');
+  if (volRow) volRow.style.display = type === 'none' ? 'none' : 'flex';
+
+  // 如果冥想正在进行，切换音效
+  if (ftBOn) {
+    ftStopAllAudio();
+    ftStartCurrentSound();
+  }
+}
+
+function ftSetVolume(val) {
+  ftVolume = parseInt(val) / 100;
+  var el = document.getElementById('snd-vol-val');
+  if (el) el.textContent = val;
+}
+
+function ftStartCurrentSound() {
+  if (ftCurrentSound === 'none') return;
+  if (ftCurrentSound === 'rain') { ftStartRain(); return; }
+  if (ftCurrentSound === 'binaural') { ftStartBinaural(); return; }
+  if (ftCurrentSound === 'guide') { ftStartGuideSound(ftBCur.p); return; }
+  // 颂钵：开始时敲一下
+  if (ftCurrentSound === 'bowl') { ftBowlStrike(); return; }
+}
+
+// ══════════════════════════════
+// Hook 到呼吸函数上
+// ══════════════════════════════
+
+// 原始函数备份
+var _origFtToggleBreath = ftToggleBreath;
+ftToggleBreath = function() {
+  _origFtToggleBreath();
+  if (ftBOn) {
+    // 刚开始：播放开场颂钵 + 启动背景音
+    if (ftCurrentSound === 'bowl') {
+      ftBowlStrike();
+    } else {
+      ftStartCurrentSound();
+    }
+  } else {
+    // 暂停：停止背景音（颂钵自然衰减，不需要stop）
+    if (ftCurrentSound !== 'bowl') ftStopAllAudio();
+  }
+};
+
+var _origFtBreathDone = ftBreathDone;
+ftBreathDone = function() {
+  _origFtBreathDone();
+  // 结束：停止背景音，敲结束颂钵
+  if (ftCurrentSound !== 'bowl') ftStopAllAudio();
+  // 无论什么模式，结束都敲颂钵
+  setTimeout(function() { ftBowlStrike(); }, 200);
+  setTimeout(function() { ftBowlStrike(); }, 1800);
+};
+
+var _origFtResetBreath = ftResetBreath;
+ftResetBreath = function() {
+  _origFtResetBreath();
+  ftStopAllAudio();
+};
+
+// 每轮呼吸循环结束时敲颂钵（仅颂钵模式）
+var _origFtBPhase = ftBPhase;
+ftBPhase = function() {
+  _origFtBPhase();
+};
+
+// Hook ftRunBPhase：每次呼吸相切换时处理引导音
+// 注意：引导音模式由 ftStartGuideSound 自己管理节奏，不需要额外hook
+
+// 双耳节拍：开始冥想时启动（颂钵先敲一下，再启动双耳）
+var _origFtSelectBreath = ftSelectBreath;
+ftSelectBreath = function(key, btn) {
+  _origFtSelectBreath(key, btn);
+};
+
+// 打开冥想面板时初始化音效UI
+var _origFtOpenModule = ftOpenModule;
+ftOpenModule = function(name) {
+  _origFtOpenModule(name);
+  if (name === 'breath') {
+    // 默认显示静音选中状态
+    var noneBtn = document.getElementById('snd-none');
+    if (noneBtn && ftCurrentSound === 'none') {
+      noneBtn.style.borderColor = '#a78bfa';
+      noneBtn.style.background = 'rgba(167,139,250,.15)';
+      noneBtn.style.color = '#a78bfa';
+    }
+    var volRow = document.getElementById('snd-vol-row');
+    if (volRow) volRow.style.display = ftCurrentSound === 'none' ? 'none' : 'flex';
+  }
+};
+
+// 页面不可见时暂停音频（省电）
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && ftAudioCtx) {
+    ftAudioCtx.suspend();
+  } else if (!document.hidden && ftAudioCtx && ftBOn) {
+    ftAudioCtx.resume();
+  }
+});
 
 </script>
 </body>
