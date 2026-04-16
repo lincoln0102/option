@@ -2,7 +2,7 @@
 // BMCS Service Worker · 牛市冷却系统
 // 路径: lincoln0102.github.io/option/
 // ══════════════════════════════════════
-const CACHE_NAME = 'bmcs-v1';
+const CACHE_NAME = 'bmcs-v6';
 const BASE = '/option/';
 
 const ASSETS = [
