@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交易纪律 · Trader's Discipline</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Noto+Serif+SC:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════ */
+:root {
+  --paper:     #f7f3ed;
+  --paper2:    #f0ebe2;
+  --paper3:    #e8e1d5;
+  --ink:       #1a1612;
+  --ink2:      #3d3630;
+  --ink3:      #6b6259;
+  --ink4:      #9a9088;
+  --rule:      #d4cdc4;
+  --rule2:     #c4bdb2;
+
+  --vermilion: #c0392b;
+  --verm-lt:   #d45a4c;
+  --verm-bg:   rgba(192,57,43,0.07);
+  --sage:      #4a7c6f;
+  --sage-bg:   rgba(74,124,111,0.08);
+  --navy:      #2c3e6b;
+  --navy-bg:   rgba(44,62,107,0.07);
+  --amber:     #8b6914;
+  --amber-bg:  rgba(139,105,20,0.08);
+
+  --serif:     'Noto Serif SC', 'Playfair Display', Georgia, serif;
+  --body-serif:'Noto Serif SC', Georgia, serif;
+  --sans:      'Noto Sans SC', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+
+  --r:         6px;
+  --max:       900px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body-serif);
+  font-size: 18px;
+  line-height: 2;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle paper texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════ */
+.site-header {
+  position: relative; z-index: 10;
+  border-bottom: 2px solid var(--ink);
+  padding: 0 24px;
+}
+.header-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 32px 0 20px;
+  gap: 16px;
+}
+.header-left {}
+.site-eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+  color: var(--ink4); text-transform: uppercase; margin-bottom: 6px;
+}
+.site-title {
+  font-family: var(--serif); font-size: clamp(32px, 6vw, 52px);
+  font-weight: 700; color: var(--ink); line-height: 1.05;
+  letter-spacing: -0.5px;
+}
+.site-title em { color: var(--vermilion); font-style: italic; }
+.site-subtitle {
+  font-family: var(--body-serif); font-size: 17px; color: var(--ink3);
+  margin-top: 8px; font-style: italic; line-height: 1.7;
+}
+.header-vol {
+  flex-shrink: 0; text-align: right;
+  font-family: var(--mono); font-size: 11px; color: var(--ink4);
+  letter-spacing: 1px; line-height: 2;
+  border-left: 1px solid var(--rule); padding-left: 20px;
+}
+.header-vol strong { display: block; font-size: 28px; color: var(--ink); font-family: var(--serif); font-weight: 400; letter-spacing: -1px; }
+
+/* chapter nav strip */
+.chapter-nav {
+  position: sticky; top: 0; z-index: 500;
+  background: var(--paper); border-bottom: 1px solid var(--rule);
+  padding: 0 24px;
+  box-shadow: 0 2px 12px rgba(26,22,18,0.06);
+}
+.chapter-nav-inner {
+  max-width: var(--max); margin: 0 auto;
+  display: flex; gap: 0; overflow-x: auto;
+  scrollbar-width: none;
+}
+.chapter-nav-inner::-webkit-scrollbar { display: none; }
+.ch-btn {
+  flex-shrink: 0; padding: 14px 18px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+  color: var(--ink4); background: none; border: none;
+  border-bottom: 2px solid transparent; cursor: pointer;
+  transition: all .2s; text-transform: uppercase; white-space: nowrap;
+  margin-bottom: -1px;
+}
+.ch-btn:hover { color: var(--ink2); }
+.ch-btn.active { color: var(--vermilion); border-bottom-color: var(--vermilion); }
+
+/* ═══════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════ */
+.main {
+  position: relative; z-index: 1;
+  max-width: var(--max); margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ═══════════════════════════════════════════
+   CHAPTER SECTION
+═══════════════════════════════════════════ */
+.chapter {
+  padding-top: 64px; margin-bottom: 16px;
+}
+.chapter-header {
+  margin-bottom: 40px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: flex-start; gap: 20px;
+}
+.ch-num {
+  font-family: var(--serif); font-size: 64px; font-weight: 400;
+  color: var(--paper3); line-height: 1; flex-shrink: 0;
+  margin-top: -8px; user-select: none;
+  letter-spacing: -2px;
+}
+.ch-meta {}
+.ch-roman {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  color: var(--ink4); text-transform: uppercase; margin-bottom: 6px;
+}
+.ch-title {
+  font-family: var(--serif); font-size: clamp(22px, 4vw, 30px);
+  font-weight: 600; color: var(--ink); line-height: 1.2;
+}
+.ch-desc {
+  font-family: var(--sans); font-size: 15px; color: var(--ink3);
+  margin-top: 6px; line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════
+   PRINCIPLE CARD
+═══════════════════════════════════════════ */
+.principle {
+  margin-bottom: 36px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+  background: #fff;
+  overflow: hidden;
+  transition: box-shadow .25s;
+  cursor: pointer;
+}
+.principle:hover { box-shadow: 0 4px 24px rgba(26,22,18,0.08); }
+.principle.open { box-shadow: 0 6px 32px rgba(26,22,18,0.10); }
+
+.pr-head {
+  padding: 24px 28px 22px;
+  display: flex; align-items: flex-start; gap: 18px;
+}
+.pr-index {
+  font-family: var(--mono); font-size: 11px; color: var(--ink4);
+  letter-spacing: 2px; flex-shrink: 0; padding-top: 6px;
+  min-width: 28px;
+}
+.pr-content { flex: 1; min-width: 0; }
+.pr-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.pr-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  padding: 3px 9px; border-radius: 2px; text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+.tag-marks   { color: var(--vermilion); background: var(--verm-bg); }
+.tag-douglas { color: var(--navy);      background: var(--navy-bg); }
+.tag-liver   { color: var(--ink3);      background: var(--paper2); border-color: var(--rule); }
+.tag-jones   { color: var(--sage);      background: var(--sage-bg); }
+.tag-taleb   { color: var(--amber);     background: var(--amber-bg); }
+.tag-buffett { color: var(--vermilion); background: var(--verm-bg); }
+.tag-general { color: var(--ink3);      background: var(--paper2); border-color: var(--rule); }
+
+.pr-title {
+  font-family: var(--serif); font-size: clamp(19px, 3vw, 23px);
+  font-weight: 600; color: var(--ink); line-height: 1.4;
+  margin-bottom: 0;
+}
+.pr-toggle {
+  flex-shrink: 0; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule); border-radius: 50%;
+  background: none; cursor: pointer; transition: all .2s;
+  color: var(--ink4); font-size: 14px; padding-top: 1px;
+  margin-top: 4px;
+}
+.principle.open .pr-toggle { background: var(--ink); color: var(--paper); border-color: var(--ink); transform: rotate(45deg); }
+
+/* quote strip — always visible */
+.pr-quote-strip {
+  padding: 0 28px 22px 74px;
+  font-family: var(--body-serif); font-size: 18px;
+  font-style: italic; color: var(--ink3); line-height: 1.75;
+  border-bottom: 1px solid var(--rule);
+}
+.pr-quote-strip::before { content: '"'; font-size: 24px; color: var(--vermilion); vertical-align: -4px; margin-right: 2px; }
+.pr-quote-strip::after  { content: '"'; font-size: 24px; color: var(--vermilion); vertical-align: -4px; margin-left: 2px; }
+.pr-quote-by {
+  display: block; margin-top: 6px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px;
+  color: var(--ink4); font-style: normal; text-align: right; padding-right: 4px;
+}
+
+/* expandable body */
+.pr-body {
+  display: none; padding: 24px 28px 28px 74px;
+}
+.principle.open .pr-body { display: block; }
+
+.pr-body p {
+  font-family: var(--body-serif); font-size: 17px;
+  color: var(--ink2); line-height: 2.05; margin-bottom: 18px;
+}
+.pr-body p:last-child { margin-bottom: 0; }
+
+.pr-rule {
+  margin: 20px 0;
+  padding: 16px 20px;
+  background: var(--paper2);
+  border-left: 3px solid var(--vermilion);
+  border-radius: 0 var(--r) var(--r) 0;
+}
+.pr-rule-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  color: var(--vermilion); text-transform: uppercase; margin-bottom: 8px;
+}
+.pr-rule-text {
+  font-family: var(--sans); font-size: 15px; color: var(--ink2);
+  line-height: 1.85; font-weight: 500;
+}
+
+.pr-cases { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .pr-cases { grid-template-columns: 1fr; } }
+
+.pr-case {
+  padding: 14px 18px;
+  background: var(--paper2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r);
+}
+.pr-case.case-us {
+  background: var(--navy-bg);
+  border-color: rgba(44,62,107,0.18);
+}
+.pr-case-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+  color: var(--ink4); text-transform: uppercase; margin-bottom: 8px;
+}
+.pr-case.case-us .pr-case-label { color: var(--navy); }
+.pr-case-text {
+  font-family: var(--sans); font-size: 14px; color: var(--ink3);
+  line-height: 1.85;
+}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+.site-footer {
+  border-top: 2px solid var(--ink); padding: 32px 24px;
+  position: relative; z-index: 1;
+}
+.footer-inner {
+  max-width: var(--max); margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+.footer-brand { font-family: var(--serif); font-size: 18px; color: var(--ink2); }
+.footer-note  { font-family: var(--mono); font-size: 11px; color: var(--ink4); letter-spacing: 1px; line-height: 1.8; text-align: right; }
+
+/* ═══════════════════════════════════════════
+   INTRO BLOCK
+═══════════════════════════════════════════ */
+.intro-block {
+  padding: 40px 0 32px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+  align-items: start;
+}
+@media (max-width: 640px) { .intro-block { grid-template-columns: 1fr; gap: 24px; } }
+.intro-text {
+  font-family: var(--body-serif); font-size: 16px; color: var(--ink2);
+  line-height: 2; font-style: italic;
+}
+.author-grid { display: flex; flex-direction: column; gap: 10px; }
+.author-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: #fff; border: 1px solid var(--rule); border-radius: var(--r);
+  transition: border-color .2s; cursor: default;
+}
+.author-row:hover { border-color: var(--rule2); }
+.author-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-marks   { background: var(--vermilion); }
+.dot-douglas { background: var(--navy); }
+.dot-liver   { background: var(--ink3); }
+.dot-jones   { background: var(--sage); }
+.dot-taleb   { background: var(--amber); }
+.dot-buffett { background: var(--vermilion); opacity: 0.7; }
+.author-name { font-family: var(--serif); font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+.author-tag  { font-family: var(--mono); font-size: 10px; color: var(--ink4); letter-spacing: 1px; }
+
+/* Progress bar */
+.progress-bar {
+  padding: 14px 0; display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.pb-label { font-family: var(--mono); font-size: 10px; color: var(--ink4); letter-spacing: 2px; white-space: nowrap; }
+.pb-track { flex: 1; height: 2px; background: var(--rule); }
+.pb-fill  { height: 100%; background: var(--vermilion); transition: width .5s; }
+.pb-count { font-family: var(--mono); font-size: 12px; color: var(--ink3); white-space: nowrap; }
+
+/* animations */
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.chapter { animation: fadeUp .4s ease both; }
+
+/* mobile */
+@media (max-width: 600px) {
+  .pr-head { padding: 20px 18px 16px; gap: 12px; }
+  .pr-quote-strip { padding: 0 18px 18px 18px; font-size: 17px; }
+  .pr-body { padding: 20px 18px 24px; }
+  .pr-body p { font-size: 16px; }
+  .pr-rule-text { font-size: 15px; }
+  .pr-case-text { font-size: 14px; }
+  .pr-index { display: none; }
+  .header-vol { display: none; }
+  .ch-btn { padding: 12px 12px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="site-eyebrow">Trader's Discipline · 交易者文库</div>
+      <h1 class="site-title">投资者的<em>交易纪律</em></h1>
+      <p class="site-subtitle">六位大师，三十二条原则，一个核心命题：<br>在市场中活下去，是一切策略的前提。</p>
+    </div>
+    <div class="header-vol">
+      <strong>VI</strong>
+      章节<br>
+      <strong id="totalCount">32</strong>
+      原则
+    </div>
+  </div>
+</header>
+
+<!-- CHAPTER NAV -->
+<nav class="chapter-nav">
+  <div class="chapter-nav-inner" id="chapterNav"></div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- INTRO -->
+  <div class="intro-block">
+    <p class="intro-text">
+      这里收录的不是交易技法，而是那些在市场中反复被验证、被违背、又被痛苦重新学会的心智原则。每一条都来自某位曾经为此付出过真实代价的人。
+    </p>
+    <div class="author-grid">
+      <div class="author-row"><div class="author-dot dot-marks"></div><div class="author-name">霍华德·马克斯</div><div class="author-tag">MARKS</div></div>
+      <div class="author-row"><div class="author-dot dot-douglas"></div><div class="author-name">马克·道格拉斯</div><div class="author-tag">DOUGLAS</div></div>
+      <div class="author-row"><div class="author-dot dot-liver"></div><div class="author-name">杰西·利弗莫尔</div><div class="author-tag">LIVERMORE</div></div>
+      <div class="author-row"><div class="author-dot dot-jones"></div><div class="author-name">保罗·都铎·琼斯</div><div class="author-tag">JONES</div></div>
+      <div class="author-row"><div class="author-dot dot-taleb"></div><div class="author-name">纳西姆·塔勒布</div><div class="author-tag">TALEB</div></div>
+      <div class="author-row"><div class="author-dot dot-buffett"></div><div class="author-name">巴菲特 / 芒格</div><div class="author-tag">BUFFETT</div></div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-bar">
+    <span class="pb-label">READING PROGRESS</span>
+    <div class="pb-track"><div class="pb-fill" id="pbFill" style="width:0%"></div></div>
+    <span class="pb-count" id="pbCount">0 / 32</span>
+  </div>
+
+  <!-- CHAPTERS rendered by JS -->
+  <div id="chaptersRoot"></div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">交易纪律 · Trader's Discipline</div>
+    <div class="footer-note">
+      内容综合自公开著作与访谈<br>
+      仅供学习参考，不构成投资建议
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const chapters = [
+  {
+    id: 'risk',
+    roman: 'Chapter I',
+    title: '风险的真实面目',
+    desc: '风险不是波动，不是价格下跌，而是在错误时刻永久失去本金的可能性。',
+    principles: [
+      {
+        tags: ['marks'],
+        title: '风险在市场乐观时积累，在市场悲观时释放',
+        quote: '当所有人都相信某样东西没有风险时，风险往往已经到了极值。',
+        quoteBy: '霍华德·马克斯《最重要的事》',
+        body: ['大多数人把"价格下跌"等同于"风险上升"——这是完全颠倒的直觉。真正的风险，在价格上涨、情绪乐观、共识形成的时候，已经悄悄积累完毕。市场崩盘不是风险的到来，而是此前积累的风险的释放。', '这意味着：当你感到最安全的时候，往往是风险最高的时刻；当你感到最恐惧的时候，往往是风险已经被定价、甚至过度定价的时刻。感觉，永远是滞后的。'],
+        rule: '在每次感到"这次不会跌"的时候，主动问自己：现在市场的共识是什么？共识越强，风险溢价越低，潜在的下行空间越大。',
+        case: '2021年11月，BTC接近$69K时，市场共识是"机构入场+ETF获批=新时代"。恐贪指数长期维持在85+。没有人谈论风险。随后开始长达一年的-77%下跌。共识最强的那一刻，正是风险积累完成的那一刻。',
+        caseUS: '1999年底，纳斯达克市盈率超过200倍，"互联网改变一切"是无可辩驳的共识。格林斯潘早在1996年就警告"非理性繁荣"，却被市场嘲笑为保守派。2000年3月纳斯达克见顶5132点，随后-78%，历时两年半。共识越强，顶部越近。'
+      },
+      {
+        tags: ['marks'],
+        title: '波动是价格，亏损才是风险——永远不要混淆',
+        quote: '风险意味着可能发生坏事。波动提供了买入好资产的机会，而不是真正的风险。',
+        quoteBy: '霍华德·马克斯《最重要的事》',
+        body: ['持有BTC并经历-50%回撤但没有卖出的人，他的风险从未真正实现。在$60K买入、$20K割肉的人，才是真正承担了永久损失的风险。波动是暂时的，卖出才让亏损变得永久。', '理解这一点，会彻底改变你对止损的理解：止损不是"控制风险"，止损是"将浮亏转化为永久损失"。真正的风险控制，发生在买入之前——买入的价格、仓位大小、对冲结构。'],
+        rule: '在每次想要割肉之前，先回答：这个资产的长期价值判断有没有改变？如果没有，下跌是波动，不是风险。只有长期价值判断发生根本改变，才是真正应该离场的理由。',
+        case: '2021年5月，BTC从$64K跌至$28K，跌幅-56%。大量"忍受不了波动"的人在$28-35K割肉。6个月后BTC涨至$69K。那次回撤，对没有卖出的人来说风险从未发生。割肉的人，把波动变成了永久亏损。',
+        caseUS: '2022年，Meta股价从$384跌至$88，跌幅-77%。大量投资者在$150附近割肉，认为"Meta完了"。2023年Meta完成转型，股价重回$500+。那次下跌对没有卖出的长期持有者来说不过是一次波动；割肉的人，却把账面浮亏变成了真实亏损。'
+      },
+      {
+        tags: ['taleb'],
+        title: '你看不到的风险，才是最致命的风险',
+        quote: '历史不会告诉你尾部风险的真实概率——因为那些事件的样本太少，而代价太大。',
+        quoteBy: '纳西姆·塔勒布《黑天鹅》',
+        body: ['人类习惯用过去的数据预测未来的风险。但真正毁灭性的事件——塔勒布称之为"黑天鹅"——恰恰是历史上从未发生过或极少发生的事。当所有人都说"这种情况不可能发生"，往往是因为它从未在近期历史中出现过，而不是因为它真的不可能。', 'LUNA归零、FTX爆雷、2020年3月单日-50%——每一次事件发生前，所有的历史模型都告诉你这是"极小概率"。但当杠杆足够高、集中度足够大时，一次极小概率事件就足以归零。'],
+        rule: '对每个持仓做"极端情景测试"：如果这个资产在30天内归零（或下跌80%），我的总损失是多少？如果这个数字超过你总资产的20%，立刻调整结构，不论当前市场多么平静。',
+        case: '2022年5月，LUNA在72小时内从$80归零。持有20%资产在LUNA的用户，两天内财富减少了五分之一。这不是"极小概率"，这是集中持仓+无对冲结构下的必然风险。历史模型从未预测过这种速度，但仓位结构本身就是炸弹。',
+        caseUS: '2008年9月，雷曼兄弟在一个周末宣告破产，随后数周内美国货币市场基金"跌破净值"——这是此前60年从未发生过的事。所有的历史模型都说这"不可能"。持有过度集中于金融股的投资者，在无法预测的黑天鹅面前毫无防御。塔勒布本人的基金在这一年大幅盈利，因为他持续为"不可能"的事件买单。'
+      }
+    ]
+  },
+  {
+    id: 'system',
+    roman: 'Chapter II',
+    title: '系统先于感觉',
+    desc: '职业交易者与散户最本质的差距，不是分析能力，而是在极端情绪下仍能执行既定计划的能力。',
+    principles: [
+      {
+        tags: ['douglas'],
+        title: '纪律是职业交易者与业余者之间唯一真正的区别',
+        quote: '大多数交易者知道该做什么，但无法在需要的时候做到。知道和做到之间的距离，就是纪律。',
+        quoteBy: '马克·道格拉斯《专业投机原理》',
+        body: ['牛市高峰时止盈单触发，你却因"感觉还会涨"手动取消；熊市底部加仓计划触发，你却因恐惧一动不动。两种场景，都是情绪战胜了系统。建立系统容易，遵守系统才是真正的壁垒。', '道格拉斯在《专业投机原理》中指出：交易亏损的根本原因，不是分析错误，而是交易者无法执行自己认为正确的计划。市场永远提供足够的理由让你打破规则，而打破规则的后果，往往在很久之后才显现。'],
+        rule: '将所有交易规则写成"如果……则……"条件语句，并在交易前签字确认。当情绪试图说服你打破规则时，先读一遍这份合约——它是你冷静时写给狂热时的自己的信。',
+        case: '2022年LUNA崩盘时，有预设止损系统的交易者在损失30%时自动出局；没有系统的持有者，最终经历-99.9%归零。一个"如果跌破X则卖出"的规则，在那一次就是生死线的全部差距。',
+        caseUS: '2020年3月疫情暴跌期间，标普500在四周内跌34%。有预设再平衡规则（"股票跌超25%自动补仓"）的投资者，机械执行了买入。没有系统的投资者，在新闻最恐惧时清仓离场，踏空了随后12个月的+75%反弹。系统在最需要的时候提供了行动指令，情绪在最需要的时候提供了相反的指令。'
+      },
+      {
+        tags: ['jones'],
+        title: '规则是在冷静时写的——执行是在狂热中做的',
+        quote: '我不预测市场，我响应市场给我设定的规则。',
+        quoteBy: '保罗·都铎·琼斯',
+        body: ['没有人能精确预测顶部或底部。但几乎所有成功的大规模减仓，都不是靠预感，而是靠提前设定好的触发规则。当条件触发时，系统自动告诉你"该卖了"，你只需要执行。', '都铎·琼斯的核心方法论：在市场平静时建立规则体系，在市场极端时机械执行。他从不在战场上修改作战方案。设定止盈单时，同时在备忘录写下："不论价格继续上涨到多少，我不修改这个止盈单。"'],
+        rule: '现在就写下你的"卖出触发清单"：至少包含3个具体指标（如MVRV>3.5、恐贪指数连续5天>80、周线RSI>85）。触发其中2个即开始减仓。清单在开仓时写，不在减仓时改。',
+        case: '2021年3月，BTC首次触及$60K时恐贪指数达到95，MVRV达到4.2。提前设置了"MVRV>3.5且恐贪>85即减仓40%"规则的交易者，在$55-65K区间完成首轮止盈。规则，是冷静的"未来自己"写给狂热的"当时自己"的信。',
+        caseUS: '1987年"黑色星期一"，道琼斯单日暴跌22.6%，至今仍是美股最大单日跌幅。都铎·琼斯在此前已设定了"如果市场特定技术条件触发则清仓"的规则，提前空仓。那一年他的基金回报超过200%。规则不需要预测，只需要响应——而响应需要在平静时预先写好。'
+      },
+      {
+        tags: ['douglas'],
+        title: '交易结果的随机性，是系统化执行的最大敌人',
+        quote: '如果你不能接受亏损，就永远无法成为一个好的交易者。',
+        quoteBy: '马克·道格拉斯《以交易为生》',
+        body: ['单次交易的结果，是随机的。这是一个被绝大多数交易者低估的事实。即使是期望值为正的系统，在短期内也会出现连续亏损。如果你用单次交易的结果来评价系统的好坏，你会在每次亏损后质疑并放弃系统，最终失去系统的长期优势。', '道格拉斯的解决方案：用"样本思维"替代"单次思维"。每一笔交易，不是"这次对不对"的问题，而是"这100次是否正期望"的问题。亏损不是失败，它是系统运行的正常输出。'],
+        rule: '连续亏损3笔之后，不要修改系统，而是检查执行是否符合规则。如果执行正确，接受结果，继续执行。如果执行错误，修正的是行为，而不是规则。',
+        case: '2023年，一个做BTC趋势跟踪的交易者连续止损6次，共亏损账户的8%。他在第7次入场前质疑并放弃了系统。第7次信号触发后，BTC上涨了45%——正是系统设计捕捉的那种行情。放弃系统的代价，往往发生在你最想放弃的那一刻之后。',
+        caseUS: 'Joel Greenblatt的"神奇公式"（按盈利收益率+资产回报率选股）在历史回测中长期跑赢市场。但研究发现，使用该策略的投资者实际收益远低于策略本身——因为在策略连续跑输的一两年内，大多数人放弃了它。系统的价值在坚持，而坚持恰恰在连续亏损时最难做到。'
+      }
+    ]
+  },
+  {
+    id: 'buy',
+    roman: 'Chapter III',
+    title: '买入哲学',
+    desc: '最好的买点从不舒适。痛苦是价格，恐惧是门票。',
+    principles: [
+      {
+        tags: ['marks'],
+        title: '悲观叙事最盛行时，往往是定价最有利的时刻',
+        quote: '投资最困难的事，不是分析，而是在最佳机会出现时鼓起勇气买入。',
+        quoteBy: '霍华德·马克斯《周期》',
+        body: ['市场价格反映的是"共识预期"，超额收益来自"你的判断比共识更准确"。当所有人都说某个资产"没有未来"，这个叙事往往已经被充分定价，甚至过度定价了。', 'BTC历史上每一次被宣告"死亡"（累计超过480次），都对应着一个买入机会。"监管会杀死BTC"、"量子计算会破解加密"——这些叙事在当时看起来无比合理，但事后都成了买入的理由。悲观叙事最有说服力时，恰恰是市场提供最大安全边际的时候。'],
+        rule: '收集当前最主流的"看空理由"，逐条评估：这些理由是真的改变了资产的长期价值，还是只是短期情绪放大了恐惧？如果是后者，悲观叙事本身就是买入信号。',
+        case: '2022年11月，FTX崩盘，BTC跌至$15.5K。主流媒体充斥"加密货币已死"的声音，恐贪指数跌至5/100历史极值。那个月底部建仓者，在接下来18个月经历了BTC从$16K涨至$73K，涨幅370%。最好的买点，总伴随着最可怕的叙事。',
+        caseUS: '2009年3月，标普500跌至666点。《时代》杂志封面是"股票市场已死"，巴菲特在《纽约时报》发文呼吁买入，被大量读者嘲笑为"过时的老头"。随后标普500开始了历史上最长的牛市，涨幅超过600%。最有说服力的悲观叙事，往往出现在最好的买点附近。'
+      },
+      {
+        tags: ['marks'],
+        title: '没有人能抄到最低点——分批建仓才是对不确定性的尊重',
+        quote: '我们从不试图预测市场底部。我们只是在价格变得有吸引力时买入，并分散在时间上。',
+        quoteBy: '霍华德·马克斯',
+        body: ['执着于"买在最低点"，往往导致的结果是：因为担心"还会更低"而一直等待，最终错过整个上涨。分批建仓的逻辑不是"我知道底部在哪"，而是"我承认我不知道底部在哪，所以我把风险分散在时间轴上"。', '时间维度的分散，和价格维度的分散同样重要。把建仓过程拉长到3-6个月，设定多个价格触发点，让时间帮你平滑成本。你不需要买在最低点，你需要的是在"底部区域"积累到足够多的筹码。'],
+        rule: '制定"熊市建仓计划"：把准备用于抄底的总资金分成6-8份，设定触发价格（如每下跌15%买入一份）。在牛市顶部就写好这份计划，熊市中执行计划，而不是在恐惧中临时决策。',
+        case: '2022年熊市，BTC从$69K跌至$15.5K，历时约一年。全程等待"最低点"的投资者，或空仓踏空，或在$20K买入后又经历$15.5K而崩溃离场。每月定额买入的人最终平均成本约$22K，在2024年牛市中获得3-5倍收益。',
+        caseUS: '2008年金融危机期间，标普500从1560点跌至666点，历时17个月。全程等待"绝对底部"的投资者，有的在800点买入后经历了-20%的进一步下跌而恐慌离场；有的则等到2010年市场明显企稳才入场，错过了-50%至+60%区间的最佳建仓窗口。在2008年10月-2009年3月分批定投的人，最终平均成本约850点，十年后回报超过300%。'
+      },
+      {
+        tags: ['jones'],
+        title: '子弹是用来射击的——现金储备的终极使命',
+        quote: '在别人贪婪时恐惧，在别人恐惧时贪婪。但要做到这一点，你必须先有钱可用。',
+        quoteBy: '沃伦·巴菲特 · 保罗·都铎·琼斯实践',
+        body: ['卖出的意义从来不只是"落袋为安"，更重要的是"为抄底储备弹药"。那些在牛市顶部卖出、在熊市底部买入的人，不是因为更聪明，而是因为更有纪律：卖出给了他们现金，现金给了他们选择，选择给了他们在别人恐惧时贪婪的能力。', '2008年金融危机期间，橡树资本用预先保留的现金大规模买入被抛售的信贷资产，获得了霍华德·马克斯职业生涯中最好的回报。能做到这一点，是因为在市场狂热时他们没有把现金全部投出去。'],
+        rule: '设立"抄底准备金"账户：每次止盈后，把至少30%的收益转入这个专用账户，只用于熊市底部建仓。这笔钱不用于日常消费，不用于其他投资——它只有一个使命：在市场最恐惧的时候出手。',
+        case: '2020年3月至4月，橡树资本在市场最恐惧时投入约150亿美元购买被抛售的信贷资产，随后获得超额回报。在加密领域，MicroStrategy在2020-2021年低迷期分批建仓的BTC，在2024年成为其最重要的资产。有子弹，才能扣动扳机。',
+        caseUS: '2008年危机最深处，巴菲特向高盛注资50亿美元，获得10%股息的优先股及认股权证。2011年高盛回购时，巴菲特这笔投资获利超过30亿美元。他能做到这一点，是因为伯克希尔在市场最疯狂时始终保有大量现金——不是因为预测到了危机，而是因为"保留弹药"本身就是他的铁律。'
+      }
+    ]
+  },
+  {
+    id: 'sell',
+    roman: 'Chapter IV',
+    title: '卖出的艺术',
+    desc: '只有真正卖出的钱，才是你的钱。账面数字，是市场借给你看的幻觉。',
+    principles: [
+      {
+        tags: ['general'],
+        title: '浮盈归零的人，全都死在"再等等"',
+        quote: '公牛赚钱，熊赚钱，猪被宰杀。',
+        quoteBy: '华尔街古训',
+        body: ['买入只需要勇气，卖出需要智慧——因为卖出意味着主动放弃"继续涨"的可能性，承认"够了"。人类大脑天生抗拒卖出：在上涨时，"再涨一点再卖"的心理让你一次次推迟；在下跌时，"跌回来再卖"的侥幸让你死扛到底。', '结果总是一样：牛市来了全程持有，熊市来了还在持有，账户归零后开始后悔。账面数字在你提现之前，只是一串会波动的像素。利润增加了你的信心，也掩盖了敞口的激增。'],
+        rule: '制定"分批止盈阶梯"：在建仓时就预设三个卖出价位（例如+50%卖20%、+100%卖30%、+200%卖30%），剩余20%让利润奔跑。每触发一档，立刻执行，不讨论，不犹豫。',
+        case: '2021年BTC从$30K涨至$69K，许多人全程持有，账面翻倍以上。随后-77%跌至$15.5K。而在$50-60K区间分批止盈50%的人，锁定了真实利润，并在$20-25K区间重新建仓，再次参与下一轮牛市。只有卖出，才能真正参与下一次机会。',
+        caseUS: '1999-2000年科技泡沫期间，思科（CSCO）从$10涨至$80，无数投资者账面获利8倍。"思科代表互联网的未来"是无可辩驳的共识，没有人想卖出。随后-89%跌至$8，花了20年才重回高点。在$40-60区间分批止盈50%的人，不仅锁定了真实收益，还在2002年底部重新以$10买回。账面数字不是真实财富，卖出才是。'
+      },
+      {
+        tags: ['liver'],
+        title: '等待再涨一倍，卖在最高点——这两个念头会让你一分不剩',
+        quote: '我从未因为止盈太早而亏钱。我因为持有太久而亏过太多次。',
+        quoteBy: '杰西·利弗莫尔《股票大作手回忆录》',
+        body: ['"再涨一倍再卖"是贪婪的语言。"卖在最高点"是完美主义的幻觉。两个念头加在一起，最终的结果不是卖在最高点，而是根本没卖成——价格在更高处反转，止盈单被上移了无数次，最终变成了深度套牢。', '利弗莫尔一生多次从巨富到破产，他的复盘结论高度一致：毁掉他的从来不是买入时机，而是卖出时对"再多一点"的执念。市场总会提供足够的理由让你继续持有，而这些理由，在顶部时最充分，也最危险。'],
+        rule: '设置止盈单时，同时写下：「不论价格继续上涨到多少，我不修改这个止盈单。」每次感到想要上移时，先读一遍。止盈单是你在冷静时对自己的承诺，不是在兴奋时可以随意撕毁的草稿。',
+        case: '2021年4月，BTC触及$64K后回调至$28K。大量在$55K附近设置止盈的交易者，因为"感觉会到$80K"而把止盈上移至$70K+，最终没有触发，随后经历-56%的下跌。止盈单被上移的那一刻，纪律就已经失守。',
+        caseUS: '2000年，英特尔（INTC）从$75涨至$100的过程中，大量投资者将目标从$100上移至$150、$200——"半导体是互联网的基础设施，没有天花板"。最终股价见顶$75后一路跌至$12。利弗莫尔早在1900年代就发现了这个规律：每次顶部，市场都会给出最有说服力的"继续持有"理由。'
+      },
+      {
+        tags: ['general'],
+        title: '卖出不是悲观——是为下一次机会保留子弹',
+        quote: '我卖出是为了在更低价格买回更多。不卖出的人，没有机会加倍。',
+        quoteBy: '杰西·利弗莫尔',
+        body: ['很多人把"卖出"等同于"看空"，认为卖出就是背叛自己的长期信仰。这是认知错误。卖出是资金管理，不是观点表达。你可以卖出现有仓位，同时对资产长期极度看多。', '最成功的长线投资者都是周期性减仓的高手：在高位卖出，保留现金，在低位重建更大的仓位。在$60K卖出50%，在$20K全部买回，最终持有的数量反而更多。卖出，是为了有能力在别人绝望时抄底。'],
+        rule: '每次减仓时，把卖出所得的资金放入"抄底准备金"账户，并设定明确的重建仓位触发价（如跌50%时开始分批建仓）。让卖出从"离场"变成"主动备战"。',
+        case: '2021年11月，一位BTC持有者在$65K卖出60%仓位，持有$390K现金。2022年底BTC跌至$16K时，他用这笔资金买入了约24枚BTC。他原先的持有量是10枚。卖出，让他的持仓数量翻了倍以上——这才是"长期看多"最正确的执行方式。',
+        caseUS: '彼得·林奇管理麦哲伦基金期间，定期对持仓进行"换仓"——卖出已充分定价的标的，买入更有安全边际的新机会。他不是看空那些被卖出的股票，而是用卖出为下一次更好的买入腾出资本。这种"主动备战"的卖出思维，帮助麦哲伦基金在13年间实现了年化29%的回报。'
+      },
+      {
+        tags: ['marks'],
+        title: '顶部永远不是靠"感觉"找到的——用规则触发卖出',
+        quote: '我从不因为卖出后价格继续涨而感到后悔——我只为没有执行计划而感到后悔。',
+        quoteBy: '霍华德·马克斯（改编）',
+        body: ['有效的卖出触发规则可以是：链上指标（MVRV > 3.5、NUPL > 0.75）、情绪指标（恐贪指数持续80+超过两周）、技术指标（周线RSI > 85）、社会信号（出租车司机开始聊加密货币）。规则越具体，执行越坚定。', '专业交易者对"卖飞"有完全不同的解读：按计划止盈后资产继续涨，说明你的判断时机不是顶部——但这不代表你的决策是错的。决策的质量，应该用"当时掌握的信息和规则"来评判，而不是用"事后的价格走势"来评判。'],
+        rule: '建立"卖飞复盘协议"：每次按计划卖出后，无论后续走势如何，只问一个问题——在卖出那一刻，基于当时的信息和规则，这是正确的决策吗？如果是，记录"正确执行"，继续前进。',
+        case: '2024年，BTC从$70K涨至$108K期间，大量按规则在$75-85K止盈的交易者经历了"踏空20-30%"的痛苦。但随后BTC在2025年回调至$74K区间，这些"卖飞"的人有充足资金在底部重建。而死扛到高位的人，最终高买低卖。卖飞不是失败，死扛才是。',
+        caseUS: '2021年，ARK Invest旗舰基金ARKK在年初达到$159高点后，许多坚持持有的投资者认为"创新科技的未来才刚刚开始"。拒绝按规则止盈的人，随后经历了-75%的跌幅，跌至$35。而按照"PE超过100倍则减仓"规则在$120附近止盈的人，不仅保住了大部分收益，还在$40区间重建了仓位。规则保护你免于在最高点不知离场。'
+      }
+    ]
+  },
+  {
+    id: 'psych',
+    roman: 'Chapter V',
+    title: '心理控制',
+    desc: '市场永远知道如何触发你最糟糕的本能。你的工作，是提前知道这一点。',
+    principles: [
+      {
+        tags: ['douglas'],
+        title: '盈利不是避弹衣——利润增加信心，也掩盖敞口',
+        quote: '市场会让你在最不应该自信的时候最为自信。',
+        quoteBy: '马克·道格拉斯（改编）',
+        body: ['大多数交易者死于牛市的末尾，因为赚钱让他们变得胆大。当账户浮盈达到+100%时，大脑开始用"盈利"来衡量风险，而不是用"本金"。"我用利润在赌，亏了也无所谓"——这个念头是对风险最危险的错误理解。利润一旦进入账户，它就是你的本金，不是赌注。', '盈利越多，"再赚一倍"的幻觉越强烈。这是进化给人类的陷阱：大脑在得到奖励时会产生多巴胺，并驱使你寻找更大的奖励。在交易中，这种机制会让你在最应该减仓时加仓，在最需要冷静时最为冲动。'],
+        rule: '当账户浮盈超过50%时，强制执行"盈利税"：提取浮盈的20%转为现金或稳定币，放入独立账户。这个动作有两个作用：让你真实感受到利润的价值，同时降低后续的风险敞口。',
+        case: '2021年，大量在$30K建仓并浮盈100%+的投资者，在$60K附近开始加仓——用"利润"继续押注。随后BTC从$69K跌至$15.5K，不仅归还了所有利润，还亏损了本金。"用利润赌博"的心态，是牛市末期最常见的亏损来源。',
+        caseUS: '1999年，大量美国散户在科技股上赚了第一个100%后，开始用"利润"追加杠杆ETF和期权。"这是属于互联网的时代，亏了也只是赚少了"——这句话在2000年被市场残酷验证。那斯达克-78%的下跌，让用"利润"加杠杆的人不仅归还了浮盈，还亏掉了本金。房子的首付，孩子的教育金，全部葬送在"反正是赚来的钱"的幻觉里。'
+      },
+      {
+        tags: ['liver'],
+        title: '等待是最难执行的策略，也往往是最有价值的',
+        quote: '在不确定的时候，什么都不做是最好的策略。',
+        quoteBy: '杰西·利弗莫尔',
+        body: ['在牛市狂热的环境中，"不做任何事"是最难执行的策略。每一次因FOMO而在高位追入，每一次因"感觉会涨"而打破止盈计划，都是在为情绪付费。真正的专业交易者，大部分时间都在等待——等待确定性更高的机会，等待赔率更优的入场点。', '利弗莫尔将"不操作"视为一种主动决策，而不是消极的等待。他在《股票大作手回忆录》中写道：在所有交易中，让我损失最惨的，往往不是我错误的判断，而是我没有耐心等到正确时机就行动。'],
+        rule: '设立"冲动操作缓冲期"：每当感到FOMO冲动时，强制等待24小时再执行。记录每次因此"错过"了什么，以及如果真执行会发生什么。三个月后回看这份记录。',
+        case: '2021年3月至7月，BTC从$65K跌至$28K。期间每次反弹都像"底部"，FOMO追入的投资者短暂盈利后，在11月高点诱惑下再度重仓，最终深套。最理智的选择是：什么都不做，等待明确信号。等待，是有代价的纪律。',
+        caseUS: '巴菲特在1969年关闭了他的合伙基金，将资金归还给投资者，原因是"找不到符合安全边际的标的"。此后纳斯达克继续上涨，他被嘲笑为"错过时代的老人"。随后1973-74年股市大跌，伯克希尔在这段"无聊的等待"中积累的现金，成为了买入华盛顿邮报等经典标的的弹药。等待，不是无所作为，是最高级的策略。'
+      },
+      {
+        tags: ['taleb'],
+        title: '用正期望值思考每一笔交易——而不是"这个会涨吗"',
+        quote: '赌博是在负期望值游戏中下注；投资是在正期望值游戏中下注——关键是你得知道哪个是哪个。',
+        quoteBy: '纳西姆·塔勒布（改编）',
+        body: ['大多数交易者问的是错误的问题："这个会涨吗？"正确的问题应该是："在这个价格入场，期望值是正的吗？"期望值 = 胜率 × 平均盈利 - 败率 × 平均亏损。一笔胜率只有40%的交易，如果盈亏比是3:1，期望值仍然为正（0.4×3 - 0.6×1 = 0.6）。', '长期只做正期望的交易，即使单次亏损，最终结果也是盈利的。塔勒布的"杠铃策略"是这一思维的极致应用：90%的极低风险资产+10%的高赔率押注，避免中间地带的平庸风险。'],
+        rule: '在每笔交易前，写下预估的胜率和目标盈亏比，计算期望值。只执行期望值为正的交易，并在事后持续追踪实际数据，校准判断。三个月的数据会告诉你，你的直觉是否有统计意义上的价值。',
+        case: '2020年"312"暴跌后，BTC在$4000-6000美元区间是历史极端低估。以正期望值逻辑入场的人，在接下来18个月获得了10-20倍回报。恐惧让大多数人放弃了正期望的机会——这就是情绪凌驾于理性之上的代价。',
+        caseUS: '2008年底，垃圾债券收益率飙升至20%+，隐含的违约率远超实际可能发生的违约。橡树资本以正期望值框架计算：即使违约率高达历史最高水平，这些债券的期望收益仍然为正。他们大规模买入，在随后3年获得了超过100%的回报。期望值框架在别人只看到恐惧时，看到了赔率。'
+      }
+    ]
+  },
+  {
+    id: 'cycle',
+    roman: 'Chapter VI',
+    title: '周期与宏观',
+    desc: '所有的超常收益最终都会向长期均值靠拢。价格可以偏离很远，但重力始终存在。',
+    principles: [
+      {
+        tags: ['marks'],
+        title: '树不会长到天上——高估必有回归',
+        quote: '树不会长到天上。',
+        quoteBy: '本杰明·格雷厄姆 · 霍华德·马克斯引用',
+        body: ['在金融市场中，几乎所有超常收益最终都会向长期均值靠拢。价格可以在短期内偏离基本价值很远，但重力始终存在。每一轮牛市都会出现"这次不同"的叙事，而这些叙事往往在当时看起来极其有说服力。', '马克斯在《周期》中反复强调：识别当前所处的周期位置，比预测价格更重要。在积累期轻仓试探，在上涨期加仓持有，在分配期分批止盈，在下跌期保存现金——这是周期投资的基本逻辑。'],
+        rule: '用两个指标粗判周期：链上MVRV（>3.5为分配期，<1为积累期）+ 市场情绪（恐贪指数>80为分配期，<20为积累期）。两者共振时，信号更强。每月花10分钟记录这两个数字。',
+        case: '2021年11月，MVRV达到3.8，恐贪指数持续在80+，媒体头版铺天盖地。识别周期的人在$60-69K区间分批减仓。不识别周期的人高位重仓，随后经历-77%回撤。2017顶-84%，2021顶-77%。均值回归，从未缺席。',
+        caseUS: '1989年日本股市泡沫巅峰，日经指数市盈率超过60倍，东京土地市值据称超过整个美国。"日本经济模式是人类历史上最优越的"是当时的主流共识。随后日经从38957点跌至7000点，-82%，且30年没有回到历史高点。均值回归不设时间表，但从不缺席。'
+      },
+      {
+        tags: ['taleb'],
+        title: '复利的敌人不是低收益，而是一次毁灭性的大亏损',
+        quote: '复利是世界第八大奇迹。理解它的人赚它的钱，不理解的人付它的钱。',
+        quoteBy: '爱因斯坦（据说）· 塔勒布实践',
+        body: ['复利增长的最大威胁不是收益率偏低，而是一次毁灭性的大亏损将复利曲线强制重置。100万亏50%变50万，需要再翻倍才能回来，复利时钟被拨回了好几年。', '这就是为什么顶级交易者对亏损有近乎偏执的厌恶：他们不是惧怕输，而是理解复利数学。保护本金，让复利持续工作，比追求单笔高收益更能创造长期财富。塔勒布的核心论点之一：负收益的伤害是不对称的，远大于等量正收益的收益。'],
+        rule: '计算一下：$100,000以年化20%稳定增长10年 = $619,174。若第5年遭遇-50%，之后继续20%增长5年 = $192,357。一次大亏让最终财富缩水69%。把这个数字贴在屏幕边上。',
+        case: '$100,000 以年化20%稳定增长10年 = $619,174。若第5年遭遇-50%（变$77,232），之后继续20%增长5年 = $192,357。一次大亏让最终财富缩水69%。复利的敌人是大亏损，不是低收益。',
+        caseUS: '长期资本管理公司（LTCM）在1994-1997年年化回报超过40%，被誉为"最聪明的对冲基金"。1998年俄罗斯债务危机触发了他们模型从未考虑过的相关性变化，4个月内亏损46亿美元，几乎破产，最终由美联储组织救援。多年精心构建的复利曲线，被一次"百年一遇"的事件彻底清零。保护复利曲线，远比提高收益率更重要。'
+      },
+      {
+        tags: ['buffett'],
+        title: '在市场中活下去，本身就是一种竞争优势',
+        quote: '第一条规则：不要亏钱。第二条规则：不要忘记第一条规则。',
+        quoteBy: '沃伦·巴菲特',
+        body: ['这句话被无数人引用，却被极少数人真正理解。巴菲特的意思不是"永远不亏损"——他的意思是：永远不要让单次亏损大到威胁你继续参与的能力。在市场中生存下来，本身就是一种竞争优势。', '下跌50%需要上涨100%才能回到原点。亏损越深，回本所需的涨幅就越夸张。这就是为什么止损不是认输，而是数学上最理性的选择。控制最大回撤，保住本金，才能保留参与下一轮机会的资格。'],
+        rule: '设定"最大可接受回撤线"：比如总资产的20%。一旦触及，强制全面审视持仓，而不是等待反弹。保本是一切策略的前提，不是结果。',
+        case: '2018年持有ETH从$1,400跌至$80，回撤-94%。从$80回到$1,400需要上涨1650%。许多人在中途"撑不住"以极低价格割肉。如果在$800设置止损，损失-43%，但保留了东山再起的资本。在市场中活着，才能等到下一次机会。',
+        caseUS: '伯克希尔·哈撒韦在过去60年间，经历了无数次市场下跌，但从未因单次亏损而被迫离场。巴菲特的秘密不是"永远赚钱"，而是"永远不会破产"。相比之下，大量1990年代崛起的明星对冲基金——老虎基金、量子基金旗下多支基金——都在单次重大亏损后被迫清盘，无缘参与后续的机会。活下去，才是最重要的竞争优势。'
+      }
+    ]
+  }
+];
+
+// tag display
+const tagInfo = {
+  marks:   { label: 'MARKS',     cls: 'tag-marks' },
+  douglas: { label: 'DOUGLAS',   cls: 'tag-douglas' },
+  liver:   { label: 'LIVERMORE', cls: 'tag-liver' },
+  jones:   { label: 'JONES',     cls: 'tag-jones' },
+  taleb:   { label: 'TALEB',     cls: 'tag-taleb' },
+  buffett: { label: 'BUFFETT',   cls: 'tag-buffett' },
+  general: { label: 'CLASSIC',   cls: 'tag-general' }
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+const readSet = new Set();
+let totalPrinciples = 0;
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function buildNav() {
+  const nav = document.getElementById('chapterNav');
+  chapters.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ch-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = ch.roman.replace('Chapter ', 'Ch.') + ' ' + ch.title;
+    btn.onclick = () => {
+      document.getElementById('ch-' + ch.id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    nav.appendChild(btn);
+  });
+}
+
+function buildChapters() {
+  const root = document.getElementById('chaptersRoot');
+  let globalIdx = 1;
+
+  chapters.forEach((ch, ci) => {
+    const sec = document.createElement('section');
+    sec.className = 'chapter';
+    sec.id = 'ch-' + ch.id;
+
+    // chapter header
+    sec.innerHTML = `
+      <div class="chapter-header">
+        <div class="ch-num">${String(ci + 1).padStart(2, '0')}</div>
+        <div class="ch-meta">
+          <div class="ch-roman">${ch.roman}</div>
+          <div class="ch-title">${ch.title}</div>
+          <div class="ch-desc">${ch.desc}</div>
+        </div>
+      </div>
+    `;
+
+    // principles
+    ch.principles.forEach((pr, pi) => {
+      const idx = globalIdx++;
+      totalPrinciples++;
+      const card = document.createElement('div');
+      card.className = 'principle';
+      card.dataset.idx = idx;
+
+      const tagsHtml = pr.tags.map(t => {
+        const ti = tagInfo[t] || tagInfo.general;
+        return `<span class="pr-tag ${ti.cls}">${ti.label}</span>`;
+      }).join('');
+
+      const bodyHtml = pr.body.map(p => `<p>${p}</p>`).join('');
+      const casesHtml = pr.caseUS
+        ? `<div class="pr-cases">
+            <div class="pr-case">
+              <div class="pr-case-label">加密市场案例</div>
+              <div class="pr-case-text">${pr.case}</div>
+            </div>
+            <div class="pr-case case-us">
+              <div class="pr-case-label">美股案例</div>
+              <div class="pr-case-text">${pr.caseUS}</div>
+            </div>
+          </div>`
+        : `<div class="pr-cases"><div class="pr-case">
+            <div class="pr-case-label">历史案例</div>
+            <div class="pr-case-text">${pr.case}</div>
+          </div></div>`;
+
+      card.innerHTML = `
+        <div class="pr-head">
+          <div class="pr-index">${String(idx).padStart(2, '0')}</div>
+          <div class="pr-content">
+            <div class="pr-tags">${tagsHtml}</div>
+            <div class="pr-title">${pr.title}</div>
+          </div>
+          <button class="pr-toggle" onclick="toggleCard(this)">+</button>
+        </div>
+        <div class="pr-quote-strip">
+          ${pr.quote}
+          <span class="pr-quote-by">— ${pr.quoteBy}</span>
+        </div>
+        <div class="pr-body">
+          ${bodyHtml}
+          <div class="pr-rule">
+            <div class="pr-rule-label">可执行原则</div>
+            <div class="pr-rule-text">${pr.rule}</div>
+          </div>
+          ${casesHtml}
+        </div>
+      `;
+
+      card.onclick = (e) => {
+        if (e.target.classList.contains('pr-toggle')) return;
+        toggleCard(card.querySelector('.pr-toggle'), card);
+      };
+
+      sec.appendChild(card);
+    });
+
+    root.appendChild(sec);
+  });
+
+  // update total
+  document.getElementById('totalCount').textContent = totalPrinciples;
+  updateProgress();
+}
+
+function toggleCard(btn, cardEl) {
+  const card = cardEl || btn.closest('.principle');
+  const wasOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+
+  if (!wasOpen) {
+    const idx = card.dataset.idx;
+    readSet.add(idx);
+    updateProgress();
+  }
+}
+
+function updateProgress() {
+  const pct = totalPrinciples ? (readSet.size / totalPrinciples * 100).toFixed(0) : 0;
+  document.getElementById('pbFill').style.width = pct + '%';
+  document.getElementById('pbCount').textContent = readSet.size + ' / ' + totalPrinciples;
+}
+
+// scroll spy
+function setupScrollSpy() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id.replace('ch-', '');
+        const idx = chapters.findIndex(c => c.id === id);
+        document.querySelectorAll('.ch-btn').forEach((b, i) => {
+          b.classList.toggle('active', i === idx);
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  chapters.forEach(ch => {
+    const el = document.getElementById('ch-' + ch.id);
+    if (el) observer.observe(el);
+  });
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+buildNav();
+buildChapters();
+setupScrollSpy();
+</script>
+</body>
+</html>
