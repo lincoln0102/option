@@ -217,19 +217,26 @@ body::before {
 }
 .principle.open .pr-toggle { background: var(--ink); color: var(--paper); border-color: var(--ink); transform: rotate(45deg); }
 
-/* quote strip — always visible */
+/* quote strip — always visible, prominent */
 .pr-quote-strip {
-  padding: 0 28px 22px 74px;
-  font-family: var(--body-serif); font-size: 18px;
-  font-style: italic; color: var(--ink3); line-height: 1.75;
+  position: relative;
+  padding: 20px 32px 20px 74px;
+  font-family: var(--body-serif); font-size: 20px;
+  font-style: italic; color: var(--ink2); line-height: 1.7;
   border-bottom: 1px solid var(--rule);
+  background: var(--paper2);
 }
-.pr-quote-strip::before { content: '"'; font-size: 24px; color: var(--vermilion); vertical-align: -4px; margin-right: 2px; }
-.pr-quote-strip::after  { content: '"'; font-size: 24px; color: var(--vermilion); vertical-align: -4px; margin-left: 2px; }
+.pr-quote-strip::before {
+  content: '\201C';
+  position: absolute; left: 28px; top: 14px;
+  font-family: var(--serif); font-size: 52px; line-height: 1;
+  color: var(--vermilion); opacity: 0.5;
+  font-style: normal;
+}
 .pr-quote-by {
-  display: block; margin-top: 6px;
-  font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px;
-  color: var(--ink4); font-style: normal; text-align: right; padding-right: 4px;
+  display: block; margin-top: 10px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+  color: var(--ink4); font-style: normal; text-align: right;
 }
 
 /* expandable body */
@@ -318,9 +325,9 @@ body::before {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 14px;
   background: #fff; border: 1px solid var(--rule); border-radius: var(--r);
-  transition: border-color .2s; cursor: default;
+  transition: border-color .2s, background .2s, transform .15s; cursor: pointer;
 }
-.author-row:hover { border-color: var(--rule2); }
+.author-row:hover { border-color: var(--ink3); background: var(--paper2); transform: translateX(3px); }
 .author-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .dot-marks   { background: var(--vermilion); }
 .dot-douglas { background: var(--navy); }
@@ -341,6 +348,21 @@ body::before {
 .pb-fill  { height: 100%; background: var(--vermilion); transition: width .5s; }
 .pb-count { font-family: var(--mono); font-size: 12px; color: var(--ink3); white-space: nowrap; }
 
+/* Back to top button */
+.back-top {
+  position: fixed; bottom: 32px; right: 32px; z-index: 900;
+  width: 44px; height: 44px;
+  background: var(--ink); color: var(--paper);
+  border: none; border-radius: 50%; cursor: pointer;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(26,22,18,0.22);
+  opacity: 0; pointer-events: none;
+  transition: opacity .3s, transform .3s;
+  transform: translateY(8px);
+}
+.back-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.back-top:hover { background: var(--ink2); }
+
 /* animations */
 @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 .chapter { animation: fadeUp .4s ease both; }
@@ -348,7 +370,8 @@ body::before {
 /* mobile */
 @media (max-width: 600px) {
   .pr-head { padding: 20px 18px 16px; gap: 12px; }
-  .pr-quote-strip { padding: 0 18px 18px 18px; font-size: 17px; }
+  .pr-quote-strip { padding: 18px 20px 18px 20px; font-size: 17px; }
+  .pr-quote-strip::before { display: none; }
   .pr-body { padding: 20px 18px 24px; }
   .pr-body p { font-size: 16px; }
   .pr-rule-text { font-size: 15px; }
@@ -356,6 +379,7 @@ body::before {
   .pr-index { display: none; }
   .header-vol { display: none; }
   .ch-btn { padding: 12px 12px; font-size: 11px; }
+  .back-top { bottom: 20px; right: 20px; width: 40px; height: 40px; }
 }
 </style>
 </head>
@@ -372,7 +396,7 @@ body::before {
     <div class="header-vol">
       <strong>VI</strong>
       章节<br>
-      <strong id="totalCount">32</strong>
+      <strong id="totalCount">34</strong>
       原则
     </div>
   </div>
@@ -392,12 +416,12 @@ body::before {
       这里收录的不是交易技法，而是那些在市场中反复被验证、被违背、又被痛苦重新学会的心智原则。每一条都来自某位曾经为此付出过真实代价的人。
     </p>
     <div class="author-grid">
-      <div class="author-row"><div class="author-dot dot-marks"></div><div class="author-name">霍华德·马克斯</div><div class="author-tag">MARKS</div></div>
-      <div class="author-row"><div class="author-dot dot-douglas"></div><div class="author-name">马克·道格拉斯</div><div class="author-tag">DOUGLAS</div></div>
-      <div class="author-row"><div class="author-dot dot-liver"></div><div class="author-name">杰西·利弗莫尔</div><div class="author-tag">LIVERMORE</div></div>
-      <div class="author-row"><div class="author-dot dot-jones"></div><div class="author-name">保罗·都铎·琼斯</div><div class="author-tag">JONES</div></div>
-      <div class="author-row"><div class="author-dot dot-taleb"></div><div class="author-name">纳西姆·塔勒布</div><div class="author-tag">TALEB</div></div>
-      <div class="author-row"><div class="author-dot dot-buffett"></div><div class="author-name">巴菲特 / 芒格</div><div class="author-tag">BUFFETT</div></div>
+      <div class="author-row" data-author="marks"><div class="author-dot dot-marks"></div><div class="author-name">霍华德·马克斯</div><div class="author-tag">MARKS →</div></div>
+      <div class="author-row" data-author="douglas"><div class="author-dot dot-douglas"></div><div class="author-name">马克·道格拉斯</div><div class="author-tag">DOUGLAS →</div></div>
+      <div class="author-row" data-author="liver"><div class="author-dot dot-liver"></div><div class="author-name">杰西·利弗莫尔</div><div class="author-tag">LIVERMORE →</div></div>
+      <div class="author-row" data-author="jones"><div class="author-dot dot-jones"></div><div class="author-name">保罗·都铎·琼斯</div><div class="author-tag">JONES →</div></div>
+      <div class="author-row" data-author="taleb"><div class="author-dot dot-taleb"></div><div class="author-name">纳西姆·塔勒布</div><div class="author-tag">TALEB →</div></div>
+      <div class="author-row" data-author="buffett"><div class="author-dot dot-buffett"></div><div class="author-name">巴菲特 / 芒格</div><div class="author-tag">BUFFETT →</div></div>
     </div>
   </div>
 
@@ -422,6 +446,9 @@ body::before {
     </div>
   </div>
 </footer>
+
+<!-- BACK TO TOP -->
+<button class="back-top" id="backTop" aria-label="回到顶部">↑</button>
 
 <script>
 // ═══════════════════════════════════════════
@@ -546,7 +573,7 @@ const chapters = [
     id: 'sell',
     roman: 'Chapter IV',
     title: '卖出的艺术',
-    desc: '只有真正卖出的钱，才是你的钱。账面数字，是市场借给你看的幻觉。',
+    desc: '只有真正卖出的钱，才是你的钱。账面数字是幻觉，退出权是底牌，而两者都需要你主动保护。',
     principles: [
       {
         tags: ['general'],
@@ -587,6 +614,26 @@ const chapters = [
         rule: '建立"卖飞复盘协议"：每次按计划卖出后，无论后续走势如何，只问一个问题——在卖出那一刻，基于当时的信息和规则，这是正确的决策吗？如果是，记录"正确执行"，继续前进。',
         case: '2024年，BTC从$70K涨至$108K期间，大量按规则在$75-85K止盈的交易者经历了"踏空20-30%"的痛苦。但随后BTC在2025年回调至$74K区间，这些"卖飞"的人有充足资金在底部重建。而死扛到高位的人，最终高买低卖。卖飞不是失败，死扛才是。',
         caseUS: '2021年，ARK Invest旗舰基金ARKK在年初达到$159高点后，许多坚持持有的投资者认为"创新科技的未来才刚刚开始"。拒绝按规则止盈的人，随后经历了-75%的跌幅，跌至$35。而按照"PE超过100倍则减仓"规则在$120附近止盈的人，不仅保住了大部分收益，还在$40区间重建了仓位。规则保护你免于在最高点不知离场。'
+      },
+      {
+        tags: ['general'],
+        title: '大师说"永不卖出"，交易室里做的是另一回事',
+        quote: '当聪明钱预见风险准备离场时，他们需要一个由无数散户构成的、流动性充裕的承接池。"永不卖出"的口号，正是为此而生的。',
+        quoteBy: '市场观察（综合）',
+        body: ['整个金融行业的商业模式建立在"资产管理规模"（AUM）之上——只有让投资者的钱封死在市场里，基金公司才能稳收管理费，券商才能持续赚佣金。公开号召卖出，是砸所有人饭碗的行为。所以"永不卖出"从来都不是中立的投资建议，而是一句对行业极其有利的营销口号。', '巴菲特2007年清仓中石油，没有即时公告，而是利用信件邮寄的时间差递交减持报告，为自己争取了宝贵的出货窗口。他深知：一旦卖出意图公开，流动性会在几分钟内冻结。大师们在公开场合谈论的"信仰"，与他们在交易室执行的"理性"，从来不是一回事。'],
+        rule: '每季度做一次"换位审视"：假设你现在手里拿的是现金，而不是这些持仓——你还会以当前价格买入吗？如果答案是否，那就是该减仓的信号。忠诚的对象是复利增长，而不是某个代码。',
+        case: 'FTX崩盘前夕，CZ（赵长鹏）宣布出售所持FTT代币，理由是"风险管理"。这一公告引发了市场对FTX偿付能力的质疑，随后FTX在72小时内崩溃。CZ的卖出不是背叛"长期主义"，而是基于真实信息的理性退出。那些因为信仰"FTX是行业基础设施"而坚持不卖的用户，最终损失了全部资产。',
+        caseUS: '高瓴资本张雷在出版《价值》一书、大谈"长期主义"的同时，精准清仓了教育行业头部标的——恰在政策监管重锤落下之前。好未来（TAL）随后从$90跌至$3，跌幅-97%。大师的文字与他们的仓位，永远是两套系统。读他们的书，更要看他们的持仓变化。'
+      },
+      {
+        tags: ['general'],
+        title: '"退出权"是你唯一的底牌——任何时候都不要主动放弃它',
+        quote: '在充满信息不对称的市场中，小股东既无控制权，也无知情权。你唯一的、终极的保护底牌，就是退出权。',
+        quoteBy: '行为金融学原则（综合）',
+        body: ['"永不卖出"最危险的地方，不是让你错过止盈——而是让你在需要退出时，发现退出权已经被自己提前缴械了。在极端崩盘中，"卖出"选项会瞬间消失：流动性枯竭，系统中断，或者规则被重写。你以为的"长期持有"，可能在某个历史性的节点，变成了"永久持有"。', '"长期主义"是一个危险的心理魔术：它能把一个糟糕的决策、一次致命的套牢，瞬间重新包装成"充满耐心的美德"。你不再是被套住的人，你是在进行"战略性持有"。这种自我叙事，剥夺了你面对真实处境的勇气——而承认错误、行使退出权，本身就是一种需要勇气的理性行为。'],
+        rule: '为每一个持仓设定"持有前提清单"：写下当初买入的3个核心理由。每季度检查：如果其中2个已不成立，不论盈亏，立刻执行退出权。这不是认输，这是在用理性保护你最重要的资产——继续参与市场的能力。',
+        case: '2022年5月LUNA崩盘，从$80归零历时72小时。链上数据显示，大量持有者在$40、$20、$5时都没有卖出——因为"长期主义信仰"和"等待反弹"的心理让他们一次次推迟行权。退出权不是在归零后才消失的，它在每一次"再等等"的念头里，被一点点主动放弃的。',
+        caseUS: '1949年前的上海证券交易所曾是远东金融枢纽。那些相信"永远持有优质资产"的投资者，在制度重写的那一刻，发现所有纸面财富瞬间归零——不是因为公司经营失败，而是因为退出的窗口永远关闭了。历史从不是线性的。相信任何单一市场会永远存在并上涨，是对历史最基本敬畏的缺失。'
       }
     ]
   },
@@ -830,11 +877,46 @@ function setupScrollSpy() {
 }
 
 // ═══════════════════════════════════════════
+// AUTHOR CLICK → SCROLL TO FIRST PRINCIPLE
+// ═══════════════════════════════════════════
+function setupAuthorLinks() {
+  document.querySelectorAll('.author-row[data-author]').forEach(row => {
+    row.addEventListener('click', () => {
+      const author = row.dataset.author;
+      // find first card with this author tag
+      const firstCard = document.querySelector(`.pr-tag.tag-${author}`)?.closest('.principle');
+      if (firstCard) {
+        firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // flash highlight
+        firstCard.style.transition = 'box-shadow .1s';
+        firstCard.style.boxShadow = '0 0 0 3px var(--vermilion)';
+        setTimeout(() => { firstCard.style.boxShadow = ''; }, 1200);
+      }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════
+// BACK TO TOP
+// ═══════════════════════════════════════════
+function setupBackToTop() {
+  const btn = document.getElementById('backTop');
+  window.addEventListener('scroll', () => {
+    btn.classList.toggle('visible', window.scrollY > 500);
+  }, { passive: true });
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
 buildNav();
 buildChapters();
 setupScrollSpy();
+setupAuthorLinks();
+setupBackToTop();
 </script>
 </body>
 </html>
