@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QQQ策略回溯与验证终端</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        input[type="number"] { background-color: #0f172a; border: 1px solid #334155; color: white; padding: 0.5rem; border-radius: 0.375rem; width: 100%; outline: none; transition: border-color 0.2s; }
+        input[type="number"]:focus { border-color: #3b82f6; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden text-sm">
+
+    <aside class="w-72 bg-gray-800 border-r border-gray-700 flex flex-col h-full z-10 custom-scrollbar overflow-y-auto shrink-0">
+        <div class="p-5 border-b border-gray-700">
+            <h1 class="text-lg font-bold text-blue-400 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                策略参数配置
+            </h1>
+            <p class="text-xs text-gray-400 mt-1">QQQ 逢低买入期权策略</p>
+        </div>
+
+        <div class="p-5 space-y-4 flex-1">
+            <!-- 进场逻辑 -->
+            <div>
+                <label class="block text-gray-400 text-xs mb-1">回撤触发条件 (%)</label>
+                <input type="number" id="param-trigger" value="-3.0" step="0.1">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-gray-400 text-xs mb-1">期权到期日(DTE)</label>
+                    <input type="number" id="param-dte" value="90">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs mb-1">价外行权价 (%)</label>
+                    <input type="number" id="param-otm" value="5">
+                </div>
+            </div>
+
+            <hr class="border-gray-700 my-2">
+
+            <!-- 盈亏比管理 -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-gray-400 text-xs mb-1">止盈目标 (%)</label>
+                    <input type="number" id="param-tp" value="100">
+                </div>
+                <div>
+                    <label class="block text-gray-400 text-xs mb-1">止损限制 (%)</label>
+                    <input type="number" id="param-sl" value="-30">
+                </div>
+            </div>
+            <div>
+                <label class="block text-gray-400 text-xs mb-1">单次仓位 (占激进账户%)</label>
+                <input type="number" id="param-pos-size" value="50" min="1" max="100">
+            </div>
+
+            <hr class="border-gray-700 my-2">
+
+            <!-- 资金管理与转移 -->
+            <div>
+                <label class="block text-gray-400 text-xs mb-1">利润锁定里程碑 ($)</label>
+                <input type="number" id="param-milestone" value="100000" step="10000">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-xs mb-1">转入VOO比例 (%)</label>
+                <input type="number" id="param-voo-alloc" value="80" min="0" max="100">
+            </div>
+            
+            <hr class="border-gray-700 my-2">
+
+            <!-- 账户基础信息 -->
+            <div>
+                <label class="block text-gray-400 text-xs mb-1">初始资金 ($)</label>
+                <input type="number" id="param-capital" value="10000" step="1000">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-xs mb-1">预估胜率 (%)</label>
+                <input type="number" id="param-winrate" value="38" step="1">
+            </div>
+        </div>
+
+        <div class="p-5 border-t border-gray-700 bg-gray-800">
+            <button id="run-sim-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded transition-colors shadow-lg shadow-blue-500/20">
+                运行蒙特卡洛模拟
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full bg-gray-900 overflow-y-auto custom-scrollbar">
+        <!-- 头部信息栏 -->
+        <header class="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900/90 backdrop-blur sticky top-0 z-20">
+            <div>
+                <h2 class="text-xl font-semibold">回测模拟器 (Monte Carlo)</h2>
+                <p class="text-gray-400 text-sm mt-1">基于“重仓+杠杆”与利润转移逻辑的资金曲线预测</p>
+            </div>
+            
+            <!-- 实时市场监控小组件 (模拟) -->
+            <div class="bg-gray-800 border border-gray-700 rounded-lg p-3 px-5 flex items-center gap-6 shadow-xl">
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">QQQ 实时行情 (模拟)</div>
+                    <div class="font-mono text-lg font-bold text-white" id="mock-qqq-price">$438.52</div>
+                </div>
+                <div class="h-8 w-px bg-gray-700"></div>
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">距前高回撤幅度</div>
+                    <div class="font-mono text-lg font-bold text-red-400" id="mock-qqq-dd">-1.24%</div>
+                </div>
+                <div class="h-8 w-px bg-gray-700"></div>
+                <div>
+                    <div class="text-xs text-gray-400 mb-1">当前策略状态</div>
+                    <div class="text-sm font-semibold text-yellow-400 flex items-center gap-1.5" id="mock-status">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                        </span>
+                        等待回撤买点
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6 space-y-6 flex-1 flex flex-col">
+            <div class="grid grid-cols-4 gap-4 shrink-0">
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-sm hover:border-gray-600 transition-colors">
+                    <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">模拟交易总次数</div>
+                    <div class="text-3xl font-bold" id="kpi-trades">200</div>
+                </div>
+                <div class="bg-gray-800 border border-green-900/50 rounded-xl p-5 shadow-sm hover:border-green-800/50 transition-colors relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-16 h-16 bg-green-500/5 rounded-bl-full"></div>
+                    <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">VOO 安全资产 (最终)</div>
+                    <div class="text-3xl font-bold text-green-400" id="kpi-voo">$0</div>
+                </div>
+                <div class="bg-gray-800 border border-blue-900/50 rounded-xl p-5 shadow-sm hover:border-blue-800/50 transition-colors relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-16 h-16 bg-blue-500/5 rounded-bl-full"></div>
+                    <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">期权激进账户 (最终)</div>
+                    <div class="text-3xl font-bold text-blue-400" id="kpi-active">$0</div>
+                </div>
+                <div class="bg-gray-800 border border-red-900/30 rounded-xl p-5 shadow-sm hover:border-red-800/30 transition-colors">
+                    <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">激进账户最大回撤</div>
+                    <div class="text-3xl font-bold text-red-400" id="kpi-dd">0%</div>
+                </div>
+            </div>
+
+            <!-- 资金曲线图表 -->
+            <div class="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-sm w-full min-h-[400px] shrink-0">
+                <canvas id="equityChart"></canvas>
+            </div>
+            
+            <div class="mt-8 shrink-0">
+                <h3 class="text-xl font-bold text-white mb-6 border-b border-gray-700 pb-2 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    策略深度解析 (Strategy Explanation)
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
+                        <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
+                            <span class="bg-blue-900/50 text-blue-300 w-6 h-6 rounded flex items-center justify-center text-xs">1</span>
+                            为什么选择 QQQ？
+                        </h4>
+                        <p class="text-gray-300 text-sm leading-relaxed">
+                            小资金做大必须依靠“重仓+杠杆”，但如果用于个股，一旦判断失误极易归零。选择美股大盘指数（如纳斯达克100指数 QQQ）是因为它<strong>不会跌到零</strong>。其底层的优胜劣汰机制决定了指数长期上涨是必然的，这为重仓做多提供了底层的概率优势。
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
+                        <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
+                            <span class="bg-blue-900/50 text-blue-300 w-6 h-6 rounded flex items-center justify-center text-xs">2</span>
+                            进场逻辑与期权选择
+                        </h4>
+                        <p class="text-gray-300 text-sm leading-relaxed">
+                            <strong>前提：在上升趋势中。</strong>当指数从前一个高点回撤超过设定的阈值（如 -3%）时，在收盘前买入看涨期权(Call)。为了给予足够的反弹时间并控制期权时间价值(Theta)衰减，选择<strong>到期日(DTE) > 90天</strong>、且行权价在<strong>价外 5%</strong>左右的合约。
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
+                        <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
+                            <span class="bg-blue-900/50 text-blue-300 w-6 h-6 rounded flex items-center justify-center text-xs">3</span>
+                            盈亏比：3比1的数学优势
+                        </h4>
+                        <p class="text-gray-300 text-sm leading-relaxed">
+                            严格执行纪律：期权价值<strong>增值 100% 止盈</strong>，<strong>亏损 -30% 止损出局</strong>。通过3:1的高盈亏比，结合长期必然上涨的标的，只要胜率维持在一个合理的水平（例如哪怕只有40%），长期坚持操作，激进账户的资本将会呈现指数级飞速增长。
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-5">
+                        <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
+                            <span class="bg-blue-900/50 text-blue-300 w-6 h-6 rounded flex items-center justify-center text-xs">4</span>
+                            利润锁定机制 (VOO配置)
+                        </h4>
+                        <p class="text-gray-300 text-sm leading-relaxed">
+                            为防止连续亏损导致破产，必须设立“资金蓄水池”。当激进账户每增长到一定规模（如每增长10万美元），就强行将账户资金的 <strong>80% 抽出买入标普500 ETF (VOO)</strong> 成为安全资产。剩余的 20% 继续在激进账户中以小博大。如此往复，这是小资金迅速放大且保住胜利果实的核心秘诀。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-red-900/20 border border-red-800/50 rounded-lg p-5 flex gap-4">
+                    <svg class="w-8 h-8 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <div>
+                        <h4 class="text-red-400 font-bold mb-1">极端风险提示</h4>
+                        <p class="text-red-200/80 text-sm leading-relaxed">
+                            此策略并非没有风险。在长期的单边熊市中（如2000年科技股泡沫崩盘后，QQQ用了16年才创出新高），逢低买入的策略会面临连续的止损，导致激进账户严重缩水甚至归零。因此，策略的大前提必须是“总体处于宏观上升趋势中”，且<strong>必须严格执行止损与定期的利润转移</strong>。
+                        </p>
+                    </div>
+                </div>
+                <!-- 底部留白 -->
+                <div class="h-12"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let equityChart = null;
+
+        function runSimulation() {
+            // 获取用户设置的参数
+            const initialCapital = parseFloat(document.getElementById('param-capital').value);
+            const winRate = parseFloat(document.getElementById('param-winrate').value) / 100;
+            const takeProfit = parseFloat(document.getElementById('param-tp').value) / 100;
+            const stopLoss = Math.abs(parseFloat(document.getElementById('param-sl').value)) / 100; 
+            const positionSize = parseFloat(document.getElementById('param-pos-size').value) / 100;
+            
+            const milestoneTarget = parseFloat(document.getElementById('param-milestone').value);
+            const vooAllocation = parseFloat(document.getElementById('param-voo-alloc').value) / 100;
+
+            const numTrades = 200; // 模拟总交易次数
+            
+            let activeCapital = initialCapital;
+            let vooStash = 0;
+            let currentMilestoneLevel = 1;
+            
+            let peakActive = activeCapital;
+            let maxDrawdown = 0;
+
+            const activeData = [activeCapital];
+            const vooData = [vooStash];
+            const labels = [0];
+
+            for(let i=1; i<=numTrades; i++) {
+                if (activeCapital <= 100) break; // 资金太小视为破产，停止交易
+
+                // 计算单次交易仓位
+                const tradeRiskCapital = activeCapital * positionSize;
+
+                // 模拟交易结果 (根据预估胜率)
+                const isWin = Math.random() < winRate;
+                let tradeResult = 0;
+
+                if (isWin) {
+                    tradeResult = tradeRiskCapital * takeProfit;
+                } else {
+                    tradeResult = -(tradeRiskCapital * stopLoss);
+                }
+
+                activeCapital = activeCapital + tradeResult;
+                
+                // 计算激进账户的最大回撤
+                if (activeCapital > peakActive) {
+                    peakActive = activeCapital;
+                }
+                const currentDD = (peakActive - activeCapital) / peakActive;
+                if (currentDD > maxDrawdown) {
+                    maxDrawdown = currentDD;
+                }
+
+                // 检查是否触发利润转移（里程碑）
+                while (activeCapital >= milestoneTarget * currentMilestoneLevel) {
+                    // 当资金达到里程碑时，将设定比例（如80%）的资金转入VOO
+                    const transferAmount = activeCapital * vooAllocation;
+                    vooStash += transferAmount;
+                    activeCapital -= transferAmount;
+                    currentMilestoneLevel++;
+                    
+                    // 转移资金后重置高点，避免回撤计算失真
+                    peakActive = activeCapital; 
+                }
+
+                activeData.push(activeCapital);
+                vooData.push(vooStash);
+                labels.push(i);
+            }
+
+            updateUI(labels, activeData, vooData, maxDrawdown, numTrades);
+        }
+
+        function updateUI(labels, activeData, vooData, maxDD, totalTrades) {
+            const finalActive = activeData[activeData.length - 1];
+            const finalVOO = vooData[vooData.length - 1];
+
+            document.getElementById('kpi-trades').innerText = activeData.length - 1;
+            document.getElementById('kpi-voo').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(finalVOO);
+            document.getElementById('kpi-active').innerText = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(finalActive);
+            document.getElementById('kpi-dd').innerText = (maxDD * 100).toFixed(2) + '%';
+
+            if (equityChart) {
+                equityChart.destroy();
+            }
+
+            const ctx = document.getElementById('equityChart').getContext('2d');
+            
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Inter';
+
+            equityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'VOO 安全资产',
+                            data: vooData,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '期权激进资金',
+                            data: activeData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '交易次数', color: '#64748b' },
+                            grid: { color: '#334155', drawBorder: false }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '账户资产 ($)', color: '#64748b' },
+                            grid: { color: '#334155', drawBorder: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) { return '$' + value / 1000 + 'k'; }
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function simulateMarketMonitor() {
+            let basePrice = 438.50;
+            let currentHigh = 445.20;
+            
+
+            setInterval(() => {
+                const targetDrop = parseFloat(document.getElementById('param-trigger').value); // 动态获取触发阈值 (如 -3.0)
+                
+                // 随机漫步逻辑
+                const change = (Math.random() - 0.5) * 1.8;
+                basePrice += change;
+                
+                if (basePrice > currentHigh) currentHigh = basePrice;
+
+                const drawdown = ((basePrice - currentHigh) / currentHigh) * 100;
+
+                document.getElementById('mock-qqq-price').innerText = '$' + basePrice.toFixed(2);
+                
+                const ddEl = document.getElementById('mock-qqq-dd');
+                ddEl.innerText = drawdown.toFixed(2) + '%';
+                
+                const statusEl = document.getElementById('mock-status');
+                
+                if (drawdown <= targetDrop) {
+                    ddEl.className = 'font-mono text-lg font-bold text-green-400';
+                    statusEl.className = 'text-sm font-bold text-green-400 flex items-center gap-1.5 animate-pulse';
+                    statusEl.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        触发买入信号！
+                    `;
+                } else {
+                    ddEl.className = 'font-mono text-lg font-bold text-red-400';
+                    statusEl.className = 'text-sm font-semibold text-yellow-400 flex items-center gap-1.5';
+                    statusEl.innerHTML = `
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                        </span>
+                        等待 ${targetDrop}% 回撤
+                    `;
+                }
+
+            }, 2500);
+        }
+
+        // 绑定事件与初始化
+        document.getElementById('run-sim-btn').addEventListener('click', runSimulation);
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            runSimulation();
+            simulateMarketMonitor();
+        });
+
+    </script>
+</body>
+</html>
